@@ -13,7 +13,7 @@ def test_make_dict():
         g(1)
     except ValueError:
         caught = True
-    assert(caught)
+    assert (caught)
 
     n = 1000
 
@@ -24,7 +24,7 @@ def test_make_dict():
         s(i, str(10 * i))
 
     for i in range(n):
-        assert(str(10 * i) == g(i))
+        assert (str(10 * i) == g(i))
 
 
 def test_hash():
@@ -35,7 +35,7 @@ def test_hash():
         a = dict[1]
     except ValueError:
         caught = True
-    assert(caught)
+    assert (caught)
 
     n = 1000
 
@@ -46,5 +46,4 @@ def test_hash():
         dict[i] = str(10 * i)
 
     for i in range(n):
-        assert(str(10 * i) == dict[i])
-
+        assert (str(10 * i) == dict[i])

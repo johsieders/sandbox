@@ -3,18 +3,19 @@
 # updated 11.05.2025
 
 
-import string
-import random
 import heapq
-import sandbox.basics.heap as heap
+import random
+import string
 from timeit import timeit
+
+import sandbox.basics.heap as heap
 
 
 def id_generator(size=6, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def test_heap()-> None:
+def test_heap() -> None:
     n = 10000
     input = heap.Heap()
     output = []
@@ -27,7 +28,8 @@ def test_heap()-> None:
         output.append(heap.heappop(input))
     assert output == backup
 
-def test_heapq()-> None:
+
+def test_heapq() -> None:
     n = 10000
     input = []
     output = []
@@ -47,4 +49,3 @@ def test_all():
 
     print(f'\n{t_heap = :.5f}')
     print(f'\n{t_deque = :.5f}')
-

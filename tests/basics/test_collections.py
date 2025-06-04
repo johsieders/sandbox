@@ -2,8 +2,7 @@
 # 20/11/2020
 # 11/05/2025
 
-from sandbox.basics.merge import merge, merge_r
-from sandbox.basics.histogram import histogram_1, histogram_2,  histogram_3,  histogram_4
+from sandbox.basics.histogram import histogram_1, histogram_2, histogram_3, histogram_4
 from sandbox.basics.index import index_1, index_2, index_2a
 
 
@@ -14,7 +13,7 @@ def test_histogram():
         for xs in xss:
             h = hg(xs)
             for x in xs:
-                assert(h[x] == xs.count(x))
+                assert (h[x] == xs.count(x))
 
 
 def test_index_1():
@@ -25,7 +24,7 @@ def test_index_1():
     index = index_1(book)
     for w, ps in index.items():
         for p in ps:
-            assert(w in book[p])
+            assert (w in book[p])
 
 
 def test_index_2():
@@ -37,9 +36,7 @@ def test_index_2():
     for f in fs:
         index = f(book, keywords)
         keys = list(index.keys())
-        assert(keys.sort() == keywords.sort())
+        assert (keys.sort() == keywords.sort())
         for w, ps in index.items():
             for p in ps:
-                assert(w in book[p])
-
-
+                assert (w in book[p])
