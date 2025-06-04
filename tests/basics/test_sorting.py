@@ -21,6 +21,7 @@ def tst_sort(xs: List[int], srt: Callable, inplace: bool) -> None:
 
 
 def test_all():
+
     srt = {bubble1: False,
            bubble2: True,
            bubble3: True,
