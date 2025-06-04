@@ -6,8 +6,6 @@ from random import randrange
 from timeit import timeit
 from typing import Callable, List
 
-from sympy.logic.boolalg import Boolean
-
 from sandbox.basics.sorting import (is_sorted, bubble1, bubble2, bubble3, bubble4,
                                     msort, qsort, hsort1, hsort2)
 
