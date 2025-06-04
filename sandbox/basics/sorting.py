@@ -6,11 +6,11 @@
 import operator
 from heapq import heappop, heappush
 
-from collections_.collections2 import merge
-from collections_.heap import Heap
+from sandbox.basics.merge import merge
+from sandbox.basics.heap import Heap, heappop, heappush
 
 
-def isSorted(xs):
+def is_sorted(xs):
     """
     :param xs: a list
     :return: True iff xs is non-descending
@@ -53,7 +53,7 @@ def bubble2(xs):
     """
     :param xs: a list
     :return: None
-    recursive, on place. Requires indices
+    recursive, in place. Requires indices
     """
 
     def bubble(k):
@@ -74,7 +74,7 @@ def bubble2(xs):
 
 def bubble3(xs):
     """
-    This sorts a list on place
+    This sorts a list in place
     :param xs: a list
     :return: none
     Standard implementation
@@ -92,7 +92,7 @@ def bubble3(xs):
 
 def bubble4(xs):
     """
-    This sorts a list on place
+    This sorts a list in place
     :param xs: a list
     :return: none
     Standard implementation improved
