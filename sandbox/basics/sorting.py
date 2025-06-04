@@ -33,7 +33,7 @@ def bubble1(xs):
     """
     :param xs: a list
     :return: xs sorted
-    recursive, not on place
+    recursive, not in place
     """
     k = len(xs)
     if k <= 1:
