@@ -2,8 +2,10 @@
 # 20/11/2020
 # updated 29.04.2025
 
-from sandbox.interpreters.forth import Forth
 from timeit import timeit
+
+from sandbox.interpreters.forth import Forth
+
 
 def tst_Forth():
     t0 = '7 8 9 DUP'  # 7 8 9 9
@@ -56,6 +58,7 @@ def tst_Forth():
     F('P10 10 HORNRR')  # 11111111111
 
     # print(F)
+
 
 def test_forth() -> None:
     t_forth = timeit(tst_Forth, number=10)

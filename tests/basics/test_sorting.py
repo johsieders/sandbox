@@ -6,22 +6,20 @@ from random import randrange
 from timeit import timeit
 from typing import Callable, List
 
-from sympy.logic.boolalg import Boolean
-
-from sandbox.basics.sorting import (is_sorted, bubble1, bubble2, bubble3, bubble4,
+from sandbox.basics.sorting import (is_sorted,
+                                    bubble1, bubble2, bubble3, bubble4,
                                     msort, qsort, hsort1, hsort2)
 
 
 def tst_sort(xs: List[int], srt: Callable, inplace: bool) -> None:
     if inplace:
         srt(xs)
-        assert(is_sorted(xs))
+        assert (is_sorted(xs))
     else:
-        assert(is_sorted(srt(xs)))
+        assert (is_sorted(srt(xs)))
 
 
 def test_all():
-
     srt = {bubble1: False,
            bubble2: True,
            bubble3: True,

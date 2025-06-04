@@ -1,8 +1,8 @@
 import numpy as np
-import torch
 import pandas as pd
-
+import torch
 from sklearn.ensemble import RandomForestClassifier
+
 
 def test_torch_np():
     cpu = torch.device('cpu')
@@ -11,15 +11,17 @@ def test_torch_np():
     n_ones = np.array(t_ones)
     s_ones = torch.from_numpy(n_ones)
 
-    n3 = n**3
+    n3 = n ** 3
     assert t_ones.sum() == n3
     assert n_ones.sum() == n3
     assert s_ones.sum() == n3
 
+
 def test_pandas():
     n = int(1e3)
     df = pd.DataFrame(np.random.rand(n, n))
-    assert(len(df) == n)
+    assert (len(df) == n)
+
 
 def test_sklearn():
     clf = RandomForestClassifier(random_state=0)
