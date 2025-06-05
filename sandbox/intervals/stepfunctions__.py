@@ -45,7 +45,34 @@ def fmerge(op: Callable, *tv: Iterable) -> Iterator:
         yield t, weak(val)
 
 
-class Stepfun:
+def assert_ascending(tv: Iterator) -> Iterator:
+    """
+    :param tv: an iterator of timestamps. The first timestamp can be None in which case it is ignored.
+    :return: tv if the times t are ascending, ValueError otherwise
+    """
+    tv = iter(tv)
+    try:
+        last = next(tv)
+    except StopIteration:
+        return
+    yield last
+
+    if last[0] is None:
+        try:
+            last = next(tv)
+        except StopIteration:
+            return
+        yield last
+
+    for t, v in tv:
+        if t <= last[0]:
+            raise ValueError
+        else:
+            last = t, v
+            yield last
+
+
+class Stepfun(object):
     """ step functions are stepwise constant. They are given by a list
         (step, value). Step functions are assumed to be right-continuous.
         The first step is always at -oo represented by None.
@@ -53,7 +80,9 @@ class Stepfun:
         +oo.
         The value None stands for undefined. The weak functions ignores operands whose
         value is None; it returns None if there is no result.
-        Example: The list ((None, None), (0, 100), (10, 200), (20, None))
+        Example:
+        ((None, None),) is the function which is nowhere defined
+        ((None, None), (0, 100), (10, 200), (20, None))
         defines a function which is 100 on the interval [0, 10),
         200 on [10, 20) and undefined elsewhere.
         Steps must be non-descending.

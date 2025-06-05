@@ -6,12 +6,14 @@
 # 26.12.04  ok
 # 6.3.2013 major revision: vlists as step functions
 # 07.01.2024 general check
+# 05.06.2025 restart on Mac
+
 
 from bisect import bisect_right, bisect_left
 from itertools import cycle
 from operator import and_, or_
 
-from fttp.src.intervals.stepfunctions__ import fmerge, Stepfun
+from sandbox.intervals.stepfunctions__ import fmerge, Stepfun
 
 flip = lambda f: lambda x, y: f(y, x)  # flips args
 
@@ -21,7 +23,7 @@ def is_interval(v):
     return isinstance(v, (tuple, list)) and len(v) == 2
 
 
-def isEmptyInterval(v):
+def is_empty_interval(v):
     """ v : list or tuple of length 2 """
     if not is_interval(v):
         raise TypeError
@@ -45,7 +47,7 @@ class Vlist(Stepfun):
     Or it contains one or more non-empty disjoint intervals in ascending order.
 
     All intervals are left-closed and right-open.
-    They can be leftbounded, rightbounded or both.
+    They can be left-bounded, right-bounded or both.
 
     Vlists are closed with respect to union (|), complement (-)
     and intersection. (&). They form a Boolean Algebra.
@@ -63,13 +65,13 @@ class Vlist(Stepfun):
         """ sf: boolean valued step function  """
         Stepfun.__init__(self, sf)
 
-    def leftunbounded(self):
+    def left_unbounded(self):
         return self.values[0]
 
     def inside(self, k):
         # if leftopen : return true for uneven k
         # else : return true for even k
-        return self.leftunbounded() != k % 2
+        return self.left_unbounded() != k % 2
 
     def __call__(self, x):
         k = bisect_right(self.steps, x) - 1
@@ -82,7 +84,7 @@ class Vlist(Stepfun):
         """ x : Interval or any object.
             Returns true iff x is contained in one of self's intervals
         """
-        return self.inside(bisect_right(self, x) - 1)
+        return self.inside(bisect_right(self.steps, x) - 1)
 
     def __pos__(self):
         return self
@@ -102,7 +104,7 @@ class Vlist(Stepfun):
             Equivalent to "self | Vlist(v)" which runs in O(n)
             Returns None, changes self """
 
-        if isEmptyInterval(v):  # v is empty, nothing to do
+        if is_empty_interval(v):  # v is empty, nothing to do
             return None
 
         aux = [(None, False)] if v[0] is not None else []
@@ -110,7 +112,7 @@ class Vlist(Stepfun):
         self |= Vlist(aux)
 
     def union_(self, v):
-        if isEmptyInterval(v):  # v is empty, nothing to do
+        if is_empty_interval(v):  # v is empty, nothing to do
             return None
 
         i = bisect_left(self.steps, v[0])
@@ -131,7 +133,7 @@ class Vlist(Stepfun):
         self.values[0] |= v[0] is None
 
     def union__(self, v):
-        if isEmptyInterval(v):  # v is empty, nothing to do
+        if is_empty_interval(v):  # v is empty, nothing to do
             return None
 
         i = bisect_left(self.steps, v[0])
@@ -197,7 +199,7 @@ class Vlist(Stepfun):
 
     def __eq__(self, vs):
         return list.__eq__(self.steps, vs.steps) and \
-            self.leftunbounded() == vs.leftunbounded()
+            self.left_unbounded() == vs.left_unbounded()
 
     def __lt__(self, ws):
         return self <= ws and not self == ws
@@ -206,12 +208,12 @@ class Vlist(Stepfun):
     __gt__ = flip(__lt__)
 
     def __iter__(self):
-        b = self.leftunbounded()
+        b = self.left_unbounded()
         return zip(list(self.steps), cycle((b, not b)))
 
     def __repr__(self):
         txt = (', ', '), [')
-        if self.leftunbounded():
+        if self.left_unbounded():
             result = '(-oo, '
             i = 1
         else:
