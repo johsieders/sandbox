@@ -1,17 +1,22 @@
 # trying to understand stepfunctions
 # merge revised, fmerge added 3/6/2013
 # completely revised 29/1/2020
+# revised for Mac 06.06.2025
 
+from __future__ import annotations
 from bisect import bisect_right
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Callable
 from functools import reduce
-from operator import add, mul
+from operator import add, mul, and_, or_, xor, sub
+from typing import Any
+
+from sympy.categories import Object
 
 
-def assert_ascending(tv):
+def check_ascending(tv: Iterable[tuple]) -> Iterator[tuple]:
     """
     :param tv: an iterator of timestamps. The first timestamp can be None in which case it is ignored.
-    :return: tv if the times t are ascending, ValueError otherwise
+    :return: true if first timestamp is None and all others strictly ascending
     """
     tv = iter(tv)
     try:
@@ -35,26 +40,36 @@ def assert_ascending(tv):
             yield last
 
 
-def weakop(op, xs):
+def weak_op(op, xs: Iterable[Any]) -> Any:
+    """
+    :param op: an operator
+    :param xs: an iterable of values
+    :return: the resulting value
+    weakop applies op to all not-None elements in xs
+    None if all elements in xs are None
+    """
     ys = [x for x in xs if x is not None]
     return reduce(op, ys) if ys else None
 
 
-def stepmerge(op, *fs: Iterable) -> Iterator:
+def merge_op(op, *tv: Iterable[tuple]) -> Iterator[tuple]:
     """
     :param op: an operator such as add, min, max
-    :param fs: an iterable of lists of timestamps
+    :param tv: an iterable of lists of timestamps
     :return: merge by op of all f in fs as iterable of timestamps
+    It returns None if all lists are empty
+    Example:
+    stepmerge(add, xs, ys, zs) returns an Iterator of the elementwise sum of xs, ys, zs where
+    the lists can be of any length.
     """
+    tv = [check_ascending(f) for f in tv]
 
-    fs = [assert_ascending(f) for f in fs]
-
-    head = {}.fromkeys(fs)  # dictionary of last read entries, key = f, value = (x, v)
-    val = {}.fromkeys(fs)  # dictionary of current value at f, key = f
-    lastval = fs  # any value not occurring in one of the f
+    head = {}.fromkeys(tv)  # dictionary of last read entries, key = f, value = (x, v)
+    val = {}.fromkeys(tv)  # dictionary of current value at f, key = f
+    lastval = tv  # any value not occurring in one of the f
 
     while True:
-        for f in fs:  # fill heads by reading next (step, value)
+        for f in tv:  # fill heads by reading next (step, value)
             if head[f] is None:
                 try:
                     head[f] = next(f)
@@ -68,21 +83,24 @@ def stepmerge(op, *fs: Iterable) -> Iterator:
         else:  # return if all f are done
             return
 
-        for f in fs:  # update values
+        for f in tv:  # update values
             if head[f] and head[f][0] == nextstep:
                 val[f] = head[f][1]
                 head[f] = None
 
-        v = weakop(op, val.values())
+        v = weak_op(op, val.values())
         if v != lastval:  # check if value has changed
             lastval = v
             yield nextstep, v
 
 
-class Stepfun:
+class Stepfun(object):
     """
-    step functions are stepwise constant. They are given by a list of
-    timestamps = (time, value). Step functions are right-continuous, that is:
+    Step functions are stepwise constant.
+    A step function is given by a list of (time, value)-pairs where the first t is None
+    and the following strictly ascending. Values can be of any type, depending on the
+    operands to be applied. The value None means "undefined".
+    Step functions are right-continuous, that is:
     f(x) = value[i] with time[i] <= x < time[i+1]
     This class guarantees:
     a) first timestamp is -oo, represented by None
@@ -106,29 +124,32 @@ class Stepfun:
     <, <= are strict, so: x op y is false whenever at least one operand ist None
     """
 
-    def __init__(self, sf, check=True):
+    def __init__(self, ts: Iterable[tuple], check=True):
         # combine intervals with identical values
-        self.timestamps = list(stepmerge(mul, sf, ((None, None),)) if check else sf)
+        if check:
+            self.timestamps = tuple(merge_op(mul, ts, ((None, None),)))
+        else:
+            self.timestamps = tuple(ts)
 
         # check input
         if len(self.timestamps) < 1 or self.timestamps[0][0] is not None:
             raise ValueError
 
     @classmethod
-    def const(self, value):
+    def const(cls, value: Any) -> Stepfun:
         return Stepfun(((None, value),), check=False)
 
-    def merge(self, op, *others):
+    def merge(self, op: Callable, *others: Stepfun) -> Stepfun:
         """
-        :param op: an binary operator such as add, mul, max, min
+        :param op: a binary operator such as add, mul, max, min
         :param others: other stepfunctions
         :return: arguments merged into self by op:
         The result's timestamps are the union of all others;
         the function value is the stepwise sum/mul/max/min
         """
-        return Stepfun(stepmerge(op, self.timestamps, *[x.timestamps for x in others]), False)
+        return Stepfun(merge_op(op, self.timestamps, *(x.timestamps for x in others)), False)
 
-    def replace_none_with_constant(self, const):
+    def replace_none_with_constant(self, const: Any) -> Stepfun:
         """
         :param const a constant
         :return: self with all Nones replaced by const
@@ -136,9 +157,9 @@ class Stepfun:
         """
         return self.replace_none_with_function(Stepfun(((None, const),), False))
 
-    def replace_none_with_function(self, sf):
+    def replace_none_with_function(self, sf) -> Stepfun:
         """
-        :param sf a sepfunction to replace all Nones
+        :param sf a stepfunction with all Nones to be replaced
         :return: self with all Nones replaced by the incumbent value of sf
         self not modified
         """
@@ -158,7 +179,7 @@ class Stepfun:
 
         return Stepfun(aux())
 
-    def __call__(self, x):
+    def __call__(self, x: int|float|None) -> Any:
         """
         :param x: the argument (can be None)
         :return: value of self at x
@@ -173,68 +194,74 @@ class Stepfun:
         i = bisect_right(ts, x)
         return self.timestamps[i][1]
 
-    def __add__(self, others):
+    def __and__(self, others: Stepfun) -> Stepfun:
+        return self.merge(and_, others)
+
+    def __or__(self, others: Stepfun) -> Stepfun:
+        return self.merge(or_, others)
+
+    def __add__(self, others: Stepfun) -> Stepfun:
         return self.merge(add, others)
 
-    def __sub__(self, other):
+    def __sub__(self, other: Stepfun) -> Stepfun:
         return self.merge(add, -other)
 
-    def __mul__(self, others):
+    def __mul__(self, others: Stepfun) -> Stepfun:
         return self.merge(mul, others)
 
-    def __abs__(self):
-        def weakabs(x):
+    def __abs__(self) -> Stepfun:
+        def weak_abs(x):
             return None if x is None else abs(x)
 
-        return Stepfun([(t, weakabs(v)) for t, v in self.timestamps], False)
+        return Stepfun(((t, weak_abs(v)) for t, v in self.timestamps), False)
 
-    def __pos__(self):
+    def __pos__(self) -> Stepfun:
         return Stepfun(self.timestamps, False)
 
-    def __neg__(self):
-        def weakminus(x):
+    def __neg__(self) -> Stepfun:
+        def weak_minus(x):
             return None if x is None else -x
 
-        return Stepfun([(t, weakminus(v)) for t, v in self.timestamps], False)
+        return Stepfun(((t, weak_minus(v)) for t, v in self.timestamps), False)
 
-    def is_positive(self):
+    def is_positive(self) -> bool:
         return all(v is not None and v > 0 for t, v in self.timestamps)
 
-    def isnoneorpositive(self):
+    def is_none_or_positive(self) -> bool:
         return all(v is None or v > 0 for t, v in self.timestamps)
 
-    def isnonnegative(self):
+    def is_nonnegative(self) -> bool:
         return all(v is not None and v >= 0 for t, v in self.timestamps)
 
-    def isnoneornonnegative(self):
+    def is_none_or_nonnegative(self) -> bool:
         return all(v is None or v >= 0 for t, v in self.timestamps)
 
-    def iszero(self):
+    def is_zero(self) -> bool:
         return all(v is not None and not v for t, v in self.timestamps)
 
-    def isnoneorzero(self):
+    def is_none_or_zero(self) -> bool:
         return all(not v for t, v in self.timestamps)
 
     def __iter__(self):
         return iter(self.timestamps)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.timestamps)
 
-    def __le__(self, other):
+    def __le__(self, other: Stepfun) -> bool:
         return not (self - other).is_positive()
 
-    def __lt__(self, other):
+    def __lt__(self, other: Stepfun) -> bool:
         return (other - self).is_positive()
 
-    def __eq__(self, other):
-        return (self - other).isnoneorzero()
+    def __eq__(self, other: Stepfun) -> bool:
+        return (self - other).is_none_or_zero()
 
-    def __repr__(self):
-        return repr(list(self.timestamps))
+    def __repr__(self) -> str:
+        return repr(self.timestamps)
 
     @classmethod
-    def scan(cls, f, start, stop, step=1):
+    def scan(cls, f: Callable, start, stop, step=1) -> Stepfun:
         """
         :param f: a function
         :param start: first timestamp scanned

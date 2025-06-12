@@ -4,10 +4,13 @@
 # merge revised, fmerge added 3/6/2013
 # revised again 22/1/2020
 
+from collections.abc import Callable, Iterable, Iterator
 from itertools import cycle, islice, tee
 from operator import add
+from typing import Any
 
-def multiply(s, t):
+
+def multiply(s, t: Iterable[int | float]) -> Iterator[int | float]:
     """ s, t : series on a ring, assuming iter(s), iter(t) both work
         multiply returns the product of s and t
         if len(s) == 0 or len(t) == 0: StopIteration at first call of next
@@ -53,11 +56,11 @@ def multiply(s, t):
             yield x
 
 
-def square(s):
+def square(s: Iterable[int | float]) -> Iterator[int | float]:
     return multiply(*tee(s))
 
 
-def inverse(s):
+def inverse(s: Iterable[int | float]) -> Iterator[int | float]:
     """"
     :param s: s : series on a field;
     :return: a series t such that multiply(s, t) = (1, 0, 0, ...)
@@ -90,11 +93,11 @@ def inverse(s):
         yield xt[-1]
 
 
-def divide(s, t):
+def divide(s, t: Iterable[int | float]) -> Iterator[int | float]:
     return multiply(s, inverse(t))
 
 
-def merge(*ts):
+def merge(*ts: Iterable[Any]) -> Iterator[Any]:
     """
     :param ts: an iterable of iterables
     :return: merge of n iterables into one.
@@ -126,7 +129,7 @@ def merge(*ts):
         yield m
 
 
-def hamming(*ps):
+def hamming(*ps: int) -> Iterator[int]:
     """
     :param ps: a list of one or more integers p0, p1, p2, ...
     :return: all multiples of p0, p1, p2, ...
@@ -143,7 +146,8 @@ def hamming(*ps):
         mq = max(q)
         q.append(min([p * x for p in ps for x in q if p * x > mq]))
 
-def ari(increment):
+
+def ari(increment: int | float) -> Iterator[int | float]:
     """
     :param increment: the increment
     :return: the arithmetic sequence starting at 0 with given increment
@@ -151,8 +155,7 @@ def ari(increment):
     return fun(lambda x: x + increment, 0)
 
 
-
-def remove_dups(t):
+def remove_dups(t: Iterable[Any]) -> Iterator[Any]:
     t = iter(t)
     last = next(t)
     yield last
@@ -164,7 +167,7 @@ def remove_dups(t):
             yield last
 
 
-def take(n, j):
+def take(n: int, j: Iterable[Any]) -> tuple:
     """
     :param n: number of elements requested
     :param j: an iterator
@@ -173,7 +176,7 @@ def take(n, j):
     return tuple(islice(j, n))
 
 
-def fun(f, *args):
+def fun(f: Callable[[Any, Any], Any], *args) -> Iterator[Any]:
     """ assume two args: arg0, arg1.
         Then fun yields:
         arg0, arg1, f(arg0, arg1), f(arg1, f(arg0, arg1)), ..
@@ -186,7 +189,7 @@ def fun(f, *args):
         yield args[-1]
 
 
-def geo(factor):
+def geo(factor: int | float) -> Iterator[int | float]:
     """
     :param factor: the factor
     :return: the geometric sequence starting at 1 with given factor
@@ -194,14 +197,14 @@ def geo(factor):
     return fun(lambda x: x * factor, 1)
 
 
-def fibo():
+def fibo() -> Iterator[int]:
     """
     :return: the Fibonacci series
     """
     return fun(add, 1, 1)
 
 
-def faculty():
+def faculty() -> Iterator[int]:
     """
     :return: the faculty sequence
     """
@@ -213,17 +216,17 @@ def faculty():
         factor += 1
 
 
-def average(xs):
+def average(xs: list[int | float]) -> float:
     return sum(xs) / len(xs) if xs else None
 
 
-def exp():
+def exp() -> Iterable[float]:
     return (1.0 / k for k in faculty())
 
 
-def cos():
+def cos() -> Iterable[float]:
     return (a * b for a, b in zip(cycle((1, 0, -1, 0)), exp()))
 
 
-def sin():
+def sin() -> Iterable[float]:
     return (a * b for a, b in zip(cycle((0, 1, 0, -1)), exp()))

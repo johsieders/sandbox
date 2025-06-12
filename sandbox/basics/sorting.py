@@ -6,8 +6,8 @@
 import operator
 from heapq import heappop, heappush
 
-from sandbox.basics.merge import merge
 from sandbox.basics.heap import Heap, heappop, heappush
+from sandbox.basics.merge import merge
 
 
 def is_sorted(xs):
@@ -171,4 +171,3 @@ def hsort2(xs):
     for x in xs:
         h.heappush(x)
     return [h.heappop() for _ in range(len(h))]
-

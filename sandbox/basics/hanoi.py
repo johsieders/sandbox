@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+
 def hanoi_naked(n: int) -> None:
     """
     Towers of Hanoi. Exponential time (n = 22 -> 1.1 s)
@@ -93,4 +94,3 @@ def hanoi_immutable(n) -> list[list[range | tuple]]:
 
     move(n, rods, 0, 1, 2)
     return protocol
-

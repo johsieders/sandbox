@@ -3,10 +3,12 @@
 # revised 05.06.2025
 
 from itertools import cycle
-from operator import add, mul
+from operator import add, mul, and_, or_, xor
+from collections.abc import Iterator
+from typing import Any
 
-# from sandbox.iterators import take
-from sandbox.stepfunctions.stepfun import Stepfun, assert_ascending
+from sandbox.iteratorz.iteratorz import take
+from sandbox.stepfunctions.stepfun import Stepfun, check_ascending, merge_op, weak_op
 
 input = [((None, None),),
          ((None, 100),),
@@ -32,31 +34,26 @@ output = [((None, None),),
           ((None, 100), (0, 31), (5, 23), (15, 41), (20, 100))]
 
 
-def hard(a, b, n):
+def gen_fun(a, b: Any, start=0, stop=10, step=1) -> Iterator[Any]:
     """
     :param a: first value
     :param b: second value
-    :param n: length of result
+    :param n: length of resulting stepfunction
     :return: a stepfunction wit n steps, alternating a and b
     """
-    ts = [None] + list(range(n))
-    timestamps = zip(ts, cycle((a, b)))
-    return Stepfun(timestamps, check=False)
+    ts = [None] + [k*step for k in range(start, stop)]
+    return zip(ts, cycle((a, b)))
 
 
-def make_hard_test(k, n):
+def gen_funs(k, n: int) -> list[Stepfun]:
     fs = []
     for i in range(0, k):
         for j in range(k, 2 * k):
-            fs.append(hard(i, j, n))
+            fs.append(Stepfun(gen_fun(i, j, n)))
     return fs
 
-
-fshard = make_hard_test(2, 3)
-print(fshard)
-
-k = 2
-n = 3
+k = 10
+n = 500
 
 def test_equal():
     for i, f in enumerate(input):
@@ -64,6 +61,10 @@ def test_equal():
             if i == j:
                 assert f == g
 
+def test_weak_op():
+    assert weak_op(or_,()) is None
+    assert weak_op(or_,(True,))
+    assert weak_op(or_,(True, None,))
 
 def test_ascending():
     testcases = [(),
@@ -76,152 +77,174 @@ def test_ascending():
                  ((None, 37), (0, 47), (0, 57), (2, 67))]
 
     for tc in testcases[:-1]:
-        assert tc == tuple(assert_ascending(tc))
+        assert tc == tuple(check_ascending(tc))
 
-def test_speed():
-    fshard = make_hard_test(k, n)
+
+def test_speed1():
+    fs = gen_funs(k, n)
     c = Stepfun.const(0)
-    hugh1 = sum(fshard, c)
-    hugh2 = c.merge(add, *fshard)
+    hugh1 = sum(fs, c)
+    hugh2 = c.merge(add, *fs)
     hugh3 = c
-    for f in fshard:
+    for f in fs:
         hugh3 += f
+
     assert hugh1 == hugh2
     assert hugh2 == hugh3
 
 
-def test_speed1():
-    fshard = make_hard_test(2, 3)
-    c = Stepfun.const(0)
-    hugh1 = sum(fshard, c)
-
-
 def test_speed2():
-    c = Stepfun.const(0)
-    hugh2: Stepfun = c.merge(add, *fshard)
+    fs = gen_funs(2, 3)
+    c = Stepfun.const(20)
+    hugh1 = sum(fs, c)
+    hugh2 = c
+    for f in fs:
+        hugh2 += f
+    assert hugh1 == hugh2
 
 
-def test_speed3():
-    hugh3 = Stepfun.const(0)
-    for f in fshard:
-        hugh3 += f
-
-
-def check_stepfun(sf):
-    self.assertEqual(sf, sf)
-    self.assertEqual(sf, +sf)
-    self.assertEqual(sf, ++sf)
-    self.assertEqual(sf, +++sf)
-    self.assertEqual(sf, --sf)
-    self.assertTrue((sf - sf).isnoneorzero())
-    self.assertTrue((sf + -sf).isnoneorzero())
-    self.assertTrue((sf - +sf).isnoneorzero())
-    self.assertLessEqual(sf, sf)
+def check_stepfun(sf: Stepfun):
+    assert sf == sf
+    assert sf == +sf
+    assert sf == ++sf
+    assert sf == +++sf
+    assert sf == --sf
+    assert (sf - sf).is_none_or_zero()
+    assert (sf + -sf).is_none_or_zero()
+    assert (sf - +sf).is_none_or_zero()
+    assert sf <= sf
 
     tf = sf.replace_none_with_constant(1)
-    uf = tf + Stepfunction(((None, 1),))
+    uf = tf + Stepfun(((None, 1),))
 
-    self.assertLess(tf, uf)
-    self.assertLessEqual(tf, tf)
-    self.assertLessEqual(tf, abs(tf))
-    self.assertLessEqual(tf, abs(tf) + abs(tf))
-    self.assertTrue(abs(tf).isnonnegative())
-    self.assertTrue((abs(tf) - abs(tf)).iszero())
+    assert tf <= uf
+    assert tf == tf
+    assert tf <= abs(tf)
+    assert tf <= abs(tf) + abs(tf)
+    assert abs(tf).is_nonnegative()
+    assert (abs(tf) - abs(tf)).is_zero()
 
     for x in range(-10, 10):
-        self.assertEqual(tf(x) + 1, uf(x))
+        assert(tf(x) + 1, uf(x))
 
 
-def testHard(self):
-    sf = hard(1, 0, 1000000)
-    tf = hard(0, 1, 1000000)
+def test_aux():
+    f = Stepfun(input[0])
+    check_stepfun(f)
+
+
+def test_hard():
+    sf = Stepfun(gen_fun(1, 0, 0,1000000))
+    tf = Stepfun(gen_fun(0, 1, 0,1000000))
     zf = sf + tf
-    self.assertEqual(Stepfunction(((None, 1),)), zf)
+    assert Stepfun(((None, 1),)) == zf
 
     for n in range(1, 100):
-        self.checkStepfunction(hard(None, 0, n))
-        self.checkStepfunction(hard(0, None, n))
+        check_stepfun(Stepfun(gen_fun(None,0, n, 0)))
+        check_stepfun(Stepfun(gen_fun(0, None, 0, n)))
 
 
-def testStepmerge(self):
+def test_merge_op1():
     replace = lambda x, y: y if x is None else y
-    self.assertEqual(output[0], take(10, stepmerge(replace, input[0], input[0])))
-    self.assertEqual(output[1], take(10, stepmerge(replace, input[0], input[1])))
 
-    self.assertEqual(output[0], take(10, stepmerge(add, input[0], input[0])))
-    self.assertEqual(output[1], take(10, stepmerge(add, input[0], input[1])))
-    self.assertEqual(output[2], take(10, stepmerge(add, input[1], input[1])))
-    self.assertEqual(output[2], take(10, stepmerge(add, input[2], input[3])))
-    self.assertEqual(output[3], take(10, stepmerge(add, input[4], input[5])))
+    assert output[0] == take(10, merge_op(replace, input[0], input[0]))
+    assert output[1] == take(10, merge_op(replace, input[0], input[1]))
 
-    self.assertEqual(output[-4], take(10, stepmerge(add, *input[:-2])))
-    self.assertEqual(output[-3], take(10, stepmerge(mul, *input[:-2])))
-    self.assertEqual(output[-2], take(10, stepmerge(max, *input[:-2])))
-    self.assertEqual(output[-1], take(10, stepmerge(min, *input[:-2])))
+    assert output[0] == take(10, merge_op(add, input[0], input[0]))
+    assert output[1] == take(10, merge_op(add, input[0], input[1]))
+    assert output[2] == take(10, merge_op(add, input[1], input[1]))
+    assert output[2] == take(10, merge_op(add, input[2], input[3]))
+    assert output[3] == take(10, merge_op(add, input[4], input[5]))
+
+    assert output[-4] == take(10, merge_op(add, *input[:-2]))
+    assert output[-3] == take(10, merge_op(mul, *input[:-2]))
+    assert output[-2] == take(10, merge_op(max, *input[:-2]))
+    assert output[-1] == take(10, merge_op(min, *input[:-2]))
 
 
-def testRelocate(self):
-    sf = Stepfunction(((None, 27),))
+def test_merge_op2():
+    f = list(gen_fun(True, False, 0, 0))
+    g = list(gen_fun(False, True, 0, 2))
+    h = list(merge_op(and_, f, g))
+    k = list(merge_op(or_, f, g))
+
+    assert h == g
+    assert k == f
+
+def test_merge_op3():
+    f = Stepfun(gen_fun(True, False, 0, 100, 0.5))
+    g = Stepfun(gen_fun(False, True, 0, 100, 0.3))
+
+    h1 = f & g
+    k1 = f | g
+
+    for x in range(-100, 100):
+         assert h1(x) == (f(x) & g(x))
+         assert k1(x) == (f(x) | g(x))
+
+
+def test_relocate():
+    sf = Stepfun(((None, 27),))
     tf = sf.relocate(range(0, 100))
-    self.assertEqual(sf, tf)
+    assert sf == tf
 
 
-def testScan(self):
+def test_scan():
     def g(x):
         return x * x
 
-    f = Stepfunction.scan(g, 0, -1)
-    self.assertEqual(Stepfunction(((None, None),)), f)
-    f = Stepfunction.scan(g, 0, 0)
-    self.assertEqual(Stepfunction(((None, None), (0, 0))), f)
-    f = Stepfunction.scan(g, 0, 1)
-    self.assertEqual(f(0), g(0))
-    self.assertEqual(f(1), g(1))
-    self.assertEqual(f(100), g(1))
-    self.checkStepfunction(f)
+    f = Stepfun.scan(g, 0, -1)
+    assert Stepfun(((None, None),)) == f
+    f = Stepfun.scan(g, 0, 0)
+    assert Stepfun(((None, None), (0, 0))) == f
+    f = Stepfun.scan(g, 0, 1)
+    assert f(0) == g(0)
+    assert f(1) == g(1)
+    assert f(100) == g(1)
+    check_stepfun(f)
 
 
-def testIntegral(self):
-    f = Stepfunction(((None, None),))
-    self.assertEqual(f.integral(0, 1), 0)
-    self.assertEqual(f.integral(-1, 100), 0)
-    self.assertEqual(f.integral(100, 1000), 0)
+def test_integral():
+    f = Stepfun(((None, None),))
+    assert f.integral(0, 1) == 0
+    assert f.integral(-1, 100) == 0
+    assert f.integral(100, 1000) == 0
 
-    f = Stepfunction(((None, 10),))
-    self.assertEqual(f.integral(0, 0), 0)
-    self.assertEqual(f.integral(0, 1), 10)
-    self.assertEqual(f.integral(-1, 100), 1010)
-    self.assertEqual(f.integral(100, 1000), 9000)
+    f = Stepfun(((None, 10),))
+    assert f.integral(0, 0) == 0
+    assert f.integral(0, 1) == 10
+    assert f.integral(-1, 100) == 1010
+    assert f.integral(100, 1000) == 9000
 
-    f = Stepfunction(((None, None), (0, 10), (2, 20)))
-    self.assertEqual(f.integral(-10, 2), 20)
-    self.assertEqual(f.integral(0.5, 2), 15)
-    self.assertEqual(f.integral(0, 3), 40)
-    self.assertEqual(f.integral(0, 3.5), 50)
-    self.assertEqual(f.integral(0, 4), 60)
-    self.assertEqual(f.integral(1, 4), 50)
-    self.assertEqual(f.integral(2, 4), 40)
-    self.assertEqual(f.integral(0, 1), 10)
-    self.assertEqual(f.integral(0, 100), 1980)
-    self.assertEqual(f.integral(10, 100), 1800)
+    f = Stepfun(((None, None), (0, 10), (2, 20)))
+    assert f.integral(-10, 2) == 20
+    assert f.integral(0.5, 2) == 15
+    assert f.integral(0, 3) == 40
+    assert f.integral(0, 3.5) == 50
+    assert f.integral(0, 4) == 60
+    assert f.integral(1, 4) == 50
+    assert f.integral(2, 4) == 40
+    assert f.integral(0, 1) == 10
+    assert f.integral(0, 100) == 1980
+    assert f.integral(10, 100) == 1800
 
 
-def testAll(self):
-    fs = [Stepfunction(f) for f in input]
+def test_all():
+    fs = [Stepfun(f) for f in input]
     for f in fs:
-        self.checkStepfunction(f)
+        check_stepfun(f)
 
 
-def testStepfunctionBasics(self):
-    inpt = [Stepfunction(f) for f in input]
-    outpt = [Stepfunction(f) for f in output]
+def test_stepfun_basics():
+    inpt = [Stepfun(f) for f in input]
+    outpt = [Stepfun(f) for f in output]
 
-    self.assertEqual(outpt[0], inpt[0] + inpt[0])
-    self.assertEqual(outpt[1], inpt[0] + inpt[1])
-    self.assertEqual(outpt[2], inpt[1] + inpt[1])
-    self.assertEqual(outpt[2], inpt[2] + inpt[3])
-    self.assertEqual(outpt[3], inpt[4] + inpt[5])
-    self.assertEqual(outpt[-4], Stepfunction(((None, None),)).merge(add, *inpt[:-2]))
-    self.assertEqual(outpt[-3], Stepfunction(((None, None),)).merge(mul, *inpt[:-2]))
-    self.assertEqual(outpt[-2], Stepfunction(((None, None),)).merge(max, *inpt[:-2]))
-    self.assertEqual(outpt[-1], Stepfunction(((None, None),)).merge(min, *inpt[:-2]))
+    assert outpt[0] == inpt[0] + inpt[0]
+    assert outpt[1] == inpt[0] + inpt[1]
+    assert outpt[2] == inpt[1] + inpt[1]
+    assert outpt[2] == inpt[2] + inpt[3]
+    assert outpt[3] == inpt[4] + inpt[5]
+    assert outpt[-4] == Stepfun(((None, None),)).merge(add, *inpt[:-2])
+    assert outpt[-3] == Stepfun(((None, None),)).merge(mul, *inpt[:-2])
+    assert outpt[-2] == Stepfun(((None, None),)).merge(max, *inpt[:-2])
+    assert outpt[-1] == Stepfun(((None, None),)).merge(min, *inpt[:-2])

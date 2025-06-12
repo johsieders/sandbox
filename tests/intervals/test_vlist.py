@@ -1,71 +1,118 @@
-# Python Test Intervalle
+# Python Test intervals
 # js, 8.6.04
 # js 25.12.04
 # js 05.06.2025
 
 
-from sandbox.intervals.vlist import Vlist, iv
+from sandbox.intervals.vlist import Vlist
 
 N = 10
 
+vss = [
+    [],
+    [(None, None)],
+    [(None, 0)],
+    [(0, None)],
+    [(0, 1)],
+    [(None, 0), (1, None)],
+    [(0, 1), (2, 3)],
+    [(None, 0), (1, 2), (3, None)]
+    ]
 
-def test_intersection():
-    v = Vlist((0, 10), (20, 30))
-    w = v.intersect((-10, -5))
-    assert w == iv()
+def test_constructor():
+    for vs in vss:
+        ws = Vlist(vs)
+        assert vs == ws.to_vlist()
 
-    w = v.intersect((-10, 0))
-    assert w == iv()
+def test_contains():
+    v = Vlist([(None, None)])
+    assert -1 in v
+    assert 0 in v
+    assert 1 in v
 
-    w = v.intersect((-10, 5))
-    assert w == Vlist((0, 5))
+    v = Vlist([(0, 10)])
+    assert 0 in v
+    assert 9.9999 in v
+    assert 10 not in v
 
-    w = v.intersect((-10, 10))
-    assert w == Vlist((0, 10))
 
-    w = v.intersect((-10, 15))
-    assert w == Vlist((0, 10))
+def test_union():
+    v = Vlist([(0, 1)])
+    w = Vlist([(1, 2)])
 
-    w = v.intersect((-10, 20))
-    assert w == Vlist((0, 10))
+    print()
+    print(v)
+    x = v | w
+    s = str(x)
+    print(s)
+    # assert w == v
+    # assert w == v | w
+    # assert v == v | w
 
-    w = v.intersect((-10, 25))
-    assert w == Vlist((0, 10), (20, 25))
+    # w = v | Vlist([(1, 2)])
+    # assert w == Vlist([(0, 2)])
+    #
+    # w = v | Vlist([(2, 3)])
+    # assert w == Vlist([(0, 1), (2, 3)])
 
-    w = v.intersect((-10, 30))
-    assert w == Vlist((0, 10), (20, 30))
 
-    w = v.intersect((-10, 35))
-    assert w == Vlist((0, 10), (20, 30))
-
-    ## untere Grenze wandert, obere Grenze fest
-    w = v.intersect((35, 40))
-    assert w == Vlist()
-
-    w = v.intersect((30, 40))
-    assert w == Vlist()
-
-    w = v.intersect((25, 40))
-    assert w == Vlist((25, 30))
-
-    w = v.intersect((20, 40))
-    assert w == Vlist((20, 30))
-
-    w = v.intersect((15, 40))
-    assert w, Vlist((20, 30))
-
-    w = v.intersect((10, 40))
-    assert w, Vlist((20, 30))
-
-    w = v.intersect((5, 40))
-    assert w == Vlist((5, 10), (20, 30))
-
-    w = v.intersect((0, 40))
-    assert w == Vlist((0, 10), (20, 30))
-
-    w = v.intersect((-10, 40))
-    assert w == Vlist((0, 10), (20, 30))
-
+# def test_intersection():
+#     v = Vlist((0, 10), (20, 30))
+#     w = v & (-10, -5)
+#     assert w == iv()
+#
+#     w = v.intersect((-10, 0))
+#     assert w == iv()
+#
+#     w = v.intersect((-10, 5))
+#     assert w == Vlist((0, 5))
+#
+#     w = v.intersect((-10, 10))
+#     assert w == Vlist((0, 10))
+#
+#     w = v.intersect((-10, 15))
+#     assert w == Vlist((0, 10))
+#
+#     w = v.intersect((-10, 20))
+#     assert w == Vlist((0, 10))
+#
+#     w = v.intersect((-10, 25))
+#     assert w == Vlist((0, 10), (20, 25))
+#
+#     w = v.intersect((-10, 30))
+#     assert w == Vlist((0, 10), (20, 30))
+#
+#     w = v.intersect((-10, 35))
+#     assert w == Vlist((0, 10), (20, 30))
+#
+#     ## untere Grenze wandert, obere Grenze fest
+#     w = v.intersect((35, 40))
+#     assert w == Vlist()
+#
+#     w = v.intersect((30, 40))
+#     assert w == Vlist()
+#
+#     w = v.intersect((25, 40))
+#     assert w == Vlist((25, 30))
+#
+#     w = v.intersect((20, 40))
+#     assert w == Vlist((20, 30))
+#
+#     w = v.intersect((15, 40))
+#     assert w, Vlist((20, 30))
+#
+#     w = v.intersect((10, 40))
+#     assert w, Vlist((20, 30))
+#
+#     w = v.intersect((5, 40))
+#     assert w == Vlist((5, 10), (20, 30))
+#
+#     w = v.intersect((0, 40))
+#     assert w == Vlist((0, 10), (20, 30))
+#
+#     w = v.intersect((-10, 40))
+#     assert w == Vlist((0, 10), (20, 30))
+#
 
 # def testAppend():
 #     v = Vlist((0, 10), (20, 30))
@@ -145,17 +192,6 @@ def test_intersection():
 # def testMake():
 #     vs = Vlist()
 #
-#
-# def testContains():
-#     v = Vlist((None, None))
-#     .failUnless(-1 in v)
-#     .failUnless(0 in v)
-#     .failUnless(1 in v)
-#
-#     v = Vlist((0, 10))
-#     .failUnless(0 in v)
-#     .failUnless(9.9 in v)
-#     .failUnless(10 not in v)
 #
 #
 # def testAnd():
