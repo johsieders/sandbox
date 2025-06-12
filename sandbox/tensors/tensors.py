@@ -1,6 +1,6 @@
-
 import torch
 from torch import nn
+
 
 class OurModule(nn.Module):
     def __init__(self, num_inputs, num_classes, dropout_prob=0.3):

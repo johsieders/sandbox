@@ -45,4 +45,3 @@ def histogram_4(xs):
     :return: histogram0 of xs: a map indicating how often each x occurs in xs
     """
     return dict([(x, xs.count(x)) for x in set(xs)])
-

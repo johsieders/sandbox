@@ -57,5 +57,3 @@ def merge_r(xs, ys: list) -> list:
         return xs[:1] + merge_r(xs[1:], ys)
     else:
         return ys[:1] + merge_r(xs, ys[1:])
-
-

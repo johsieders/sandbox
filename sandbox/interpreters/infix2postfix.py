@@ -13,7 +13,7 @@
 operators = {'+': (2, 1), '-': (2, 1), '*': (2, 2), '/': (2, 2), '~': (1, 3)}
 
 
-def infix2postfix(formula: String, operators: dict[str, tuple[int, int]])-> String:
+def infix2postfix(formula: String, operators: dict[str, tuple[int, int]]) -> String:
     """
     transforms an infix into a postfix formula
     """

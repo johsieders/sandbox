@@ -375,4 +375,3 @@ class Forth(object):
         a = self.stack.pop()
         b = self.stack.pop()
         self.stack.append(b < a)
-
