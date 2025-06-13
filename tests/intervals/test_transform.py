@@ -4,7 +4,6 @@
 
 from sandbox.intervals.vlist import vlist2timestamps, timestamps2vlist
 
-
 tss = [
     [(None, False), (0, True), (10, False), (20, True), (30, False)],
     [(None, False), (5, True), (15, False), (25, True), (35, False)],
@@ -12,7 +11,7 @@ tss = [
     [(None, True)],
     [(None, True), (30, False)],
     [(None, False), (30, True)]
-    ]
+]
 
 vss = [
     [],
@@ -23,13 +22,15 @@ vss = [
     [(None, 0), (1, None)],
     [(0, 1), (2, 3)],
     [(None, 0), (1, 2), (3, None)]
-    ]
+]
+
 
 def test_vs2ts():
     for vs in vss:
         ts = vlist2timestamps(vs)
         ws = timestamps2vlist(ts)
         assert ws == vs
+
 
 def test_ts2vs():
     for ts in tss:

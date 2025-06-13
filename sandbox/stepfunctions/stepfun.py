@@ -4,13 +4,12 @@
 # revised for Mac 06.06.2025
 
 from __future__ import annotations
+
 from bisect import bisect_right
 from collections.abc import Iterable, Iterator, Callable
 from functools import reduce
-from operator import add, mul, and_, or_, xor, sub
+from operator import add, mul, and_, or_
 from typing import Any
-
-from sympy.categories import Object
 
 
 def check_ascending(tv: Iterable[tuple]) -> Iterator[tuple]:
@@ -179,7 +178,7 @@ class Stepfun(object):
 
         return Stepfun(aux())
 
-    def __call__(self, x: int|float|None) -> Any:
+    def __call__(self, x: int | float | None) -> Any:
         """
         :param x: the argument (can be None)
         :return: value of self at x
@@ -223,6 +222,12 @@ class Stepfun(object):
             return None if x is None else -x
 
         return Stepfun(((t, weak_minus(v)) for t, v in self.timestamps), False)
+
+    def __not__(self) -> Stepfun:
+        def weak_not(x):
+            return None if x is None else  not x
+
+        return Stepfun(((t, weak_not(v)) for t, v in self.timestamps), False)
 
     def is_positive(self) -> bool:
         return all(v is not None and v > 0 for t, v in self.timestamps)

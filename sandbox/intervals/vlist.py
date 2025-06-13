@@ -10,9 +10,8 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from operator import and_, or_, xor
 
-from sandbox.stepfunctions.stepfun import Stepfun, merge_op
+from sandbox.stepfunctions.stepfun import Stepfun
 
 
 def vlist2timestamps(vs: Iterable) -> list[tuple]:
@@ -22,16 +21,19 @@ def vlist2timestamps(vs: Iterable) -> list[tuple]:
     """
 
     ts = [(None, False)]
+    rb = None
 
     for lb, rb in vs:
         if lb is not None:
             ts.append((lb, True))
         else:
             ts[0] = (lb, True)
-        if rb is not None:
-            ts.append((rb, False))
+
+    if rb is not None:
+        ts.append((rb, False))
 
     return ts
+
 
 def timestamps2vlist(ts: Iterable) -> list[tuple]:
     """
@@ -79,7 +81,7 @@ class Vlist(object):
     [(None, None)] is a vlist with one interval which is the real line.
     """
 
-    def __init__(self, vs: Iterable[tuple]|Stepfun):
+    def __init__(self, vs: Iterable[tuple] | Stepfun):
         """
         vs: iterable of intervals or a Stepfun
         """
@@ -87,7 +89,7 @@ class Vlist(object):
             self.stepfun = vs
         elif isinstance(vs, Iterable):
             ts = vlist2timestamps(vs)
-            self.stepfun = Stepfun(ts, check=False)
+            self.stepfun = Stepfun(ts, check=True)
 
     def __and__(self, vs: Vlist) -> Vlist:
         return Vlist(self.stepfun & vs.stepfun)
@@ -96,7 +98,7 @@ class Vlist(object):
         return Vlist(self.stepfun | vs.stepfun)
 
     def __xor__(self, vs: Vlist) -> Vlist:
-        return Vlist(self.stepfun | vs.stepfun)
+        return (self - vs) | (vs - self)
 
     def __eq__(self, vs: Vlist) -> bool:
         return self.stepfun == vs.stepfun
@@ -105,11 +107,7 @@ class Vlist(object):
         return self.stepfun(x)
 
     def __neg__(self) -> Vlist:
-        ts = [(t, not v) for t, v in self.stepfun.timestamps]
-        return Vlist(ts)
-
-    def __pos__(self) -> Vlist:
-        return Vlist(self.stepfun)
+        return Vlist(self.stepfun.__not__())
 
     def __sub__(self, vs):
         """
@@ -121,6 +119,10 @@ class Vlist(object):
     @classmethod
     def empty(cls) -> Vlist:
         return Vlist(())
+
+    @classmethod
+    def all(cls) -> Vlist:
+        return Vlist(((None, None),))
 
     def to_vlist(self):
         return timestamps2vlist(self.stepfun.timestamps)

@@ -90,6 +90,7 @@ def test_merge():
 
 from timeit import *
 
+
 def test_time_iterators():
     print()
     t = Timer('take(171, hamming(2,3,5,7,11))', 'from sandbox.iteratorz.iteratorz import hamming, take')

@@ -41,16 +41,17 @@ def test_all():
     for s, t in sorted_time:
         print(f'{s.__name__} = {t:.5f}')
 
+
 def test_non_recursive():
     srt = {
-   #        bubble1: False,
-   #        bubble2: True,
-           bubble3: True,
-           bubble4: True,
-   #        msort: False,
-   #        qsort: False,
-           hsort1: False,
-           hsort2: False}
+        #        bubble1: False,
+        #        bubble2: True,
+        bubble3: True,
+        bubble4: True,
+        #        msort: False,
+        #        qsort: False,
+        hsort1: False,
+        hsort2: False}
     time = {}
 
     n = 5000

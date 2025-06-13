@@ -2,9 +2,9 @@
 # edited 21.1.2020
 # revised 05.06.2025
 
-from itertools import cycle
-from operator import add, mul, and_, or_, xor
 from collections.abc import Iterator
+from itertools import cycle
+from operator import add, mul, and_, or_
 from typing import Any
 
 from sandbox.iteratorz.iteratorz import take
@@ -41,7 +41,7 @@ def gen_fun(a, b: Any, start=0, stop=10, step=1) -> Iterator[Any]:
     :param n: length of resulting stepfunction
     :return: a stepfunction wit n steps, alternating a and b
     """
-    ts = [None] + [k*step for k in range(start, stop)]
+    ts = [None] + [k * step for k in range(start, stop)]
     return zip(ts, cycle((a, b)))
 
 
@@ -52,8 +52,10 @@ def gen_funs(k, n: int) -> list[Stepfun]:
             fs.append(Stepfun(gen_fun(i, j, n)))
     return fs
 
+
 k = 10
 n = 500
+
 
 def test_equal():
     for i, f in enumerate(input):
@@ -61,10 +63,12 @@ def test_equal():
             if i == j:
                 assert f == g
 
+
 def test_weak_op():
-    assert weak_op(or_,()) is None
-    assert weak_op(or_,(True,))
-    assert weak_op(or_,(True, None,))
+    assert weak_op(or_, ()) is None
+    assert weak_op(or_, (True,))
+    assert weak_op(or_, (True, None,))
+
 
 def test_ascending():
     testcases = [(),
@@ -125,7 +129,7 @@ def check_stepfun(sf: Stepfun):
     assert (abs(tf) - abs(tf)).is_zero()
 
     for x in range(-10, 10):
-        assert(tf(x) + 1, uf(x))
+        assert (tf(x) + 1, uf(x))
 
 
 def test_aux():
@@ -134,13 +138,13 @@ def test_aux():
 
 
 def test_hard():
-    sf = Stepfun(gen_fun(1, 0, 0,1000000))
-    tf = Stepfun(gen_fun(0, 1, 0,1000000))
+    sf = Stepfun(gen_fun(1, 0, 0, 1000000))
+    tf = Stepfun(gen_fun(0, 1, 0, 1000000))
     zf = sf + tf
     assert Stepfun(((None, 1),)) == zf
 
     for n in range(1, 100):
-        check_stepfun(Stepfun(gen_fun(None,0, n, 0)))
+        check_stepfun(Stepfun(gen_fun(None, 0, n, 0)))
         check_stepfun(Stepfun(gen_fun(0, None, 0, n)))
 
 
@@ -171,6 +175,7 @@ def test_merge_op2():
     assert h == g
     assert k == f
 
+
 def test_merge_op3():
     f = Stepfun(gen_fun(True, False, 0, 100, 0.5))
     g = Stepfun(gen_fun(False, True, 0, 100, 0.3))
@@ -179,8 +184,8 @@ def test_merge_op3():
     k1 = f | g
 
     for x in range(-100, 100):
-         assert h1(x) == (f(x) & g(x))
-         assert k1(x) == (f(x) | g(x))
+        assert h1(x) == (f(x) & g(x))
+        assert k1(x) == (f(x) | g(x))
 
 
 def test_relocate():
@@ -248,3 +253,10 @@ def test_stepfun_basics():
     assert outpt[-3] == Stepfun(((None, None),)).merge(mul, *inpt[:-2])
     assert outpt[-2] == Stepfun(((None, None),)).merge(max, *inpt[:-2])
     assert outpt[-1] == Stepfun(((None, None),)).merge(min, *inpt[:-2])
+
+def test_not():
+    sf = Stepfun(((None, True),))
+    assert not sf == Stepfun(((None, False),))
+
+    sf = Stepfun(((None, True), (0, False)))
+    assert not sf == Stepfun(((None, False),(0, True)))
