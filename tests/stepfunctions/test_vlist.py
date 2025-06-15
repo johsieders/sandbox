@@ -1,10 +1,10 @@
-# Python Test intervals
+# Python Test stepfunctions
 # js, 8.6.04
 # js 25.12.04
-# js 05.06.2025
+# js 15.06.2025
 
 
-from sandbox.intervals.vlist import Vlist
+from sandbox.stepfunctions.vlist import Vlist, normalize
 
 N = 10
 
@@ -18,6 +18,18 @@ vss = [
     [(0, 1), (2, 3)],
     [(None, 0), (1, 2), (3, None)]
 ]
+
+
+def test_normalize():
+    assert normalize(()) == ((None, False),)
+    assert normalize(((None, None),)) == ((None, True),)
+    assert normalize(((None, 0),)) == ((None, True), (0, False))
+    assert normalize(((None, 0), (1, None))) == ((None, True), (0, False), (1, True))
+    assert normalize(((None, 0), (-1, None), (2, 3))) == ((None, True),)
+    assert normalize(((None, 0), (-1, 2.5), (2, 3))) == ((None, True), (3, False))
+
+    r = normalize(())
+    print(r)
 
 
 def test_constructor():
@@ -41,7 +53,6 @@ def test_contains():
 def test_union():
     v = Vlist([(0, 1)])
     w = Vlist([(-1, 2)])
-
     assert w == v | w
 
     w = v | Vlist([(1, 2)])
@@ -86,7 +97,6 @@ def test_intersection():
 
     w = v & Vlist(((25, 40),))
     assert w == Vlist(((25, 30),))
-
 
     w = v & Vlist(((20, 40),))
     assert w == Vlist(((20, 30),))
@@ -207,6 +217,7 @@ def test_empty():
         assert v == v | e
         assert e == v & e
 
+
 def test_difference():
     e = Vlist.empty()
     for vs in vss:
@@ -218,23 +229,22 @@ def test_difference():
             assert w - v - v == w - v
 
 
-def test_difference1():
+def _test_difference1():
     v = Vlist(((0, 10), (20, 30)))
     w = Vlist(((5, 20),))
     print()
     print(v - w)
     print(w - v)
-#
-#
-def testHard():
 
-    ts = [(a, a + 1) for a in range(0, 10000, 2)]
+
+def test_hard():
+    ts = [(a, a + 1) for a in range(0, 1000, 2)]
     vs = Vlist(ts)
 
     assert Vlist.all() == vs | -vs
     assert Vlist.empty() == vs & -vs
 
-    ts = [(a, a + 1) for a in range(0, 10000, 1)]
+    ts = [(a, a + 1) for a in range(0, 1000, 1)]
     vs = Vlist(ts)
 
     assert Vlist.all() == vs | -vs

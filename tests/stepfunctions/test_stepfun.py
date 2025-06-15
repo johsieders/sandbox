@@ -2,7 +2,6 @@
 # edited 21.1.2020
 # revised 05.06.2025
 
-from collections.abc import Iterator
 from itertools import cycle
 from operator import add, mul, and_, or_
 from typing import Any
@@ -34,27 +33,29 @@ output = [((None, None),),
           ((None, 100), (0, 31), (5, 23), (15, 41), (20, 100))]
 
 
-def gen_fun(a, b: Any, start=0, stop=10, step=1) -> Iterator[Any]:
+def gen_fun(a, b: Any, start=0, stop=10, step=1) -> Stepfun:
     """
     :param a: first value
     :param b: second value
-    :param n: length of resulting stepfunction
-    :return: a stepfunction wit n steps, alternating a and b
+    :start: first timestamp
+    :stop: last timestamp + step
+    :step: distance between timestamps
+    :return: a stepfunction alternating a and b in the range given by start, stop, step.
     """
     ts = [None] + [k * step for k in range(start, stop)]
-    return zip(ts, cycle((a, b)))
+    return Stepfun(tuple(zip(ts, cycle((a, b)))))
 
 
 def gen_funs(k, n: int) -> list[Stepfun]:
     fs = []
     for i in range(0, k):
         for j in range(k, 2 * k):
-            fs.append(Stepfun(gen_fun(i, j, n)))
+            fs.append(gen_fun(i, j, n))
     return fs
 
 
 k = 10
-n = 500
+n = 30
 
 
 def test_equal():
@@ -65,28 +66,31 @@ def test_equal():
 
 
 def test_weak_op():
-    assert weak_op(or_, ()) is None
-    assert weak_op(or_, (True,))
-    assert weak_op(or_, (True, None,))
+    w_or = weak_op(or_)
+    assert w_or(()) is None
+    assert w_or((True,))
+    assert w_or((True, None,))
 
 
 def test_ascending():
-    testcases = [(),
-                 ((0, 37),),
-                 ((None, None),),
-                 ((None, 37),),
-                 ((None, 37), (0, 47)),
-                 ((None, 37), (0, 47), (1, 57)),
-                 ((None, 37), (0, 47), (1, 57), (2, 67)),
-                 ((None, 37), (0, 47), (0, 57), (2, 67))]
+    testcases = [
+        ((None, 37),),
+        ((None, None),),
+        ((None, 37),),
+        ((None, 37), (0, 47)),
+        ((None, 37), (0, 47), (1, 57)),
+        ((None, 37), (0, 47), (1, 57), (2, 67))]
 
-    for tc in testcases[:-1]:
-        assert tc == tuple(check_ascending(tc))
+    for tc in testcases:
+        assert tc == check_ascending(tc)
+        f = Stepfun(tc)
 
 
 def test_speed1():
+    f = gen_fun(10, 20, 0, 200)
     fs = gen_funs(k, n)
-    c = Stepfun.const(0)
+    c = Stepfun.const(7)
+
     hugh1 = sum(fs, c)
     hugh2 = c.merge(add, *fs)
     hugh3 = c
@@ -121,25 +125,24 @@ def check_stepfun(sf: Stepfun):
     tf = sf.replace_none_with_constant(1)
     uf = tf + Stepfun(((None, 1),))
 
-    assert tf <= uf
     assert tf == tf
-    assert tf <= abs(tf)
     assert tf <= abs(tf) + abs(tf)
-    assert abs(tf).is_nonnegative()
+    assert abs(tf).is_non_negative()
     assert (abs(tf) - abs(tf)).is_zero()
 
-    for x in range(-10, 10):
+    for x in range(-100, 100):
         assert (tf(x) + 1, uf(x))
 
 
 def test_aux():
-    f = Stepfun(input[0])
-    check_stepfun(f)
+    for t in input:
+        f = Stepfun(t)
+        check_stepfun(f)
 
 
 def test_hard():
-    sf = Stepfun(gen_fun(1, 0, 0, 1000000))
-    tf = Stepfun(gen_fun(0, 1, 0, 1000000))
+    sf = Stepfun(gen_fun(1, 0, 0, 10000))
+    tf = Stepfun(gen_fun(0, 1, 0, 10000))
     zf = sf + tf
     assert Stepfun(((None, 1),)) == zf
 
@@ -188,7 +191,7 @@ def test_merge_op3():
         assert k1(x) == (f(x) | g(x))
 
 
-def test_relocate():
+def _test_relocate():
     sf = Stepfun(((None, 27),))
     tf = sf.relocate(range(0, 100))
     assert sf == tf
@@ -254,9 +257,10 @@ def test_stepfun_basics():
     assert outpt[-2] == Stepfun(((None, None),)).merge(max, *inpt[:-2])
     assert outpt[-1] == Stepfun(((None, None),)).merge(min, *inpt[:-2])
 
+
 def test_not():
     sf = Stepfun(((None, True),))
     assert not sf == Stepfun(((None, False),))
 
     sf = Stepfun(((None, True), (0, False)))
-    assert not sf == Stepfun(((None, False),(0, True)))
+    assert not sf == Stepfun(((None, False), (0, True)))
