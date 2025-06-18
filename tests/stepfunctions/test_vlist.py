@@ -28,9 +28,6 @@ def test_normalize():
     assert normalize(((None, 0), (-1, None), (2, 3))) == ((None, True),)
     assert normalize(((None, 0), (-1, 2.5), (2, 3))) == ((None, True), (3, False))
 
-    r = normalize(())
-    print(r)
-
 
 def test_constructor():
     for vs in vss:
@@ -200,9 +197,6 @@ def test_intersection1():
 def test_complement():
     for vs in vss:
         v = Vlist(vs)
-        print()
-        print(v)
-        print(-v)
         assert v == --v
 
 
@@ -229,22 +223,21 @@ def test_difference():
             assert w - v - v == w - v
 
 
-def _test_difference1():
+def test_difference1():
     v = Vlist(((0, 10), (20, 30)))
     w = Vlist(((5, 20),))
-    print()
-    print(v - w)
-    print(w - v)
+    assert v - w == Vlist(((0, 5), (20, 30)))
+    assert w - v == Vlist(((10, 20),))
 
 
 def test_hard():
-    ts = [(a, a + 1) for a in range(0, 1000, 2)]
+    ts = [(a, a + 1) for a in range(0, 5000, 2)]
     vs = Vlist(ts)
 
     assert Vlist.all() == vs | -vs
     assert Vlist.empty() == vs & -vs
 
-    ts = [(a, a + 1) for a in range(0, 1000, 1)]
+    ts = [(a, a + 1) for a in range(0, 5000, 1)]
     vs = Vlist(ts)
 
     assert Vlist.all() == vs | -vs

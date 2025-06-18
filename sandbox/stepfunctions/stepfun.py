@@ -10,6 +10,7 @@ from collections.abc import Sequence, Callable
 from functools import reduce
 from operator import add, mul, and_, or_
 from typing import Any
+import heapq
 
 
 def check_ascending(tv_pairs: Sequence) -> tuple:
@@ -45,46 +46,44 @@ def weak_op(op) -> Callable:
 def merge_op(op, *tv_pairs: Sequence) -> tuple:
     """
     :param op: a binary operator such as add, min, max
-    :param tv_pairs: a sequence of lists of timestamps
-    :return: merge by op of all f in fs as Sequence of timestamps
-    It returns None if all lists are empty
-    Example:
-    merge_op(add, xs, ys, zs) returns an Iterator of the elementwise sum of xs, ys, zs where
-    the lists can be of any length.
+    :param tv_pairs: a sequence of lists of tv_pairs
+    :return: merge by op of all f in fs as Sequence of tv_pairs
+    Each tv_list has a first entry with timestamp = None.
+    So, ((None,None),) represents a function which is nowhere defined.
+    Example: merge_op(add, xs, ys, zs) returns an Iterator of
+    the elementwise sum of xs, ys, zs where the lists can be of any length > 0.
     """
 
+    val = {}  # dictionary of current value at tvi, key = #tv_iterator, value = v
     w_op = weak_op(op)
-    tv_iterators = [iter(t) for t in tv_pairs]
+    tv_iterators = []
 
-    head = {}.fromkeys(tv_iterators)  # dictionary of last read entries, key = tv_iterator, value = (t, v)
-    val = {}.fromkeys(tv_iterators)  # dictionary of current value at tvi, key = tv_iterator, value = v
-    last_val = ""  # any value not equal to any tvi
+    for k, tvi in enumerate(tv_pairs):
+        if len(tvi) == 0:
+            raise ValueError
+        t, v = tvi[0]
+        if t is not None:
+            raise ValueError
+        val[k] = v
+        tv_iterators.append([(k, p) for p in tvi[1:]])
+
     result = []
+    last_t, last_v = None, ""
 
-    while True:
-        for tvi in tv_iterators:  # fill heads by reading next (time, value)
-            if head[tvi] is None:
-                try:
-                    head[tvi] = next(tvi)
-                except StopIteration:
-                    pass
+    for k, (t, v) in heapq.merge(*tv_iterators, key=lambda p: p[1][0]):
+        if t != last_t:
+            w = w_op(val.values())
+            if last_v != w:
+                result.append((last_t, w))
+                last_v = w
+            last_t = t
+        val[k] = v
 
-        heads = [h[0] for h in head.values() if h]
-        if heads:  # there are heads left
-            aux = [x for x in heads if x is not None]
-            next_t = min(aux) if aux else None
-        else:  # return if all t are done
-            return tuple(result)
-
-        for tvi in tv_iterators:  # update values
-            if head[tvi] and head[tvi][0] == next_t:
-                val[tvi] = head[tvi][1]
-                head[tvi] = None
-
-        v = w_op(val.values())
-        if v != last_val:  # check if value has changed
-            last_val = v
-            result.append((next_t, v))
+    w = w_op(val.values())
+    if w != last_v:
+        result.append((last_t, w))
+    
+    return tuple(result)
 
 
 class Stepfun(object):
