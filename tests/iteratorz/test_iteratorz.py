@@ -8,7 +8,7 @@ from itertools import repeat as itrepeat
 from operator import add
 
 from sandbox.iteratorz.iteratorz import hamming, inverse, merge, multiply, square, take, sin, cos, exp
-from sandbox.stepfunctions.stepfun import merge_op
+from sandbox.stepfunctions.stepfun_archive import merge_op
 
 epsilon = 1e-8
 

@@ -12,7 +12,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from operator import or_
 
-from sandbox.stepfunctions.stepfun import Stepfun, merge_op
+from sandbox.stepfunctions.stepfun_archive import Stepfun, merge_op
 
 
 def vlist2timestamps(vs: Sequence) -> list[tuple]:

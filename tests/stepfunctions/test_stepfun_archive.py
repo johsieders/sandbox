@@ -7,7 +7,8 @@ from operator import add, mul, and_, or_
 from typing import Any
 
 from sandbox.iteratorz.iteratorz import take
-from sandbox.stepfunctions.stepfun import Stepfun, check_ascending, merge_op, weak_op
+from sandbox.stepfunctions.stepfun_archive import Stepfun, check_ascending, merge_op, weak_op
+
 
 def test_tutorial():
     # A Stepfun is given by a non-empty sequence of time-value pairs, the first timestamp being always None
@@ -18,9 +19,10 @@ def test_tutorial():
     # some interesting stepfunctions:
     funs = [
         Stepfun(((None, None),)),  # undefined on (-oo, +oo)
-        Stepfun(((None, 0),)),  #  constant = 0 on (-oo, +oo)
+        Stepfun(((None, 0),)),  # constant = 0 on (-oo, +oo)
         Stepfun(((None, None), (0, 10))),  # undefined on (-oo,0) and constant = 10 on [0, +oo)
-        Stepfun(((None, None), (0, 10), (2, None))),  # undefined on (-oo,0) constant = 10 on [0, 2), undefined on [2, +oo)
+        Stepfun(((None, None), (0, 10), (2, None))),
+        # undefined on (-oo,0) constant = 10 on [0, 2), undefined on [2, +oo)
         Stepfun(((None, None), (0, 10), (1, 10), (2, 20)))  # undefined om (-oo, 0), 10 on [0, 1), 20 on [2, +oo)
     ]
 
@@ -38,8 +40,9 @@ def test_tutorial():
     assert str(f - g) == str(((None, None), (1, -10), (2, 10), (3, -10), (4, 10), (5, -30)))
     assert str(f * g) == str(((None, None), (1, 10), (2, 200), (3, 600), (4, 1200), (5, 30)))
 
+
 def test_merge_op4():
-    t_list = [(None, None), (0,100), (2, 200), (4, 140)]
+    t_list = [(None, None), (0, 100), (2, 200), (4, 140)]
     s_list = [(None, 100), (0, 200), (2, 100), (3, 230), (5, 500), (6, 600)]
     r_list = merge_op(add, t_list, s_list)
     print()
