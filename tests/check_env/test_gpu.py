@@ -16,4 +16,4 @@ def test_cuda():
         x = torch.ones(1, device=device)
         print(x)
     else:
-        print("\Cuda device not found.")
+        print("\nCuda device not found.")
