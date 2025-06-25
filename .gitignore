@@ -1,4 +1,5 @@
 venv
+archive
 .venv
 .idea
 .json
