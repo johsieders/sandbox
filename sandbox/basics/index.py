@@ -61,7 +61,7 @@ def index_2a(book, keywords):
 
 def make_index(rows, v):
     """
-    :param rows: list of rows; each row being a tuple of fields or whatever
+    :param rows: list of rows; each row being a tuple of test_fields or whatever
     :param v: row -> value (value to be indexed)
     :return: a dictionary; key = field, value = IDs of rows with v(row) = value
     """
@@ -78,7 +78,7 @@ def make_index(rows, v):
 
 def make_indices(rows, vs):
     """
-    :param rows: list of rows; each row being a tuple of fields or whatever
+    :param rows: list of rows; each row being a tuple of test_fields or whatever
     :param vs: functions v: row -> value (value to be indexed)
     :return: a list of dictionaries; key = field, value = IDs of rows with v(row) = value
     """

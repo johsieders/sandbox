@@ -9,5 +9,5 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+/archive/test_fields/
 /archive/fields/
-/sandbox/fields/

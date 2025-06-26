@@ -1,43 +1,66 @@
 # p4m/tests/test_locally.py
 
 import pytest
-import torch
+from sympy import Poly
 
-from sandbox.p4m.core.fraction import Fraction
-from sandbox.p4m.core.utils import close_to
-from sandbox.p4m.core.wrappers import Int, Float, Complex, Tensor
+from sandbox.p4m.fraction import Fraction
+from sandbox.p4m.complex import Complex
+from sandbox.p4m.matrix import Matrix
+from sandbox.p4m.polynomial import Polynomial
+from sandbox.p4m.utils import close_to
+from sandbox.p4m.wrappers import IntNative, FloatNative, ComplexNative
 
 # ----- Type/sample groupings -----
 
 fraction_samples = [
-    Fraction(Int(1), Int(2)),
-    Fraction(Int(2), Int(3)),
-    Fraction(Int(5), Int(4)),
-    Fraction(Int(-3), Int(7)),
-    Fraction(Int(9)),  # auto-denominator = one (i.e. 9/1)
-    Fraction(Int(0), Int(5)),  # zero
+    Fraction(IntNative(1), IntNative(2)),
+    Fraction(IntNative(2), IntNative(3)),
+    Fraction(IntNative(5), IntNative(4)),
+    Fraction(IntNative(-3), IntNative(7)),
+    Fraction(IntNative(9)),  # auto-denominator = one (i.e. 9/1)
+    Fraction(IntNative(0), IntNative(5)),  # zero
 ]
 
+complex_float_samples = [
+    Complex(FloatNative(1.0), FloatNative(2.0)),    # 1.0 + 2.0i
+    Complex(FloatNative(0.0), FloatNative(3.5)),    # 0.0 + 3.5i
+    Complex(FloatNative(-2.1), FloatNative(1.7)),   # -2.1 + 1.7i
+    Complex(FloatNative(4.2), FloatNative(0.0)),    # 4.2 + 0.0i
+    Complex(FloatNative(0.0), FloatNative(0.0)),    # 0.0 + 0.0i
+]
+
+
 FIELD_TYPES_AND_SAMPLES = [
-    (Float, [Float(2.0), Float(3.0), Float(5.0)]),
-    (Complex, [Complex(complex(2.0, 0)), Complex(complex(3.0, 1)), Complex(complex(5.0, 2))]),
+    (FloatNative, [FloatNative(2.0), FloatNative(3.0), FloatNative(5.0)]),
+    (ComplexNative, [ComplexNative(complex(2.0, 0)), ComplexNative(complex(3.0, 1)), ComplexNative(complex(5.0, 2))]),
     (Fraction, fraction_samples),
     # Add future Field types here (e.g. Fraction, Fp, etc.)
 ]
 
+
+poly_samples = [
+    Polynomial([IntNative(1), IntNative(2), IntNative(3)]),    # 1 + 2x + 3x^2
+    Polynomial([IntNative(0), IntNative(1)]),            # x
+    Polynomial([IntNative(-2), IntNative(0), IntNative(1)]),   # -2 + x^2
+    Polynomial([IntNative(5)]),                    # constant polynomial
+]
+
+
 EUCLIDIAN_RING_TYPES_AND_SAMPLES = [
-    (Int, [Int(2), Int(3), Int(5)]),
+    (IntNative, [IntNative(2), IntNative(3), IntNative(5)]),
+    (Poly, poly_samples),
     # Add future EuclideanRing types here
 ] + FIELD_TYPES_AND_SAMPLES
 
-tensor_samples = [
-    Tensor(torch.tensor([[1.0, 2.0], [3.0, 4.0]])),
-    Tensor(torch.tensor([[4.0, 5.0], [6.0, 7.0]])),
-    Tensor(torch.tensor([[0.0, 0.0], [0.0, 0.0]])),
+matrix_samples = [
+    Matrix([[IntNative(1), IntNative(2)], [IntNative(3), IntNative(4)]]),
+    Matrix([[IntNative(0), IntNative(1)], [IntNative(1), IntNative(0)]]),
+    Matrix([[IntNative(2), IntNative(0)], [IntNative(0), IntNative(2)]]),
+    Matrix([[IntNative(-1), IntNative(2)], [IntNative(0), IntNative(-2)]]),
 ]
 
 RING_TYPES_AND_SAMPLES = [
-    (Tensor, tensor_samples),
+    (Matrix, matrix_samples),
     # ... your other rings ...
 ] + EUCLIDIAN_RING_TYPES_AND_SAMPLES
 
