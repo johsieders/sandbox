@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 from typing import TypeVar, Generic, Sequence
 
-from sandbox.p4m.algebraic import EuclideanRing
+from sandbox.p4m.protocols.p_euclidean_ring import EuclideanRing
 
 T = TypeVar("T", bound=EuclideanRing)
+
 
 class Polynomial(Generic[T]):
     __slots__ = ("_coeffs",)
@@ -70,14 +72,6 @@ class Polynomial(Generic[T]):
 
     def norm(self) -> float:
         return max(abs(a.norm()) for a in self._coeffs)
-
-    @classmethod
-    def zero(cls, value_type: type[T]) -> Polynomial[T]:
-        return cls([value_type.zero()])
-
-    @classmethod
-    def one(cls, value_type: type[T]) -> Polynomial[T]:
-        return cls([value_type.one()])
 
     def zero(self) -> Polynomial[T]:
         return Polynomial([self._coeffs[0].zero()])

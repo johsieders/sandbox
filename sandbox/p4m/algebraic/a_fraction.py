@@ -1,34 +1,44 @@
 from __future__ import annotations
-from sandbox.p4m.algebraic import EuclideanRing
+
 from typing import TypeVar, Generic
 
+from sandbox.p4m.protocols.p_euclidean_ring import EuclideanRing
+
 T = TypeVar("T", bound=EuclideanRing)
+
 
 def gcd(a: T, b: T) -> T:
     while b != b.zero():
         a, b = b, a % b
     return a
 
+
 class Fraction(Generic[T]):
     __slots__ = ("_num", "_den")
 
-    def __init__(self, numerator: T, denominator: T | None = None):
-        if denominator is None:
-            denominator = numerator.one()
-        if denominator == denominator.zero():
-            raise ZeroDivisionError("Fraction with denominator zero")
-        g = gcd(numerator, denominator)
-        num = numerator // g
-        den = denominator // g
-        # Normalize sign if type supports ordering
-        try:
-            if den < den.zero():
-                num = -num
-                den = -den
-        except (TypeError, AttributeError):
-            pass  # Not all types are ordered (e.g. polynomials over finite fields)
-        self._num = num
-        self._den = den
+    def __init__(self, numerator: T | Fraction[T], denominator: T | None = None):
+        if isinstance(numerator, Fraction):
+            # Copy constructor: ignore denominator argument
+            self._num = numerator._num
+            self._den = numerator._den
+        else:
+            if denominator is None:
+                denominator = numerator.one()
+            if denominator == denominator.zero():
+                raise ZeroDivisionError("Fraction with denominator zero")
+
+            g = gcd(numerator, denominator)
+            num = numerator // g
+            den = denominator // g
+            # Optional: sign normalization if possible
+            try:
+                if den < den.zero():
+                    num = -num
+                    den = -den
+            except (TypeError, AttributeError):
+                pass
+            self._num = num
+            self._den = den
 
     def __add__(self, other: Fraction) -> Fraction:
         return Fraction(
@@ -53,9 +63,9 @@ class Fraction(Generic[T]):
 
     def __eq__(self, other: object) -> bool:
         return (
-            isinstance(other, Fraction)
-            and self._num == other._num
-            and self._den == other._den
+                isinstance(other, Fraction)
+                and self._num == other._num
+                and self._den == other._den
         )
 
     def __floordiv__(self, other: Fraction) -> Fraction:

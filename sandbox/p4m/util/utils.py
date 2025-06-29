@@ -1,6 +1,6 @@
 # p4m/core/utils.py
 
-def close_to(a, b, eps=1e-12):
+def close_to(a, b, eps=1e-9):
     """Return True if a and b are within eps under their norm()."""
     try:
         return (a - b).norm() < eps

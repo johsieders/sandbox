@@ -1,22 +1,30 @@
 from __future__ import annotations
+
 from typing import TypeVar, Generic, Sequence
-from sandbox.p4m.algebraic import Ring  # Your protocol
+
+from sandbox.p4m.protocols.p_ring import Ring
 
 T = TypeVar("T", bound=Ring)
+
 
 class Matrix(Generic[T]):
     __slots__ = ("_data", "_rows", "_cols")
 
-    def __init__(self, rows: Sequence[Sequence[T]]):
-        # Defensive copy and shape checking
-        if not rows or not rows[0]:
-            raise ValueError("Matrix must have at least one row and one column")
-        row_lengths = {len(row) for row in rows}
-        if len(row_lengths) != 1:
-            raise ValueError("All rows must have the same length")
-        self._rows = len(rows)
-        self._cols = len(rows[0])
-        self._data = tuple(tuple(row) for row in rows)
+    def __init__(self, rows: Sequence[Sequence[T]] | Matrix[T]):
+        if isinstance(rows, Matrix):
+            # Copy constructor
+            self._data = rows._data
+            self._rows = rows._rows
+            self._cols = rows._cols
+        else:
+            if not rows or not rows[0]:
+                raise ValueError("Matrix must have at least one row and one column")
+            row_lengths = {len(row) for row in rows}
+            if len(row_lengths) != 1:
+                raise ValueError("All rows must have the same length")
+            self._rows = len(rows)
+            self._cols = len(rows[0])
+            self._data = tuple(tuple(row) for row in rows)
 
     def __add__(self, other: Matrix[T]) -> Matrix[T]:
         self._check_shape(other)
@@ -48,14 +56,14 @@ class Matrix(Generic[T]):
         return Matrix(result)
 
     def __neg__(self) -> Matrix[T]:
-        return Matrix([[ -a for a in row ] for row in self._data])
+        return Matrix([[-a for a in row] for row in self._data])
 
     def __eq__(self, other: object) -> bool:
         return (
-            isinstance(other, Matrix)
-            and self._rows == other._rows
-            and self._cols == other._cols
-            and self._data == other._data
+                isinstance(other, Matrix)
+                and self._rows == other._rows
+                and self._cols == other._cols
+                and self._data == other._data
         )
 
     def zero(self) -> Matrix[T]:
@@ -86,7 +94,8 @@ class Matrix(Generic[T]):
         return self._data
 
     def __str__(self) -> str:
-        return "\n".join("[" + ", ".join(str(a) for a in row) + "]" for row in self._data)
+        return "\n[" + "\n".join("[" + ", ".join(str(a) for a in row) + "]," for row in self._data) + "]"
+        # return str(self._data)
 
     def __repr__(self) -> str:
         return f"Matrix({self._data})"

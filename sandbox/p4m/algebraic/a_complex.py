@@ -1,23 +1,44 @@
 from __future__ import annotations
-from typing import TypeVar, Generic
 
-from sandbox.p4m.algebraic import Field
+from typing import TypeVar
+
+from sandbox.p4m.natives.n_complex import NativeComplex
+from sandbox.p4m.protocols.p_field import Field
 
 T = TypeVar("T", bound=Field)
+
+from typing import TypeVar, Generic, Any
+
+T = TypeVar("T")  # Typically bound=Field
+
 
 class Complex(Generic[T]):
     __slots__ = ("_re", "_im")
 
-    def __init__(self, re: T | Complex[T], im: T | None = None):
-        # If only one argument and it's Complex, act as copy constructor
+    def __init__(self, re: Any, im: Any = None):
+
+        # Case 1: Complex(c: Complex[T]) –> Complex[T]
         if im is None and isinstance(re, Complex):
             self._re = re._re
             self._im = re._im
-        elif im is not None:
+        # Case 2: Complex(c: ComplexNative) –> Complex[int|float]
+        elif im is None and isinstance(re, NativeComplex):
+            self._re = re._value.real
+            self._im = re._value.imag
+        # Case 3: Complex(re: Complex[T], im: Complex[T]) -> Complex[T]
+        elif isinstance(re, Complex) and isinstance(im, Complex):
+            # Combine re and im as a + ib, where a and b are Complex[T]
+            # We set: (a + ib) = (re, im)
+            # So, re: Complex[T], im: Complex[T]
+            # "Flatten" to T
+            a, b = re._re, re._im
+            c, d = im._re, im._im
+            self._re = a - d
+            self._im = b + c
+        # Case 4: Complex(re: T, im: T) -> Complex[T]
+        else:
             self._re = re
             self._im = im
-        else:
-            raise TypeError("Complex constructor requires (re, im) or a Complex instance.")
 
     def __add__(self, other: Complex[T]) -> Complex[T]:
         return Complex(self._re + other._re, self._im + other._im)
