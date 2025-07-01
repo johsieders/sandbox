@@ -4,10 +4,8 @@ import functools
 from typing import Any
 
 
-# ----- Float -----
 @functools.total_ordering
 class NativeFloat:
-    __slots__ = ("_value",)
 
     def __init__(self, value: float | NativeFloat):
         if isinstance(value, NativeFloat):

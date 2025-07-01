@@ -3,9 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 
-# ----- Complex -----
 class NativeComplex:
-    __slots__ = ("_value",)
 
     def __init__(self, value: complex | NativeComplex):
         if isinstance(value, NativeComplex):

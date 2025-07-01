@@ -8,7 +8,7 @@
 # is based on the idea of *property-based* or *axiomatic* testing. Rather than
 # hard-coding expected results for specific cases, we generate step functions
 # (constant, edge, random, and composite examples) and check that their
-# algebraic and analytical properties (ring/field axioms and theorems) are
+# mapper and analytical properties (ring/field axioms and theorems) are
 # satisfied. This covers much broader ground, catches subtle implementation
 # bugs, and is robust against minor expected-value errors due to
 # floating-point computation. All equality is checked via a custom `close_to`

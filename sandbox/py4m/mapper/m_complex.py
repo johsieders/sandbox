@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from sandbox.p4m.natives.n_complex import NativeComplex
-from sandbox.p4m.protocols.p_field import Field
+from sandbox.py4m.protocols.p_field import Field
+from sandbox.py4m.wrapper.w_complex import NativeComplex
 
 T = TypeVar("T", bound=Field)
 

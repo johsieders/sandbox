@@ -1,12 +1,12 @@
-# p4m/tests/test_complex.py
+# py4m/tests/test_complex.py
 
 from _operator import mul
 from functools import reduce
 
-from sandbox.p4m.algebraic.a_matrix import Matrix
-from sandbox.p4m.util.utils import close_to
-from sandbox.p4m.util.make_samples import make_samples
-from tests.p4m.test_natives import int_samples
+from sandbox.py4m.mapper.m_matrix import Matrix
+from sandbox.py4m.util.make_samples import make_samples
+from sandbox.py4m.util.utils import close_to
+from tests.py4m.test_natives import int_samples
 
 # ----- Type/sample groupings -----
 

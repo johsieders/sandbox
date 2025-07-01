@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Protocol, runtime_checkable, Any
 
-from sandbox.p4m.protocols.p_euclidean_ring import EuclideanRing
+from sandbox.py4m.protocols.p_euclidean_ring import EuclideanRing
 
 
 @runtime_checkable

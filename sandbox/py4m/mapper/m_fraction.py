@@ -2,43 +2,91 @@ from __future__ import annotations
 
 from typing import TypeVar, Generic
 
-from sandbox.p4m.protocols.p_euclidean_ring import EuclideanRing
+from sandbox.py4m.protocols.p_euclidean_ring import EuclideanRing
+from sandbox.py4m.util.utils import close_to
 
 T = TypeVar("T", bound=EuclideanRing)
 
 
+def ext_gcd(a: T, b: T) -> tuple[T, T, T]:
+    """
+    :param a: an element of an Euclidian ring
+    :param b: another element of an Euclidian ring
+    :return: three elements g, s, t such that
+             g = gcd(a, b) and
+             g = a * s + b * t
+    """
+    zero = a.zero()
+    one = a.one()
+
+    s, u = one, zero
+    t, v = zero, one
+
+    while not close_to(b, zero):
+        q, r = divmod(a, b)
+        a, b = b, r
+        s, u = u, s - q * u
+        t, v = v, t - q * v
+    return a, s, t
+
+
 def gcd(a: T, b: T) -> T:
-    while b != b.zero():
+    # while b != b.zero():
+    #     a, b = b, a % b
+    # return a
+
+    while not close_to(b.norm(),0.):
         a, b = b, a % b
     return a
 
 
 class Fraction(Generic[T]):
-    __slots__ = ("_num", "_den")
+    """
+    This constructor accepts one or two arguments, which are of type T or Fraction[T]
+    A single argument is interpreted as the numerator;
+    the denominator is assumed to be one of the matching type.
+    Two fractions are flattened into one.
+    For any two fractions r, s !=0, the invariant is
+    Fraction(r, s) == r / s
+    """
 
-    def __init__(self, numerator: T | Fraction[T], denominator: T | None = None):
-        if isinstance(numerator, Fraction):
-            # Copy constructor: ignore denominator argument
-            self._num = numerator._num
-            self._den = numerator._den
+    def __init__(self, *args: T | Fraction[T]):
+        self._num = None
+        self._den = None
+
+        if len(args) not in (1, 2):
+            raise TypeError("Fraction constructor expects one or two arguments")
+
+        # supply denominator = one, if none is given
+        numerator = args[0]
+        if len(args) == 1:
+            denominator = numerator.one()
         else:
-            if denominator is None:
-                denominator = numerator.one()
-            if denominator == denominator.zero():
-                raise ZeroDivisionError("Fraction with denominator zero")
+            denominator = args[1]
 
-            g = gcd(numerator, denominator)
-            num = numerator // g
-            den = denominator // g
-            # Optional: sign normalization if possible
-            try:
-                if den < den.zero():
-                    num = -num
-                    den = -den
-            except (TypeError, AttributeError):
-                pass
-            self._num = num
-            self._den = den
+        # flatten if input type is Fraction
+        if isinstance(numerator, Fraction):
+            num = numerator._num * denominator._den
+            den = numerator._den * denominator._num
+        else:
+            num = numerator
+            den = denominator
+
+        if den == den.zero():
+            raise ZeroDivisionError()
+
+        g = gcd(num, den)
+        num //= g
+        den //= g
+        # Optional: sign normalization if possible
+        try:
+            if den < den.zero():
+                num = -num
+                den = -den
+        except (TypeError, AttributeError):
+            pass
+        self._num = num
+        self._den = den
 
     def __add__(self, other: Fraction) -> Fraction:
         return Fraction(
@@ -74,7 +122,7 @@ class Fraction(Generic[T]):
     def __mod__(self, other: Fraction) -> Fraction:
         return self.zero()
 
-    def divmod(self, other: Fraction) -> tuple[Fraction, Fraction]:
+    def __divmod__(self, other: Fraction) -> tuple[Fraction, Fraction]:
         return (self / other, self.zero())
 
     def inverse(self) -> Fraction:

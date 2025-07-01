@@ -4,10 +4,8 @@ import functools
 from typing import Any
 
 
-# ----- Int -----
 @functools.total_ordering
 class NativeInt:
-    __slots__ = ("_value",)
 
     def __init__(self, value: int | NativeInt):
         if isinstance(value, NativeInt):
@@ -41,7 +39,7 @@ class NativeInt:
     def __mod__(self, other: NativeInt) -> NativeInt:
         return NativeInt(self._value % other._value)
 
-    def divmod(self, other: NativeInt) -> tuple[NativeInt, NativeInt]:
+    def __divmod__(self, other: NativeInt) -> tuple[NativeInt, NativeInt]:
         q, r = divmod(self._value, other._value)
         return (NativeInt(q), NativeInt(r))
 

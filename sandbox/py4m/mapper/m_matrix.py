@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TypeVar, Generic, Sequence
 
-from sandbox.p4m.protocols.p_ring import Ring
+from sandbox.py4m.protocols.p_ring import Ring
 
 T = TypeVar("T", bound=Ring)
 

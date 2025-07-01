@@ -1,15 +1,15 @@
-# p4m/tests/test_properties.py
+# tests/py4m/make_samples.py
 
 from itertools import cycle
 from typing import Any, Sequence
 
-from sandbox.p4m.algebraic.a_complex import Complex
-from sandbox.p4m.algebraic.a_fraction import Fraction
-from sandbox.p4m.algebraic.a_matrix import Matrix
-from sandbox.p4m.algebraic.a_polynomial import Polynomial
-from sandbox.p4m.natives.n_complex import NativeComplex
-from sandbox.p4m.natives.n_float import NativeFloat
-from sandbox.p4m.natives.n_int import NativeInt
+from sandbox.py4m.mapper.m_complex import Complex
+from sandbox.py4m.mapper.m_fraction import Fraction
+from sandbox.py4m.mapper.m_matrix import Matrix
+from sandbox.py4m.mapper.m_polynomial import Polynomial
+from sandbox.py4m.wrapper.w_complex import NativeComplex
+from sandbox.py4m.wrapper.w_float import NativeFloat
+from sandbox.py4m.wrapper.w_int import NativeInt
 
 # --------------------------
 # 1. Base sample generators
@@ -40,7 +40,7 @@ MAP = {
     NativeComplex: (complex, F, lambda: (1,), STAR_ARG),
     Complex: (F, F, lambda: (1,), STAR_ARG),
     Fraction: (E, F, lambda: (2,), STAR_ARG),
-    Polynomial: (E, E, lambda: next(POLY_CYCLE), TUPLE_ARG),
+    Polynomial: (E, E, lambda: next(POLY_CYCLE), STAR_ARG),
     Matrix: (R, R, lambda: next(MATRIX_CYCLE), MATRIX_ARG),
 }
 
@@ -49,7 +49,7 @@ MATRIX_CYCLE = cycle((k, k) for k in range(4, 5))
 
 
 def satisfies_requirement(receiver: Any, producer: Any) -> bool:
-    """Return True if producer satisfies the algebraic requirement"""
+    """Return True if producer satisfies the mapper requirement"""
     rank_required = RANK[MAP[receiver][REQUIRES]]  # what the receiver requires
     rank_provided = RANK[MAP[producer][RETURNS]]  # what the producer returns
     return rank_required <= rank_provided
