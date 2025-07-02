@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import TypeVar, Generic
 
-from sandbox.py4m.protocols.p_euclidean_ring import EuclideanRing
+from sandbox.py4m.protocols.p_field import Field
 
-T = TypeVar("T", bound=EuclideanRing)
+T = TypeVar("T", bound=Field)
 
 
 class Polynomial(Generic[T]):
@@ -27,7 +27,7 @@ class Polynomial(Generic[T]):
         q(x) == r(x)(x)
         """
         if len(args) == 0:
-            raise TypeError("Polynomial constructor expects at least one argument")
+            raise TypeError(f"expected 1 or 2 arguments, got {len(args)}")
         elif isinstance(args[0], Polynomial):
             ps = list(args)  # list of polynomials
             zero = ps[0]._coeffs[0].zero()
@@ -91,8 +91,8 @@ class Polynomial(Generic[T]):
         return len(self._coeffs) - 1
 
     def norm(self) -> float:
-        # return max(abs(a.norm()) for a in self._coeffs)
-        return len(self._coeffs) - 1
+        return max(abs(a.norm()) for a in self._coeffs)
+        # return len(self._coeffs) - 1
 
     def zero(self) -> Polynomial[T]:
         return Polynomial(self._coeffs[0].zero())

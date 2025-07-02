@@ -1,32 +1,38 @@
 # py4m/tests/test_complex.py
 
-from _operator import mul
-from functools import reduce
+import pytest
 
 from sandbox.py4m.mapper.m_complex import Complex
 from sandbox.py4m.util.make_samples import make_samples
 from sandbox.py4m.util.utils import close_to
-from tests.py4m.test_natives import complex_samples
+from tests.py4m.check_properties import check_fields
+from tests.py4m.test_fractions import frac_int_samples
+from tests.py4m.test_natives import complex_native_samples
 
 # ----- Type/sample groupings -----
 
-n = 30
+N = 20
 
 
-def make_complex_samples(n):
-    return make_samples([Complex], complex_samples(n))
+def complex_float_samples(n):
+    return make_samples([Complex], complex_native_samples(n))
 
 
-def test_complex():
-    # todo
-    complex_samples = make_complex_samples(n)
-    complex_samples_reversed = list(complex_samples)
-    complex_samples_reversed.reverse()
-    complex_zero = complex_samples[0].zero()
-    complex_one = complex_samples[0].one()
-    total = sum(complex_samples, complex_zero)
-    total_rev = sum(complex_samples_reversed, complex_zero)
-    assert total == total_rev
-    prod = reduce(mul, complex_samples, complex_one)
-    prod_rev = reduce(mul, complex_samples_reversed, complex_one)
-    assert close_to(prod, prod_rev)
+def complex_complex_samples(n):
+    return make_samples([Complex, Complex], complex_native_samples(n))
+
+
+def complex_frac_samples(n):
+    non_zero_samples = [f for f in frac_int_samples(n) if not close_to(f, f.zero())]
+    return make_samples([Complex], non_zero_samples)
+
+
+def complex_samples(n: int):
+    return (complex_float_samples(n),
+            complex_complex_samples(n),
+            complex_frac_samples(n))
+
+
+@pytest.mark.parametrize("samples", complex_samples(N))
+def test_properties(samples):
+    check_fields(samples)

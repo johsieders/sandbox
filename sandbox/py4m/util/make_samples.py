@@ -40,7 +40,7 @@ MAP = {
     NativeComplex: (complex, F, lambda: (1,), STAR_ARG),
     Complex: (F, F, lambda: (1,), STAR_ARG),
     Fraction: (E, F, lambda: (2,), STAR_ARG),
-    Polynomial: (E, E, lambda: next(POLY_CYCLE), STAR_ARG),
+    Polynomial: (F, E, lambda: next(POLY_CYCLE), STAR_ARG),
     Matrix: (R, R, lambda: next(MATRIX_CYCLE), MATRIX_ARG),
 }
 

@@ -35,7 +35,7 @@ def gcd(a: T, b: T) -> T:
     #     a, b = b, a % b
     # return a
 
-    while not close_to(b.norm(),0.):
+    while not close_to(b.norm(), 0.):
         a, b = b, a % b
     return a
 

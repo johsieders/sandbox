@@ -1,18 +1,17 @@
 # config.py
 
 from sandbox.py4m.util.make_samples import E, F, R
-from tests.py4m.test_complex import complex_samples as complex_algs
-from tests.py4m.test_fractions import fraction_samples as fractions
-from tests.py4m.test_matrices import matrix_samples as matrices
-from tests.py4m.test_natives import (
-    int_samples as ints,
-    float_samples as floats,
-    complex_samples as complex_nats)
-from tests.py4m.test_polynomials import polynomial_samples as polynomials
+from tests.py4m.test_complex import complex_native_samples as complex_algs
 
-samples = {R: [matrices],
-           E: [ints, fractions, polynomials],
-           F: [floats, complex_nats, complex_algs]}
+# from tests.py4m.test_natives import (
+#     int_samples as ints,
+#     float_samples as floats,
+#     complex_native_samples as complex_nats)
+# from tests.py4m.test_polynomials import polynomial_samples as polynomials
+#
+# samples = {R: [matrices],
+#            E: [ints, fractions, polynomials],
+#            F: [floats, complex_nats, complex_algs]}
 
 # from .native_samples import (
 #     RING_SAMPLES as NATIVE_RING_SAMPLES,

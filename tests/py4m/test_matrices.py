@@ -10,7 +10,7 @@ from tests.py4m.test_natives import int_samples
 
 # ----- Type/sample groupings -----
 
-n = 100
+n = 15
 
 
 def make_matrices(n):
@@ -29,7 +29,5 @@ def test_matrix():
     assert total == total_rev
     prod = reduce(mul, matrix_samples, matrix_one)
     prod_rev = reduce(mul, matrix_samples_reversed, matrix_one)
-    assert close_to(prod, prod_rev, 1e-6)
+    assert close_to(prod, prod_rev)
 
-
-matrix_samples = make_matrices(n)

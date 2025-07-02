@@ -1,21 +1,34 @@
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import TypeVar, Generic, Any
 
 from sandbox.py4m.protocols.p_field import Field
 from sandbox.py4m.wrapper.w_complex import NativeComplex
 
 T = TypeVar("T", bound=Field)
 
-from typing import TypeVar, Generic, Any
-
-T = TypeVar("T")  # Typically bound=Field
-
 
 class Complex(Generic[T]):
-    __slots__ = ("_re", "_im")
 
-    def __init__(self, re: Any, im: Any = None):
+    def __init__(self, *args: T | Complex[T]):
+
+        if len(args) not in (1, 2):
+            raise TypeError(f"expected 1 or 2 arguments, got {len(args)}")
+
+        a = args[0]
+        if len(args) == 1:
+            b = args[0].zero()
+        else:
+            b = args[1]
+
+        if isinstance(a, Complex) and isinstance(b, Complex):
+            self._re = a._re - b._im
+            self._im = a._im + b._re
+        else:
+            self._re = a
+            self._im = b
+
+    def __initx__(self, re: Any, im: Any = None):
 
         # Case 1: Complex(c: Complex[T]) –> Complex[T]
         if im is None and isinstance(re, Complex):
@@ -72,7 +85,7 @@ class Complex(Generic[T]):
     def __mod__(self, other: Complex[T]) -> Complex[T]:
         return self.zero()
 
-    def divmod(self, other: Complex[T]) -> tuple[Complex[T], Complex[T]]:
+    def __divmod__(self, other: Complex[T]) -> tuple[Complex[T], Complex[T]]:
         return (self / other, self.zero())
 
     def inverse(self) -> Complex[T]:

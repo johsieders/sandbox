@@ -34,7 +34,7 @@ class NativeComplex:
     def __mod__(self, other: NativeComplex) -> NativeComplex:
         return self.zero()
 
-    def divmod(self, other: NativeComplex) -> tuple[NativeComplex, NativeComplex]:
+    def __divmod__(self, other: NativeComplex) -> tuple[NativeComplex, NativeComplex]:
         return (self / other, self.zero())
 
     def __truediv__(self, other: NativeComplex) -> NativeComplex:

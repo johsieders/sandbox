@@ -39,7 +39,7 @@ class NativeFloat:
     def __mod__(self, other: NativeFloat) -> NativeFloat:
         return self.zero()
 
-    def divmod(self, other: NativeFloat) -> tuple[NativeFloat, NativeFloat]:
+    def __divmod__(self, other: NativeFloat) -> tuple[NativeFloat, NativeFloat]:
         return (self / other, self.zero())
 
     def __truediv__(self, other: NativeFloat) -> NativeFloat:
