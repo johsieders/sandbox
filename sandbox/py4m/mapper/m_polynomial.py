@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import TypeVar, Generic
 
 from sandbox.py4m.protocols.p_field import Field
+from sandbox.py4m.util.utils import close_to
 
 T = TypeVar("T", bound=Field)
 
 
 class Polynomial(Generic[T]):
-
     def __init__(self, *args: T | Polynomial[T]):
         """
         This constructor accepts a nonempty list of coefficients of type T or Polynomial[T].
@@ -26,6 +26,7 @@ class Polynomial(Generic[T]):
         Then for all x, we have:
         q(x) == r(x)(x)
         """
+
         if len(args) == 0:
             raise TypeError(f"expected 1 or 2 arguments, got {len(args)}")
         elif isinstance(args[0], Polynomial):
@@ -38,10 +39,8 @@ class Polynomial(Generic[T]):
         else:
             coeffs = list(args)  # list of coefficients
 
-        while len(coeffs) > 1 and coeffs[-1] == coeffs[-1].zero():
+        while len(coeffs) > 1 and close_to(coeffs[-1], coeffs[-1].zero()):
             coeffs.pop()
-        if len(coeffs) == 0:
-            raise TypeError("Polynomial constructor expects at least one non-zero argument")
         self._coeffs = tuple(coeffs)
 
     def __add__(self, other: Polynomial[T]) -> Polynomial[T]:
@@ -84,9 +83,6 @@ class Polynomial(Generic[T]):
         _, r = self.__divmod__(other)
         return r
 
-    # def divmod(self, other: Polynomial[T]) -> tuple[Polynomial[T], Polynomial[T]]:
-    #     return self.__divmod__(other)
-
     def degree(self) -> int:
         return len(self._coeffs) - 1
 
@@ -108,9 +104,13 @@ class Polynomial(Generic[T]):
         return result
 
     def __divmod__(self, other: Polynomial[T]) -> tuple[Polynomial[T], Polynomial[T]]:
+        # todo:     floordiv, mod and divmod only issubclass(T, Field)
         # Polynomial long division
+        # if not issubclass(T.__class__, Field):
+        #     raise TypeError(f" {T.__class__} must be a subclass of {Field}")
         if other == other.zero():
             raise ZeroDivisionError("Polynomial division by zero")
+
         a = list(self._coeffs)
         b = list(other._coeffs)
         m, n = len(a) - 1, len(b) - 1

@@ -1,33 +1,32 @@
-# py4m/tests/test_complex.py
+# py4m/tests/test_matrices.py
 
-from _operator import mul
-from functools import reduce
+
+import pytest
 
 from sandbox.py4m.mapper.m_matrix import Matrix
-from sandbox.py4m.util.make_samples import make_samples
-from sandbox.py4m.util.utils import close_to
-from tests.py4m.test_natives import int_samples
+from sandbox.py4m.util.g_samples import (g_ints, g_floats, g_complex_,
+                                         g_nat_complex, g_nat_ints, g_nat_floats,
+                                         g_complex, g_fractions, g_matrices)
+from sandbox.py4m.util.utils import compose, take
+from tests.py4m.check_properties import check_rings
+
 
 # ----- Type/sample groupings -----
 
-n = 15
+def matrix_samples(n: int):
+    return (compose(take(n), g_matrices, g_nat_ints, g_ints)(10, 20),
+            compose(take(n), g_matrices, g_matrices, g_nat_floats, g_floats)(10, 20),
+            compose(take(n), g_matrices, g_nat_floats, g_floats)(10, 20),
+            compose(take(n), g_matrices, g_complex, g_nat_complex, g_complex_)(10, 20),
+            compose(take(n), g_matrices, g_fractions, g_nat_ints, g_ints)(10, 20))
 
 
-def make_matrices(n):
-    return make_samples([Matrix], int_samples(n))
+@pytest.mark.parametrize("samples", matrix_samples(10))
+def test_properties(samples):
+    check_rings(samples)
 
-
-def test_matrix():
-    # todo
-    matrix_samples = make_matrices(n)
-    matrix_samples_reversed = list(matrix_samples)
-    matrix_samples_reversed.reverse()
-    matrix_zero = matrix_samples[0].zero()
-    matrix_one = matrix_samples[0].one()
-    total = sum(matrix_samples, matrix_zero)
-    total_rev = sum(matrix_samples_reversed, matrix_zero)
-    assert total == total_rev
-    prod = reduce(mul, matrix_samples, matrix_one)
-    prod_rev = reduce(mul, matrix_samples_reversed, matrix_one)
-    assert close_to(prod, prod_rev)
+def test_matrix_matrix():
+    ms1 = Matrix(*compose(take(4), g_matrices, g_nat_ints, g_ints)(10, 20))
+    ms2 = Matrix(*compose(take(4), g_matrices, g_nat_ints, g_ints)(10, 20))
+    check_rings((ms1, ms2))
 

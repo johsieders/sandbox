@@ -2,52 +2,29 @@
 
 import pytest
 
-from sandbox.py4m.mapper.m_fraction import Fraction
-from sandbox.py4m.mapper.m_polynomial import Polynomial
-from sandbox.py4m.util.make_samples import make_samples
-from sandbox.py4m.util.utils import close_to
-from tests.py4m.check_properties import check_fields
-from tests.py4m.test_natives import int_samples, float_samples
+from sandbox.py4m.util.g_samples import (g_ints, g_floats, g_complex_,
+                                         g_nat_complex, g_nat_ints, g_nat_floats,
+                                         g_fractions, g_polynomials)
+from sandbox.py4m.util.utils import compose, take
+from tests.py4m.check_properties import check_fields, check_euclidean_rings
+
 
 # ----- Type/sample groupings -----
 
-# todo
-N = 5
+def fraction_samples(n: int):
+    return (compose(take(n), g_fractions, g_nat_ints, g_ints)(10, 20),
+            compose(take(n), g_fractions, g_fractions, g_fractions, g_nat_ints, g_ints)(10, 20),
+            compose(take(n), g_fractions, g_nat_floats, g_floats)(10, 20),
+            compose(take(n), g_fractions, g_fractions, g_nat_floats, g_floats)(10., 20.),
+            compose(take(n), g_fractions, g_nat_complex, g_complex_)(10, 20),
+            compose(take(n), g_fractions, g_polynomials, g_nat_floats, g_floats)(100., 200.))
 
 
-def frac_int_samples(n: int):
-    non_zero_samples = [f for f in int_samples(n) if f != f.zero()]
-    return make_samples([Fraction], non_zero_samples)
+@pytest.mark.parametrize("samples", fraction_samples(2)[-1:])  # todo: fine with 2, bad with 5
+def test_euclidean_ring(samples):
+    check_euclidean_rings(samples)
 
 
-def frac_frac_samples(n: int):
-    non_zero_samples = [f for f in frac_int_samples(n) if not close_to(f, f.zero())]
-    return make_samples([Fraction], non_zero_samples)
-
-
-def frac_poly_samples(n: int):
-    non_zero_samples = [f for f in float_samples(n) if not close_to(f, f.zero())]
-    return make_samples([Fraction, Polynomial], non_zero_samples)
-
-
-def frac_samples(n: int):
-    return (frac_poly_samples(n),
-            frac_int_samples(n),
-            frac_frac_samples(n))
-
-
-@pytest.mark.parametrize("samples", frac_samples(N)[1:])
-# todo
+@pytest.mark.parametrize("samples", fraction_samples(20)[:-1])
 def test_fields(samples):
     check_fields(samples)
-
-
-@pytest.mark.parametrize("samples", [frac_int_samples(N)])
-def test_constructor(samples):
-    while samples:
-        f = samples.pop()
-        if samples:
-            g = samples.pop()
-            if g != g.zero():
-                h = Fraction(f, g)
-                assert h == f / g

@@ -8,33 +8,7 @@ from sandbox.py4m.util.utils import close_to
 T = TypeVar("T", bound=EuclideanRing)
 
 
-def ext_gcd(a: T, b: T) -> tuple[T, T, T]:
-    """
-    :param a: an element of an Euclidian ring
-    :param b: another element of an Euclidian ring
-    :return: three elements g, s, t such that
-             g = gcd(a, b) and
-             g = a * s + b * t
-    """
-    zero = a.zero()
-    one = a.one()
-
-    s, u = one, zero
-    t, v = zero, one
-
-    while not close_to(b, zero):
-        q, r = divmod(a, b)
-        a, b = b, r
-        s, u = u, s - q * u
-        t, v = v, t - q * v
-    return a, s, t
-
-
 def gcd(a: T, b: T) -> T:
-    # while b != b.zero():
-    #     a, b = b, a % b
-    # return a
-
     while not close_to(b.norm(), 0.):
         a, b = b, a % b
     return a
@@ -51,8 +25,6 @@ class Fraction(Generic[T]):
     """
 
     def __init__(self, *args: T | Fraction[T]):
-        self._num = None
-        self._den = None
 
         if len(args) not in (1, 2):
             raise TypeError("Fraction constructor expects one or two arguments")
@@ -72,8 +44,13 @@ class Fraction(Generic[T]):
             num = numerator
             den = denominator
 
-        if den == den.zero():
-            raise ZeroDivisionError()
+        if close_to(den, den.zero()):  # todo
+            print('\nzero division: ', den.norm())
+            print(num)
+            print(den)
+            exit(1)
+
+            # raise ZeroDivisionError()
 
         g = gcd(num, den)
         num //= g
@@ -85,6 +62,7 @@ class Fraction(Generic[T]):
                 den = -den
         except (TypeError, AttributeError):
             pass
+
         self._num = num
         self._den = den
 
@@ -137,10 +115,10 @@ class Fraction(Generic[T]):
         return self._num.norm() / self._den.norm()
 
     def zero(self) -> Fraction:
-        return Fraction(self._num.zero(), self._den.one())
+        return Fraction(self._num.zero(), self._num.one())
 
     def one(self) -> Fraction:
-        return Fraction(self._num.one(), self._den.one())
+        return Fraction(self._num.one(), self._num.one())
 
     @property
     def numerator(self) -> T:

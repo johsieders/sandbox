@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic, Any
+from typing import TypeVar, Generic
 
 from sandbox.py4m.protocols.p_field import Field
-from sandbox.py4m.wrapper.w_complex import NativeComplex
 
 T = TypeVar("T", bound=Field)
 
@@ -27,31 +26,6 @@ class Complex(Generic[T]):
         else:
             self._re = a
             self._im = b
-
-    def __initx__(self, re: Any, im: Any = None):
-
-        # Case 1: Complex(c: Complex[T]) –> Complex[T]
-        if im is None and isinstance(re, Complex):
-            self._re = re._re
-            self._im = re._im
-        # Case 2: Complex(c: ComplexNative) –> Complex[int|float]
-        elif im is None and isinstance(re, NativeComplex):
-            self._re = re._value.real
-            self._im = re._value.imag
-        # Case 3: Complex(re: Complex[T], im: Complex[T]) -> Complex[T]
-        elif isinstance(re, Complex) and isinstance(im, Complex):
-            # Combine re and im as a + ib, where a and b are Complex[T]
-            # We set: (a + ib) = (re, im)
-            # So, re: Complex[T], im: Complex[T]
-            # "Flatten" to T
-            a, b = re._re, re._im
-            c, d = im._re, im._im
-            self._re = a - d
-            self._im = b + c
-        # Case 4: Complex(re: T, im: T) -> Complex[T]
-        else:
-            self._re = re
-            self._im = im
 
     def __add__(self, other: Complex[T]) -> Complex[T]:
         return Complex(self._re + other._re, self._im + other._im)
