@@ -2,9 +2,10 @@
 
 from itertools import islice
 from typing import Callable, Iterator
+from sandbox.py4m.cockpit import params
 
 
-def close_to(x, y, rtol=1e-9, atol=1e-12):
+def close_to(x, y, rtol=params['rtol'], atol=params['atol']):
     """
     rtol: relative tolerance parameter.
     atol: absolute tolerance parameter.

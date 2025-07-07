@@ -25,8 +25,8 @@ def matrix_samples(n: int):
 def test_properties(samples):
     check_rings(samples)
 
-def test_matrix_matrix():
-    ms1 = Matrix(*compose(take(4), g_matrices, g_nat_ints, g_ints)(10, 20))
-    ms2 = Matrix(*compose(take(4), g_matrices, g_nat_ints, g_ints)(10, 20))
-    check_rings((ms1, ms2))
 
+def test_matrix_matrix():
+    ms1 = Matrix(*compose(take(100), g_matrices, g_nat_ints, g_ints)(10, 20))
+    ms2 = Matrix(*compose(take(100), g_matrices, g_nat_ints, g_ints)(10, 20))
+    check_rings((ms1, ms2))

@@ -3,11 +3,14 @@ from __future__ import annotations
 import functools
 from typing import Any
 
+from sandbox.py4m.util.utils import close_to
+
 
 @functools.total_ordering
 class NativeFloat:
 
     def __init__(self, value: float | NativeFloat):
+        self._descent = [NativeFloat]
         if isinstance(value, NativeFloat):
             self._value = value._value
         elif isinstance(value, float):
@@ -28,7 +31,8 @@ class NativeFloat:
         return NativeFloat(-self._value)
 
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, NativeFloat) and self._value == other._value
+        return (isinstance(other, NativeFloat)
+                and close_to(self._value, other._value))
 
     def __lt__(self, other: NativeFloat) -> bool:
         return self._value < other._value
@@ -46,7 +50,7 @@ class NativeFloat:
         return NativeFloat(self._value / other._value)
 
     def inverse(self) -> NativeFloat:
-        if self._value == 0.0:
+        if close_to(self._value, 0.0):
             raise ZeroDivisionError("Float.inverse(): division by zero")
         return NativeFloat(1.0 / self._value)
 
@@ -72,3 +76,6 @@ class NativeFloat:
 
     def __repr__(self) -> str:
         return f"Float({self._value})"
+
+    def descent(self):
+        return self._descent

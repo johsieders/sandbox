@@ -1,20 +1,16 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic
-
 from sandbox.py4m.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4m.util.utils import close_to
 
-T = TypeVar("T", bound=EuclideanRing)
 
-
-def gcd(a: T, b: T) -> T:
+def gcd[T](a: T, b: T) -> T:
     while not close_to(b.norm(), 0.):
         a, b = b, a % b
     return a
 
 
-class Fraction(Generic[T]):
+class Fraction[T: EuclideanRing]:
     """
     This constructor accepts one or two arguments, which are of type T or Fraction[T]
     A single argument is interpreted as the numerator;
@@ -38,19 +34,16 @@ class Fraction(Generic[T]):
 
         # flatten if input type is Fraction
         if isinstance(numerator, Fraction):
+            self._descent = args[0]._descent
             num = numerator._num * denominator._den
             den = numerator._den * denominator._num
         else:
+            self._descent = [Fraction] + args[0]._descent
             num = numerator
             den = denominator
 
-        if close_to(den, den.zero()):  # todo
-            print('\nzero division: ', den.norm())
-            print(num)
-            print(den)
-            exit(1)
-
-            # raise ZeroDivisionError()
+        if close_to(den, den.zero()):
+            raise ZeroDivisionError()
 
         g = gcd(num, den)
         num //= g
@@ -90,8 +83,7 @@ class Fraction(Generic[T]):
     def __eq__(self, other: object) -> bool:
         return (
                 isinstance(other, Fraction)
-                and self._num == other._num
-                and self._den == other._den
+                and close_to(self._num * other._den, self._den * other._num)
         )
 
     def __floordiv__(self, other: Fraction) -> Fraction:
@@ -104,7 +96,7 @@ class Fraction(Generic[T]):
         return (self / other, self.zero())
 
     def inverse(self) -> Fraction:
-        if self._num == self._num.zero():
+        if close_to(self._num, self._num.zero()):
             raise ZeroDivisionError("Fraction division by zero")
         return Fraction(self._den, self._num)
 
@@ -136,3 +128,6 @@ class Fraction(Generic[T]):
 
     def __repr__(self) -> str:
         return f"Fraction({repr(self._num)}, {repr(self._den)})"
+
+    def descent(self):
+        return self._descent
