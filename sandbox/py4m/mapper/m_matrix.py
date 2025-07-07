@@ -1,42 +1,50 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic
-
 from math import sqrt
 
 from sandbox.py4m.protocols.p_ring import Ring
 from sandbox.py4m.util.utils import close_to
 
-T = TypeVar("T", bound=Ring)
 
-
-class Matrix(Generic[T]):
-
+class Matrix[T: Ring]:
     def __init__(self, *args: T | Matrix[T]):
         """
-        This constructor accepts a list of n^2 matrix entries of type T or Matrix[T].
-        T must implement the ring protocol.
-        Case type = matrix: All arguments must be matrices of the same size m x m.
-        The result is an n*m x n*m - matrix
+        Accepts either:
+        - n^2 entries of type T (creates an n x n matrix)
+        - n^2 Matrix[T] blocks of equal size m x m (creates a block matrix of size (n*m) x (n*m))
         """
-        n = int(sqrt(len(args)))
+        count = len(args)
+        n = int(sqrt(count))
+        if n == 0 or n ** 2 != count:
+            raise TypeError(f"expected n^2 arguments, got {count}")
 
-        if n == 0 or n ** 2 != len(args):
-            raise TypeError(f"expected n^2 arguments, got {len(args)}")
-        elif isinstance(args[0], Matrix):
+        # Block matrix case
+        if isinstance(args[0], Matrix):
+            # All blocks must be matrices of the same size
             m = args[0]._size
-            self._size = m * n
-            self._data = [[0 for _ in range(m * n)] for _ in range(m * n)]
-            for j in range(n):
-                for k in range(n):
-                    self._data[m * j:m * (j + 1)][m * k:m * (k + 1)] = args[n * j + k]
-                    for i in range(m):
-                        for l in range(m):
-                            self._data[m * j + i][m * k + l] = args[n * j + k][i][l]
+            if not all(isinstance(x, Matrix) and x._size == m for x in args):
+                raise TypeError("All blocks must be Matrix objects of the same size")
 
+            self._descent = args[0]._descent
+            self._size = n * m
+            # Build the block matrix using tuple-of-tuples for immutability
+            rows = []
+            for block_row in range(n):
+                for inner_row in range(m):
+                    row = []
+                    for block_col in range(n):
+                        block = args[block_row * n + block_col]
+                        row.extend(block[inner_row])
+                    rows.append(tuple(row))
+            self._data = tuple(rows)
         else:
+            # Scalar matrix case
+            self._descent = [Matrix] + args[0]._descent
             self._size = n
-            self._data = tuple(tuple([args[k * n: (k + 1) * n] for k in range(n)]))
+            self._data = tuple(
+                tuple(args[i * n + j] for j in range(n))
+                for i in range(n)
+            )
 
     def __add__(self, other: Matrix[T]) -> Matrix[T]:
         self._check_shape(other)
@@ -121,3 +129,6 @@ class Matrix(Generic[T]):
     # Optionally, support item access
     def __getitem__(self, idx):
         return self._data[idx]
+
+    def descent(self):
+        return self._descent

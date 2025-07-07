@@ -8,6 +8,7 @@ from typing import Any
 class NativeInt:
 
     def __init__(self, value: int | NativeInt):
+        self._descent = [NativeInt]
         if isinstance(value, NativeInt):
             self._value = value._value
         elif isinstance(value, int):
@@ -65,3 +66,6 @@ class NativeInt:
 
     def __repr__(self) -> str:
         return f"Int({self._value})"
+
+    def descent(self):
+        return self._descent

@@ -1,14 +1,10 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic
-
-from sandbox.py4m.protocols.p_field import Field
+from sandbox.py4m.protocols.p_ring import Ring
 from sandbox.py4m.util.utils import close_to
 
-T = TypeVar("T", bound=Field)
 
-
-class Polynomial(Generic[T]):
+class Polynomial[T: Ring]:
     def __init__(self, *args: T | Polynomial[T]):
         """
         This constructor accepts a nonempty list of coefficients of type T or Polynomial[T].
@@ -30,6 +26,7 @@ class Polynomial(Generic[T]):
         if len(args) == 0:
             raise TypeError(f"expected 1 or 2 arguments, got {len(args)}")
         elif isinstance(args[0], Polynomial):
+            self._descent = args[0]._descent
             ps = list(args)  # list of polynomials
             zero = ps[0]._coeffs[0].zero()
             coeffs = []
@@ -37,6 +34,7 @@ class Polynomial(Generic[T]):
                 coeffs += [zero] * len(p._coeffs)
                 coeffs[k:k + len(p._coeffs)] = [a + b for a, b in zip(coeffs[k:k + len(p._coeffs)], p._coeffs)]
         else:
+            self._descent = [Polynomial] + args[0]._descent
             coeffs = list(args)  # list of coefficients
 
         while len(coeffs) > 1 and close_to(coeffs[-1], coeffs[-1].zero()):
@@ -138,3 +136,6 @@ class Polynomial(Generic[T]):
 
     def coeffs(self) -> tuple[T, ...]:
         return self._coeffs
+
+    def descent(self):
+        return self._descent

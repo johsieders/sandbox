@@ -6,6 +6,7 @@ from typing import Any
 class NativeComplex:
 
     def __init__(self, value: complex | NativeComplex):
+        self._descent = [NativeComplex]
         if isinstance(value, NativeComplex):
             self._value = value._value
         elif isinstance(value, complex):
@@ -67,3 +68,6 @@ class NativeComplex:
 
     def __repr__(self) -> str:
         return f"Complex({self._value})"
+
+    def descent(self):
+        return self._descent

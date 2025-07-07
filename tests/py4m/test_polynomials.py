@@ -39,7 +39,7 @@ def test_rings(samples):
 
 
 @pytest.mark.parametrize("samples", poly_samples(20)[2:])
-# samples 0 and 1 are just rings
+# samples 0 and 1 are rings
 def test_euclidean_rings(samples):
     check_euclidean_rings(samples)
 
@@ -48,7 +48,7 @@ def poly_table(n):
     return zip(poly_samples(n), poly_args(n))
 
 
-@pytest.mark.parametrize("samples,args", poly_table(20))
+@pytest.mark.parametrize("samples,args", poly_table(100))
 def test_poly_poly(samples, args):
     q = Polynomial(*samples)
     for x in args:

@@ -1,13 +1,10 @@
 from __future__ import annotations
 
-from typing import TypeVar, Generic
-
 from sandbox.py4m.protocols.p_field import Field
+from sandbox.py4m.util.utils import close_to
 
-T = TypeVar("T", bound=Field)
 
-
-class Complex(Generic[T]):
+class Complex[T: Field]:
 
     def __init__(self, *args: T | Complex[T]):
 
@@ -21,9 +18,11 @@ class Complex(Generic[T]):
             b = args[1]
 
         if isinstance(a, Complex) and isinstance(b, Complex):
+            self._descent = args[0]._descent
             self._re = a._re - b._im
             self._im = a._im + b._re
         else:
+            self._descent = [Complex] + args[0]._descent
             self._re = a
             self._im = b
 
@@ -43,7 +42,9 @@ class Complex(Generic[T]):
         return Complex(-self._re, -self._im)
 
     def __eq__(self, other: object) -> bool:
-        return isinstance(other, Complex) and self._re == other._re and self._im == other._im
+        return (isinstance(other, Complex) and
+                close_to(self._re, other._re) and
+                close_to(self._im, other._im))
 
     def __truediv__(self, other: Complex[T]) -> Complex[T]:
         # (a+bi)/(c+di) = [(a+bi)*(c-di)] / (c^2 + d^2)
@@ -65,7 +66,7 @@ class Complex(Generic[T]):
     def inverse(self) -> Complex[T]:
         c, d = self._re, self._im
         denom = c * c + d * d
-        if denom == denom.zero():
+        if close_to(denom, denom.zero()):
             raise ZeroDivisionError("Complex division by zero")
         return Complex(c / denom, -d / denom)
 
@@ -97,3 +98,6 @@ class Complex(Generic[T]):
 
     def __repr__(self) -> str:
         return f"Complex({repr(self._re)}, {repr(self._im)})"
+
+    def descent(self):
+        return self._descent
