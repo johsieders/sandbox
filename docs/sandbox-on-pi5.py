@@ -1,4 +1,4 @@
-#
+# 26.07.2025
 # workflow on raspberry pi5
 # this is by session
 

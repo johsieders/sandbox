@@ -1,0 +1,48 @@
+project_name: Default
+working_dir: "."
+cmd:
+- python Sandbox Script
+provisioning:
+  gpu_count: 0
+  cpu_count: 2
+  ram: 4
+teamcity:
+  url: https://api.cadence.jetbrains.com
+  build_conf_id: id4443e544022b40118a96f86c1ee89e1f_JetTrain
+env:
+  variables:
+    PYTHONUNBUFFERED: "1"
+    OPENAI_API_KEY: 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
+  python:
+    pip:
+      requirements_path: requirements.txt
+    version: 3.13.0
+  secrets:
+    variables: {}
+    ssh_keys: []
+  aws:
+    sync_config: false
+    sync_credentials: false
+    sync_cache: false
+project_sync:
+  local:
+    root: "."
+    storage_name: Cadence Storage
+    uri: ""
+    exclude:
+    - /.venv/**
+    include: []
+    sync_back: false
+    snapshots: true
+    storage_type: DEFAULT
+inputs: []
+outputs:
+- type: OUTPUT
+  storage_name: Cadence Storage
+  uri: ""
+  path: "."
+  acceleration: false
+  storage_type: DEFAULT
+mounts: []
+storages: []
+description: ""

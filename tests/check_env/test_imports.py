@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import torch
+from sympy import *
 from sklearn.ensemble import RandomForestClassifier
 
 
@@ -29,3 +30,13 @@ def test_sklearn():
          [11, 12, 13]]
     y = [0, 1]  # classes of each sample
     clf.fit(X, y)
+
+
+def test_sympy():
+    x, y = symbols('x y')
+    expr = x + 2 * y
+    print()
+    print(expr)
+
+    expr =diff(sin(x) * exp(x), x)
+    print(expr)
