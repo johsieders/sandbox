@@ -2,11 +2,11 @@
 
 import pytest
 
+from sandbox.py4alg.mapper.m_fraction import gcd
 from sandbox.py4alg.mapper.m_polynomial import Polynomial
-from sandbox.py4alg.util.g_samples import (g_cycle, g_ints, g_floats, g_complex_,
+from sandbox.py4alg.util.g_samples import (g_ints, g_floats, g_complex_,
                                            g_nat_complex, g_nat_ints, g_nat_floats,
                                            g_fractions, g_polynomials)
-from sandbox.py4alg.mapper.m_fraction import gcd
 from sandbox.py4alg.util.utils import close_to
 from sandbox.py4alg.util.utils import compose, take
 from sandbox.py4alg.wrapper.w_float import NativeFloat
@@ -14,18 +14,21 @@ from tests.py4alg.check_properties import check_rings, check_euclidean_rings
 
 
 # ----- Type/sample groupings -----
-# todo
-def xxx_test_gcd():
+def test_gcd1():
+    p = Polynomial(NativeFloat(0.))
+    q = Polynomial(NativeFloat(2.), NativeFloat(7.))
+    g = gcd(p, q)
+    assert gcd(p, q) == q
+    assert gcd(q, p) == q
+    assert p == p // g * g
+    assert q == q // g * g
+
     p = Polynomial(NativeFloat(1.), NativeFloat(0.), NativeFloat(-1.))
     q = Polynomial(NativeFloat(1.), NativeFloat(1.))
-    g = gcd(p, q)
-    print()
-    print(g)
-    assert gcd(p, q) == Polynomial(NativeFloat(1.), NativeFloat(1.))
-
-    p = Polynomial(NativeFloat(2.), NativeFloat(3.), NativeFloat(1.))
-    q = Polynomial(NativeFloat(1.), NativeFloat(0.), NativeFloat(-1.))
-    assert gcd(p, q) == Polynomial(NativeFloat(1.), NativeFloat(1.))
+    g = gcd(q, p)
+    assert g == Polynomial(NativeFloat(1.), NativeFloat(1.))
+    assert p == p // g * g
+    assert q == q // g * g
 
 
 def poly_samples(n: int):
@@ -49,13 +52,22 @@ def poly_args(n):
             compose(take(n), g_fractions, g_nat_floats, g_floats)(10, 20))
 
 
+@pytest.mark.parametrize("samples", poly_samples(20)[5:6])
+def test_gcd(samples):
+    for p in samples:
+        for q in samples:
+            g = gcd(p, q)
+            assert p == p // g * g
+            assert q == q // g * g
+
+
 @pytest.mark.parametrize("samples", poly_samples(20))
 def test_rings(samples):
     check_rings(samples)
 
 
 @pytest.mark.parametrize("samples", poly_samples(20)[2:])
-# samples 0 and 1 are rings
+# samples 0 and 1 are non-euclidean rings
 def test_euclidean_rings(samples):
     check_euclidean_rings(samples)
 

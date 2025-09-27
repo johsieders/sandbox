@@ -18,6 +18,7 @@ def test_cycle():
     diff = [c - d for c, d in zip(ds, es)]
     assert sum(diff, NativeInt(0)) == NativeInt(0)
 
+
 def test_tuples():
     n = 10
     a = g_ints(0, 20)
@@ -43,6 +44,7 @@ def test_g():
     for s in [s for s in samples if s != '']:
         assert len(list(islice(s, n))) == n
 
+
 # todo
 def xxx_test_compose():
     n = 10
@@ -55,41 +57,43 @@ def xxx_test_compose():
     for s in [s for s in samples if s != '']:
         assert len(list(islice(s, n))) == n
 
+
 # todo
 def xxx_test_implements():
-        g = compose(g_fractions, g_nat_ints, g_ints)(10, 20)
-        assert next(g).implements() == 4
-        g = compose(g_polynomials, g_nat_ints, g_ints)(10, 20)
-        assert next(g).implements() == 3
-        g = compose(g_matrices, g_nat_ints, g_ints)(10, 20)
-        assert next(g).implements() == 1
-        g = compose(g_complex, g_nat_ints, g_ints)(10, 20)
-        assert next(g).implements() == 2
+    g = compose(g_fractions, g_nat_ints, g_ints)(10, 20)
+    assert next(g).implements() == 4
+    g = compose(g_polynomials, g_nat_ints, g_ints)(10, 20)
+    assert next(g).implements() == 3
+    g = compose(g_matrices, g_nat_ints, g_ints)(10, 20)
+    assert next(g).implements() == 1
+    g = compose(g_complex, g_nat_ints, g_ints)(10, 20)
+    assert next(g).implements() == 2
 
-        g = compose(g_fractions, g_nat_floats, g_floats)(10, 20)
-        assert next(g).implements() == 4
-        g = compose(g_polynomials, g_nat_floats, g_floats)(10, 20)
-        assert next(g).implements() == 3
-        g = compose(g_matrices, g_nat_floats, g_floats)(10, 20)
-        assert next(g).implements() == 1
-        g = compose(g_complex, g_nat_floats, g_floats)(10, 20)
-        assert next(g).implements() == 4
+    g = compose(g_fractions, g_nat_floats, g_floats)(10, 20)
+    assert next(g).implements() == 4
+    g = compose(g_polynomials, g_nat_floats, g_floats)(10, 20)
+    assert next(g).implements() == 3
+    g = compose(g_matrices, g_nat_floats, g_floats)(10, 20)
+    assert next(g).implements() == 1
+    g = compose(g_complex, g_nat_floats, g_floats)(10, 20)
+    assert next(g).implements() == 4
 
-        g = compose(g_fractions, g_fractions, g_nat_ints, g_ints)(10, 20)
-        assert next(g).implements() == 4
-        g = compose(g_polynomials, g_polynomials, g_nat_ints, g_ints)(10, 20)
-        assert next(g).implements() == 3
-        g = compose(g_matrices, g_matrices, g_nat_ints, g_ints)(10, 20)
-        assert next(g).implements() == 1
-        g = compose(g_complex, g_complex, g_nat_ints, g_ints)(10, 20)
-        assert next(g).implements() == 2
+    g = compose(g_fractions, g_fractions, g_nat_ints, g_ints)(10, 20)
+    assert next(g).implements() == 4
+    g = compose(g_polynomials, g_polynomials, g_nat_ints, g_ints)(10, 20)
+    assert next(g).implements() == 3
+    g = compose(g_matrices, g_matrices, g_nat_ints, g_ints)(10, 20)
+    assert next(g).implements() == 1
+    g = compose(g_complex, g_complex, g_nat_ints, g_ints)(10, 20)
+    assert next(g).implements() == 2
+
 
 # todo
 def xxx_test_x():
-        g = compose(g_fractions, g_matrices, g_nat_ints, g_ints)(10, 20)
-        print()
-        # try:
-        #     print(next(g).implements())
-        # except TypeError:
-        #     print('TypeError')
-        print(next(g).implements())
+    g = compose(g_fractions, g_matrices, g_nat_ints, g_ints)(10, 20)
+    print()
+    # try:
+    #     print(next(g).implements())
+    # except TypeError:
+    #     print('TypeError')
+    print(next(g).implements())

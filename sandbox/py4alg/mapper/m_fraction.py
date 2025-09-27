@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
-from sandbox.py4alg.cockpit import AlgebraicType
 from sandbox.py4alg.util.utils import close_to
 
 
@@ -21,15 +21,9 @@ class Fraction[T: EuclideanRing]:
     Fraction(r, s) == r / s
     """
 
-    functor_map =  \
-        {AlgebraicType.RING: None,
-         AlgebraicType.COMMUTATIVE_RING: None,
-         AlgebraicType.EUCLIDEAN_RING: AlgebraicType.FIELD,
-         AlgebraicType.FIELD: AlgebraicType.FIELD}
+    # functor_map removed - using protocol-based system instead
 
-    @staticmethod
-    def resulting_type(t: AlgebraicType) -> AlgebraicType | None:
-        return Fraction.functor_map[t]
+    # resulting_type() method removed - using protocol-based system instead
 
     def __init__(self, *args: T | Fraction[T]):
 

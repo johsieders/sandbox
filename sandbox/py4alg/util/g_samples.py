@@ -4,7 +4,8 @@ import random
 from itertools import cycle
 from typing import Any, Sequence, Iterator, Callable
 
-from sandbox.py4alg.cockpit import AlgebraicType, params
+from sandbox.py4alg.cockpit import params
+# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.mapper.m_complex import Complex
 from sandbox.py4alg.mapper.m_fp import Fp
 from sandbox.py4alg.mapper.m_fraction import Fraction
@@ -72,6 +73,7 @@ def g_make(type, min=1, max=1, min_norm=params['min_norm']) -> Callable[[Any], A
     return generate
 
 
+g_fp = g_make(Fp)
 g_nat_ints = g_make(NativeInt)
 g_nat_floats = g_make(NativeFloat)
 g_nat_complex = g_make(NativeComplex)
@@ -80,7 +82,6 @@ g_fractions = g_make(Fraction, 1, 2)
 g_complex = g_make(Complex, 1, 2)
 g_polynomials = g_make(Polynomial, params['poly_min'], params['poly_max'])
 g_matrices = g_make(Matrix, params['matrix_size'], params['matrix_size'])
-
 
 # meaning of successors:
 # g_x -> g_y means that g_y accepts g_x as argument
@@ -100,11 +101,9 @@ successors = {g_ints: (g_nat_ints,),
               g_polynomials: (g_polynomials, g_floats, g_fractions, g_ints)
               }
 
-def resulting_type(first: AlgebraicType, *types) -> AlgebraicType | None:
-    if len(types) == 0:
-        return first
-    else:
-        return resulting_type(types[0].resulting_type(first), *types[1:])
+
+# resulting_type() function removed - using protocol-based system instead
+
 
 def g_tree(sources, successors, depth=3, n=5):
     """

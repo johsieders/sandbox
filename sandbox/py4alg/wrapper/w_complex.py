@@ -2,13 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from sandbox.py4alg.cockpit import AlgebraicType
-
 
 class NativeComplex:
-
-    def resulting_type(t: AlgebraicType) -> AlgebraicType | None:
-        return AlgebraicType.FIELD
 
     def __init__(self, value: complex | NativeComplex):
         if isinstance(value, NativeComplex):
@@ -50,11 +45,14 @@ class NativeComplex:
             raise ZeroDivisionError("Complex.inverse(): division by zero")
         return NativeComplex(1 / self._value)
 
-    def degree(self) -> float:
-        return abs(self._value)
+    def gcd(self, a: NativeComplex) -> NativeComplex:
+        return self.one() if self or a else self.zero()
 
     def norm(self) -> float:
         return abs(self._value)
+
+    def __bool__(self) -> bool:
+        return bool(self._value)
 
     @classmethod
     def zero(cls) -> NativeComplex:
@@ -76,5 +74,3 @@ class NativeComplex:
     def descent(self):
         return [NativeComplex]
 
-    def implements(self):
-        return AlgebraicType.FIELD

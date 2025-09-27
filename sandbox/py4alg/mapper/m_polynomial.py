@@ -1,24 +1,20 @@
 from __future__ import annotations
 
+# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.protocols.p_ring import Ring
 from sandbox.py4alg.util.utils import close_to
-from sandbox.py4alg.cockpit import AlgebraicType
 
 
 class Polynomial[T: Ring]:
-    
-    functor_map = \
-        {AlgebraicType.RING: AlgebraicType.RING,
-         AlgebraicType.COMMUTATIVE_RING: AlgebraicType.COMMUTATIVE_RING,
-         AlgebraicType.EUCLIDEAN_RING: AlgebraicType.COMMUTATIVE_RING,
-         AlgebraicType.FIELD: AlgebraicType.EUCLIDEAN_RING}
+    # functor_map removed - using protocol-based system instead
 
     def __init__(self, *args: T | Polynomial[T]):
         """
         This constructor accepts a nonempty list of coefficients of type T or Polynomial[T].
         Case type == Polynomial: The result p is a Polynomial[T] (flattening)
         p(x) = p_0(x) + p_1(x)*x + p_2(x)*x^2...
-        This is the copy constructor if the list contains only one element.
+        If the list contains only one element, it is assumed to be a polynomial, 
+        and the constructor makes a copy of it.
         Case type <= EuclideanRing: The result is a polynomial with given coefficients.
         Trailing zeros are eliminated.
 
@@ -97,7 +93,7 @@ class Polynomial[T: Ring]:
     def norm(self) -> float:
         # return max(abs(a.norm()) for a in self._coeffs)
         # this is necessary for the GCD to stop
-        return len(self._coeffs) - 1
+        return self._coeffs[0].norm()
 
     def zero(self) -> Polynomial[T]:
         return Polynomial(self._coeffs[0].zero())

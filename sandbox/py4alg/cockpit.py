@@ -1,9 +1,6 @@
 # tests/py4alg/make_samples.py
 
 import random
-from enum import IntEnum
-
-from sympy import AlgebraicNumber
 
 params = {'rtol': 1e-9,
           'atol': 1e-12,
@@ -23,14 +20,6 @@ def set_test_seed():
     """
     random.seed(params['seed'])
 
-
-class AlgebraicType(IntEnum):
-    RING = 1
-    COMMUTATIVE_RING = 2
-    EUCLIDEAN_RING = 3
-    FIELD = 4
-
-#
 # def functor_result(functor: Callable[[Any], Any], algtype: AlgType=None) -> AlgType:
 #     tt = {(Matrix, AlgType.Ring): AlgType.Ring,
 #           (Matrix, AlgType.CommutativeRing): AlgType.Ring,

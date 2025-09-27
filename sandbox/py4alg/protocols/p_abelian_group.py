@@ -1,0 +1,19 @@
+from __future__ import annotations
+
+from typing import Protocol, runtime_checkable, Any
+
+
+@runtime_checkable
+class AbelianGroup(Protocol):
+
+    def __add__(self, other: Any) -> Any: ...
+
+    def __neg__(self) -> Any: ...
+
+    def __eq__(self, other: Any) -> bool: ...
+
+    def __bool__(self) -> bool: ...
+
+    def norm(self) -> float: ...
+
+    def zero(self) -> Any: ...

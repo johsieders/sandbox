@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from sandbox.py4alg.protocols.p_field import Field
+
+# AlgebraicType import removed - using protocol-based system instead
 
 
-class Fp(Field):
+class Fp:
     def __init__(self, *args: int):
         if len(args) != 2:
             raise TypeError(f"Fp expects exactly two arguments: p, n (got {args})")
@@ -45,6 +46,10 @@ class Fp(Field):
     def __eq__(self, other: object) -> bool:
         return isinstance(other, Fp) and self._p == other._p and self._n == other._n
 
+    def __lt__(self, other: Fp) -> bool:
+        self._assert_compatible(other)
+        return self._n < other._n
+
     def __truediv__(self, other: Fp) -> Fp:
         self._assert_compatible(other)
         return self * other.inverse()
@@ -74,15 +79,21 @@ class Fp(Field):
         # For a finite field element, norm is just abs(n)
         return abs(self._n)
 
-    def degree(self) -> int:
-        # Always degree 0 for field elements
-        return 0
+    def __bool__(self) -> bool:
+        return bool(self._n)
+
+    def gcd(self, a: Fp) -> Fp:
+        return Fp(self._p, 1) \
+            if (self._n > 0 or a._n > 0) \
+            else Fp(self._p, 0)
 
     def zero(self) -> Fp:
         return Fp(self._p, 0)
 
     def one(self) -> Fp:
         return Fp(self._p, 1)
+
+    # implements() method removed - using protocol-based system instead
 
     def __str__(self) -> str:
         return f"{self._n} (mod {self._p})"

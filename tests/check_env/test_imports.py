@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 import torch
-from sympy import *
 from sklearn.ensemble import RandomForestClassifier
+from sympy import *
 
 
 def test_torch_np():
@@ -38,5 +38,5 @@ def test_sympy():
     print()
     print(expr)
 
-    expr =diff(sin(x) * exp(x), x)
+    expr = diff(sin(x) * exp(x), x)
     print(expr)

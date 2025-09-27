@@ -1,18 +1,13 @@
 from __future__ import annotations
 
+# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.protocols.p_field import Field
-from sandbox.py4alg.cockpit import AlgebraicType
 from sandbox.py4alg.util.utils import close_to
 
 
 class Complex[T: Field]:
-
     # If arg[0] implements a Field, Complex implements a Field
-    functor_map = \
-        {AlgebraicType.RING: AlgebraicType.RING,
-         AlgebraicType.COMMUTATIVE_RING: AlgebraicType.COMMUTATIVE_RING,
-         AlgebraicType.EUCLIDEAN_RING: AlgebraicType.COMMUTATIVE_RING,
-         AlgebraicType.FIELD: AlgebraicType.FIELD}
+    # functor_map removed - using protocol-based system instead
 
     def __init__(self, *args: T | Complex[T]):
 

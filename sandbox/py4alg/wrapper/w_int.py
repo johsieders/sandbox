@@ -3,7 +3,8 @@ from __future__ import annotations
 import functools
 from typing import Any
 
-from sandbox.py4alg.cockpit import AlgebraicType
+# AlgebraicType import removed - using protocol-based system instead
+from sandbox.py4alg.util.primes import gcd
 
 
 @functools.total_ordering
@@ -45,11 +46,17 @@ class NativeInt:
         q, r = divmod(self._value, other._value)
         return (NativeInt(q), NativeInt(r))
 
-    def degree(self) -> int:
-        return abs(self._value)
-
     def norm(self) -> int:
         return abs(self._value)
+
+    def __bool__(self):
+        return bool(self._value)
+
+    def gcd(self, a: NativeInt) -> NativeInt:
+        if isinstance(a, NativeInt):
+            return NativeInt(gcd(self._value, a._value))
+        else:
+            raise TypeError("Expected NativeInt or int for gcd operation")
 
     @classmethod
     def zero(cls) -> NativeInt:
@@ -71,5 +78,4 @@ class NativeInt:
     def descent(self):
         return [NativeInt]
 
-    def implements(self):
-        return AlgebraicType.EUCLIDEAN_RING
+    # implements() method removed - using protocol-based system instead

@@ -1,7 +1,7 @@
 project_name: Default
 working_dir: "."
 cmd:
-- python Sandbox Script
+  - python Sandbox Script
 provisioning:
   gpu_count: 0
   cpu_count: 2
@@ -18,8 +18,8 @@ env:
       requirements_path: requirements.txt
     version: 3.13.0
   secrets:
-    variables: {}
-    ssh_keys: []
+    variables: { }
+    ssh_keys: [ ]
   aws:
     sync_config: false
     sync_credentials: false
@@ -30,19 +30,19 @@ project_sync:
     storage_name: Cadence Storage
     uri: ""
     exclude:
-    - /.venv/**
-    include: []
+      - /.venv/**
+    include: [ ]
     sync_back: false
     snapshots: true
     storage_type: DEFAULT
-inputs: []
+inputs: [ ]
 outputs:
-- type: OUTPUT
-  storage_name: Cadence Storage
-  uri: ""
-  path: "."
-  acceleration: false
-  storage_type: DEFAULT
-mounts: []
-storages: []
+  - type: OUTPUT
+    storage_name: Cadence Storage
+    uri: ""
+    path: "."
+    acceleration: false
+    storage_type: DEFAULT
+mounts: [ ]
+storages: [ ]
 description: ""

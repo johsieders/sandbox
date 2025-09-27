@@ -1,16 +1,11 @@
 # py4alg/tests/test_fractions.py
 
-import pytest
-
-from sandbox.py4alg.mapper.m_polynomial import Polynomial
 from sandbox.py4alg.mapper.m_fraction import Fraction
+from sandbox.py4alg.mapper.m_polynomial import Polynomial
 from sandbox.py4alg.util.g_samples import (g_cycle, g_ints, g_floats, g_complex_,
                                            g_nat_complex, g_nat_ints, g_nat_floats,
                                            g_fractions, g_polynomials)
 from sandbox.py4alg.util.utils import compose, take
-from sandbox.py4alg.wrapper.w_int import NativeInt
-from tests.py4alg.check_properties import (check_fields, check_euclidean_rings,
-                                           check_division_algorithm, check_divmod)
 
 
 # ----- Type/sample groupings -----
@@ -40,9 +35,9 @@ def fraction_samples(n: int):
 #     check_fields(samples)
 
 # todo
-def xxx_test_rat_poly():
-    coeffs_p = compose(take(3), g_nat_ints, g_cycle)((1, 0, -1))
-    coeffs_q = compose(take(2), g_nat_ints, g_cycle)((1, 1))
+def test_rat_poly():
+    coeffs_p = compose(take(3), g_nat_floats, g_cycle)((1., 0., -1.))
+    coeffs_q = compose(take(2), g_nat_floats, g_cycle)((1., 1.))
     p = Polynomial(*coeffs_p)
     q = Polynomial(*coeffs_q)
     r = Fraction(p, q)
@@ -50,8 +45,10 @@ def xxx_test_rat_poly():
     print()
     print(coeffs_p)
     print(coeffs_q)
+    print(p)
     print(q)
     print(r)
+    print(r * q)
 
 
 def test_poly_rat():
@@ -62,6 +59,3 @@ def test_poly_rat():
     print()
     print(rs)
     print(p)
-
-
-

@@ -2,18 +2,14 @@ from __future__ import annotations
 
 from math import sqrt
 
+from sandbox.py4alg.cockpit import params
+# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.protocols.p_ring import Ring
 from sandbox.py4alg.util.utils import close_to
-from sandbox.py4alg.cockpit import AlgebraicType
 
 
 class Matrix[T: Ring]:
-
-    functor_map = \
-        {AlgebraicType.RING: AlgebraicType.RING,
-         AlgebraicType.COMMUTATIVE_RING: AlgebraicType.RING,
-         AlgebraicType.EUCLIDEAN_RING: AlgebraicType.RING,
-         AlgebraicType.FIELD: AlgebraicType.RING}
+    # functor_map removed - using protocol-based system instead
 
     def __init__(self, *args: T | Matrix[T]):
         """
@@ -110,6 +106,9 @@ class Matrix[T: Ring]:
             one if i == j else zero
             for j in range(self._size)
             for i in range(self._size)])
+
+    def __bool__(self) -> bool:
+        return self.norm() < params['atol']
 
     def norm(self) -> float:
         return max(a.norm() for row in self._data for a in row)

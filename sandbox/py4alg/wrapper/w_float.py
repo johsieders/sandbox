@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 from typing import Any
 
-from sandbox.py4alg.cockpit import AlgebraicType
+# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.util.utils import close_to
 
 
@@ -52,8 +52,11 @@ class NativeFloat:
             raise ZeroDivisionError("Float.inverse(): division by zero")
         return NativeFloat(1.0 / self._value)
 
-    def degree(self) -> float:
-        return abs(self._value)
+    def gcd(self, a: NativeFloat) -> NativeFloat:
+        return self.one() if (self or a) else self.zero()
+
+    def __bool__(self) -> bool:
+        return bool(self._value)
 
     def norm(self) -> float:
         return abs(self._value)
@@ -78,5 +81,4 @@ class NativeFloat:
     def descent(self):
         return [NativeFloat]
 
-    def implements(self):
-        return AlgebraicType.FIELD
+    # implements() method removed - using protocol-based system instead

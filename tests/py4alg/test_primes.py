@@ -1,6 +1,7 @@
 import pytest
+
 from sandbox.py4alg.util.primes import (
-    is_prime, get_primes, primefactors, gcd, ext_gcd, 
+    is_prime, get_primes, gcd, ext_gcd,
     inv_mod, chinese_remainder, factorize, phi, ord, find_generator
 )
 
@@ -38,14 +39,14 @@ GCD_CASES = [
 
 # Test cases for factorize
 FACTORIZE_CASES = [
-    (12, [2, 2, 3]),
-    (30, [2, 3, 5]),
-    (17, [17]),
-    (100, [2, 2, 5, 5]),
-#    (1, []),
-#    (2, [2]),
-    (4, [2, 2]),
-    (9, [3, 3]),
+    (12, [(2, 2), (3, 1)]),
+    (30, [(2, 1), (3, 1), (5, 1)]),
+    (17, [(17, 1)]),
+    (100, [(2, 2), (5, 2)]),
+    (1, []),
+    (2, [(2, 1)]),
+    (4, [(2, 2)]),
+    (9, [(3, 2)]),
 ]
 
 # Test cases for phi
@@ -78,7 +79,7 @@ FIND_GENERATOR_CASES = [3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
 
 # Test cases for inv_mod
 INV_MOD_CASES = [
-    (3, 7, 5),   # 3 * 5 = 15 ≡ 1 (mod 7)
+    (3, 7, 5),  # 3 * 5 = 15 ≡ 1 (mod 7)
     (5, 11, 9),  # 5 * 9 = 45 ≡ 1 (mod 11) 
     (7, 13, 2),  # 7 * 2 = 14 ≡ 1 (mod 13)
 ]
@@ -91,12 +92,12 @@ def test_is_prime(n, expected):
 
 @pytest.mark.parametrize("n, expected", GET_PRIMES_CASES)
 def test_get_primes(n, expected):
-    assert get_primes(n) == expected
+    assert list(get_primes(n)) == expected
 
 
 def test_get_primes_error():
     with pytest.raises(ValueError):
-        get_primes(1)
+        list(get_primes(1))
 
 
 @pytest.mark.parametrize("a, b, expected", GCD_CASES)
@@ -139,31 +140,13 @@ def test_chinese_remainder_error():
 @pytest.mark.parametrize("n, expected_factors", FACTORIZE_CASES)
 def test_factorize(n, expected_factors):
     result = factorize(n)
-    assert sorted(result) == sorted(expected_factors)
+    assert result == expected_factors
     # Verify product equals original number
     if result:
         product = 1
-        for factor in result:
-            product *= factor
+        for prime, exponent in result:
+            product *= prime ** exponent
         assert product == n
-
-
-def test_primefactors():
-    primes_list = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31]
-    
-    # Test a few key cases
-    factors, remainder = primefactors(12, primes_list)
-    assert factors == [2, 1]
-    assert remainder == 1
-    
-    factors, remainder = primefactors(30, primes_list)
-    assert factors == [1, 1, 1]
-    assert remainder == 1
-
-
-def test_primefactors_error():
-    with pytest.raises(ValueError):
-        primefactors(-1, [2, 3, 5])
 
 
 @pytest.mark.parametrize("m, expected", PHI_CASES)
