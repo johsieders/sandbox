@@ -19,7 +19,8 @@ DESIGN PHILOSOPHY:
 2. **Axiom Direct**: Each function tests exactly one mathematical property
 3. **Numerical Stability**: Uses tolerance-based equality via close_to()
 4. **Composable**: Higher-level structures built from primitive properties
-5. **Pure Mathematics**: Encodes timeless mathematical truths
+5. **No Type Checks**: Assumes all relevant methods exist; type checking is caller's responsibility
+6. **Pure Mathematics**: Encodes timeless mathematical truths
 
 VERIFICATION APPROACH:
 - Properties tested directly from definitions, not expected values
@@ -46,21 +47,13 @@ import pytest
 
 from sandbox.py4alg.util.utils import close_to
 
-
-# ----- Ring tests -----
+# ----- Abelian Group tests (additivity) -----
 
 def check_additive_identity(samples):
     for a in samples:
         zero = a.zero()
         assert close_to(a + zero, a)
         assert close_to(zero + a, a)
-
-
-def check_multiplicative_identity(samples):
-    for a in samples:
-        one = a.one()
-        assert close_to(a * one, a)
-        assert close_to(one * a, a)
 
 
 def check_additive_inverse(samples):
@@ -87,6 +80,23 @@ def check_associativity_addition(samples):
                     print('asso_add: ', u.descent())
                     print('asso_add: ', v.descent())
             # assert close_to((a + b) + c, a + (b + c))
+
+
+def check_bulk_add(samples):
+    samples_rev = reversed(list(samples))
+    zero = samples[0].zero()
+    total = sum(samples, zero)
+    total_rev = sum(samples_rev, zero)
+    assert close_to(total, total_rev)
+
+
+# ----- Ring tests -----
+
+def check_multiplicative_identity(samples):
+    for a in samples:
+        one = a.one()
+        assert close_to(a * one, a)
+        assert close_to(one * a, a)
 
 
 def check_associativity_multiplication(samples):
@@ -155,14 +165,6 @@ def check_right_distributivity(samples):
                     print('right_dist: ', v.descent())
 
 
-def check_bulk_add(samples):
-    samples_rev = reversed(list(samples))
-    zero = samples[0].zero()
-    total = sum(samples, zero)
-    total_rev = sum(samples_rev, zero)
-    assert close_to(total, total_rev)
-
-
 def check_bulk_mul(samples):
     # Protocol-based filtering handles type checking now
     samples_rev = reversed(list(samples))
@@ -216,6 +218,68 @@ def check_divmod(samples):
                 print('divmod: ', v.descent())
 
 
+def check_gcd_properties(samples):
+    """Check basic gcd properties: gcd(a,b) divides both a and b."""
+    for a in samples:
+        for b in samples:
+            if close_to(a, a.zero()) and close_to(b, b.zero()):
+                continue
+            g = a.gcd(b)
+            # gcd(a,b) divides a and b
+            if not close_to(a, a.zero()):
+                assert close_to(a % g, a.zero()), f"gcd({a},{b}) = {g} does not divide {a}"
+            if not close_to(b, b.zero()):
+                assert close_to(b % g, b.zero()), f"gcd({a},{b}) = {g} does not divide {b}"
+
+
+def check_gcd_commutativity(samples):
+    """Check gcd commutativity: gcd(a,b) = gcd(b,a)."""
+    for a in samples:
+        for b in samples:
+            assert close_to(a.gcd(b), b.gcd(a)), f"gcd not commutative: gcd({a},{b}) != gcd({b},{a})"
+
+
+def check_gcd_associativity(samples):
+    """Check gcd associativity: gcd(gcd(a,b),c) = gcd(a,gcd(b,c))."""
+    for a in samples:
+        for b in samples:
+            for c in samples:
+                u = a.gcd(b).gcd(c)
+                v = a.gcd(b.gcd(c))
+                if not close_to(u, v):
+                    print(f'\ngcd_assoc: gcd(gcd({a},{b}),{c}) != gcd({a},gcd({b},{c}))')
+                    print('gcd_assoc: ', (u - v).norm())
+                    print('gcd_assoc: ', u.descent())
+                    print('gcd_assoc: ', v.descent())
+
+
+def check_gcd_identity(samples):
+    """Check gcd identity: gcd(a,0) = a for rings, gcd(a,0) = 1 for fields when a≠0."""
+    for a in samples:
+        zero = a.zero()
+        one = a.one()
+
+        if close_to(a, zero):
+            # gcd(0,0) = 0 for all structures
+            assert close_to(zero.gcd(zero), zero), f"gcd identity failed: gcd(0,0) != 0"
+        else:
+            # For fields: gcd(a,0) = gcd(0,a) = 1 when a≠0
+            # For rings: gcd(a,0) = gcd(0,a) = a when a≠0
+            # Check if this might be a field by testing if a has an inverse
+            try:
+                a.inverse()
+                # Likely a field - expect gcd(a,0) = 1
+                expected = one
+                context = "field"
+            except (AttributeError, ZeroDivisionError):
+                # Likely a ring - expect gcd(a,0) = a
+                expected = a
+                context = "ring"
+
+            assert close_to(a.gcd(zero), expected), f"gcd identity failed for {context}: gcd({a},0) != {expected}"
+            assert close_to(zero.gcd(a), expected), f"gcd identity failed for {context}: gcd(0,{a}) != {expected}"
+
+
 # ----- Field tests -----
 
 def check_truediv_and_inverse(samples):
@@ -265,6 +329,10 @@ def check_euclidean_rings(samples):
     check_rings(samples)
     check_division_algorithm(samples)
     check_divmod(samples)
+    check_gcd_properties(samples)
+    check_gcd_commutativity(samples)
+    check_gcd_associativity(samples)
+    check_gcd_identity(samples)
 
 
 def check_fields(samples):

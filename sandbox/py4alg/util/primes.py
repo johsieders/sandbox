@@ -11,6 +11,7 @@ CORE PRIME FUNCTIONS:
 
 MODULAR ARITHMETIC:
 - gcd(a, b): Euclidean algorithm for greatest common divisor
+- lcm(a, b): Least common multiple using lcm(a,b) = |a*b|/gcd(a,b)
 - ext_gcd(a, b): Extended Euclidean algorithm returning (gcd, s, t) where gcd = a*s + b*t
 - inv_mod(a, m): Modular multiplicative inverse when gcd(a, m) = 1
 - chinese_remainder(remainders, moduli): Chinese Remainder Theorem solver
@@ -40,7 +41,7 @@ Generated for rapid prototyping of algebraic structures and cryptographic primit
 # improved 27/09/2025 using Claude.
 """
 
-from typing import Tuple, List, Sequence
+from typing import Tuple, List, Sequence, Generator
 
 
 def is_prime(n: int) -> bool:
@@ -55,7 +56,7 @@ def is_prime(n: int) -> bool:
     return True
 
 
-def get_primes(n: int):
+def get_primes(n: int) -> Generator[int, None, None]:
     """
     Generator that yields all primes p with 2 <= p < n
     :param n: an integer >= 2
@@ -76,10 +77,12 @@ def get_primes(n: int):
             yield i
 
 
-def gcd(a, b):
+def gcd(a: int, b: int) -> int:
     """
-    :param a: an element of an Euclidian ring
-    :param b: another element of an Euclidian ring
+    Euclidean algorithm for greatest common divisor.
+
+    :param a: an integer
+    :param b: an integer
     :return: gcd of a and b
     """
     while b:
@@ -87,13 +90,13 @@ def gcd(a, b):
     return a
 
 
-def ext_gcd(a, b) -> tuple:
+def ext_gcd(a: int, b: int) -> Tuple[int, int, int]:
     """
-    :param a: an element of an Euclidian ring
-    :param b: another element of an Euclidian ring
-    :return: three elements g, s, t such that
-            g = gcd(a, b) and
-            g = a * s + b * t
+    Extended Euclidean algorithm.
+
+    :param a: an integer
+    :param b: an integer
+    :return: tuple (g, s, t) where g = gcd(a, b) and g = a * s + b * t
     """
     s, u = 1, 0
     t, v = 0, 1
@@ -106,10 +109,12 @@ def ext_gcd(a, b) -> tuple:
     return a, s, t
 
 
-def inv_mod(a, m):
+def inv_mod(a: int, m: int) -> int:
     """
-    :param a: an element of an Euclidian ring
-    :param m: another element of an Euclidian ring
+    Modular multiplicative inverse.
+
+    :param a: an integer
+    :param m: an integer
     :return: inverse of a modulo m
     The inverse exists iff gcd(a, m) = 1
     Here is how it works:
@@ -123,11 +128,13 @@ def inv_mod(a, m):
     return s % m
 
 
-def chinese_remainder(a: Sequence, coprimes: Sequence):
+def chinese_remainder(a: Sequence[int], coprimes: Sequence[int]) -> int:
     """
-    :param a: list of elements of an Euclidian ring
-    :param coprimes: list of coprime elements of an Euclidian ring, often primes
-    :return: x such that x = a[i] mod m[i] for all i
+    Chinese Remainder Theorem solver.
+
+    :param a: list of remainders
+    :param coprimes: list of pairwise coprime moduli
+    :return: x such that x ≡ a[i] (mod coprimes[i]) for all i
 
     Here is how it works:
 
@@ -315,3 +322,23 @@ def find_generator(p: int) -> int:
 
     # This should never happen for a prime p
     raise RuntimeError(f"Could not find generator for prime {p}")
+
+
+def lcm(a: int, b: int) -> int:
+    """
+    Least common multiple of two integers.
+
+    Uses the identity: lcm(a, b) = |a * b| / gcd(a, b)
+
+    :param a: an integer
+    :param b: an integer
+    :return: lcm of a and b (always non-negative)
+    :raises ValueError: if both a and b are zero
+    """
+    if a == 0 and b == 0:
+        raise ValueError("lcm(0, 0) is undefined")
+
+    if a == 0 or b == 0:
+        return 0
+
+    return abs(a * b) // gcd(abs(a), abs(b))

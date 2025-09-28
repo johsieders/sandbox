@@ -11,7 +11,7 @@ from sandbox.py4alg.util.utils import compose, take
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat
 from sandbox.py4alg.wrapper.w_int import NativeInt
-from tests.py4alg.check_properties import check_euclidean_rings, check_fields
+from tests.py4alg.check_properties import check_euclidean_rings, check_fields, check_comparables
 
 
 # ----- Type/sample groupings -----
@@ -44,6 +44,10 @@ def native_samples(n: int):
             compose(take(n), g_nat_complex, g_complex_)(0, 20),
             compose(take(n), g_nat_complex, g_nat_complex, g_complex_)(0, 20))
 
+
+@pytest.mark.parametrize("samples", native_samples(40)[:4])
+def test_comparables(samples):
+    check_comparables(samples)
 
 @pytest.mark.parametrize("samples", native_samples(40))
 def test_euclidean_rings(samples):

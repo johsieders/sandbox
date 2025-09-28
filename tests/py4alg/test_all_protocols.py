@@ -13,6 +13,7 @@ new types in testing when they implement the appropriate protocols.
 from typing import List, Any
 
 from sandbox.py4alg.mapper.m_fp import Fp
+from sandbox.py4alg.mapper.m_ec import ECpoint
 # Protocol imports
 from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.protocols.p_comparable import Comparable
@@ -22,7 +23,6 @@ from sandbox.py4alg.protocols.p_ring import Ring
 # Sample generation imports
 from sandbox.py4alg.util.g_samples import g_ints, g_floats, g_complex_
 from sandbox.py4alg.util.g_samples import g_nat_floats, g_nat_complex, g_nat_ints
-from sandbox.py4alg.util.primes import get_primes
 from sandbox.py4alg.util.utils import compose, take
 # Property checking imports
 from tests.py4alg.check_properties import (
@@ -50,22 +50,39 @@ def native_complex_samples() -> List[Any]:
 
 def fp_samples() -> List[Any]:
     """Generate Fp samples grouped by prime to avoid incompatible operations."""
-    primes = list(get_primes(K))
-    samples = []
+
     # Only use one prime to avoid mixing incompatible Fp elements
-    if primes:
-        p = primes[0]  # Use just the first prime (2)
-        samples.extend([Fp(p, a) for a in range(min(p + 5, 10))])  # Generate enough samples
-    return samples
+
+    p = 47
+    return [Fp(p, a) for a in range(K)]
+
+
+def ec_samples() -> List[Any]:
+    """Generate ECpoint samples on a single curve to avoid incompatible operations."""
+
+    # Use curve y^2 = x^3 + 1*x + 1 mod 7 (same as zero() method)
+    a, b, p = 1, 1, 7
+
+    # Generate all points on the curve, limited to K samples for performance
+    points = list(ECpoint.gen_points(a, b, p))
+    return points[:K]
+
+
+# List of all sample generator functions
+SAMPLE_GENERATORS = [
+    native_int_samples,
+    native_float_samples,
+    native_complex_samples,
+    fp_samples,
+    ec_samples,
+]
 
 
 def get_all_samples() -> List[Any]:
     """Collect all available samples from all generators."""
     all_samples = []
-    all_samples.extend(native_int_samples())
-    all_samples.extend(native_float_samples())
-    all_samples.extend(native_complex_samples())
-    all_samples.extend(fp_samples())
+    for generator in SAMPLE_GENERATORS:
+        all_samples.extend(generator())
     return all_samples
 
 

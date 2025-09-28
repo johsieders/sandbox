@@ -56,7 +56,7 @@ class NativeInt:
         if isinstance(a, NativeInt):
             return NativeInt(gcd(self._value, a._value))
         else:
-            raise TypeError("Expected NativeInt or int for gcd operation")
+            raise TypeError("Expected NativeInt for gcd operation")
 
     @classmethod
     def zero(cls) -> NativeInt:

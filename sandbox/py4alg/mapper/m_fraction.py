@@ -124,6 +124,13 @@ class Fraction[T: EuclideanRing]:
     def one(self) -> Fraction:
         return Fraction(self._num.one(), self._num.one())
 
+    def gcd(self, other: Fraction) -> Fraction:
+        """GCD for field of fractions: gcd(a,b) = 1 if either is non-zero, 0 if both are zero."""
+        if close_to(self, self.zero()) and close_to(other, other.zero()):
+            return self.zero()
+        else:
+            return self.one()
+
     @property
     def numerator(self) -> T:
         return self._num
