@@ -40,19 +40,12 @@ class Fraction[T: EuclideanRing]:
         # flatten if input-type is Fraction
         if isinstance(numerator, Fraction):
             self._descent = args[0].descent()
-            self._implements = args[0].implements()
             num = numerator._num * denominator._den
             den = numerator._den * denominator._num
         else:
             self._descent = [Fraction] + args[0].descent()
-            self._implements = self.functor_map[args[0].implements()]
             num = numerator
             den = denominator
-
-        if self._implements is None:
-            print()
-            print(f"Fraction.__init__: {self._descent}")
-            raise TypeError("Fraction requires a EuclideanRing or a Field")
 
         if close_to(den, den.zero()):
             raise ZeroDivisionError()
@@ -150,6 +143,3 @@ class Fraction[T: EuclideanRing]:
 
     def descent(self):
         return self._descent
-
-    def implements(self):
-        return self._implements

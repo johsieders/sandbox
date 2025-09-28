@@ -4,16 +4,16 @@ Protocol-Based Test Organization
 This module provides a centralized approach to testing algebraic protocols by:
 1. Collecting samples from all available sample generators
 2. Filtering samples by protocol implementation using isinstance()
-3. Running protocol-specific tests on all relevant samples
-
-This eliminates the need for AlgebraicField constants and automatically includes
-new types in testing when they implement the appropriate protocols.
+3. Running protocol-specific tests on all relevant samples. 
 """
 
 from typing import List, Any
 
+import pytest
+
 from sandbox.py4alg.mapper.m_fp import Fp
 from sandbox.py4alg.mapper.m_ec import ECpoint
+from sandbox.py4alg.util.g_samples import g_matrices
 # Protocol imports
 from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.protocols.p_comparable import Comparable
@@ -68,6 +68,24 @@ def ec_samples() -> List[Any]:
     return points[:K]
 
 
+def matrix_int_samples() -> List[Any]:
+    """Generate Matrix[NativeInt] samples."""
+    matrix_k = min(K, 15)  # Smaller K since we have multiple matrix types
+    return list(compose(take(matrix_k), g_matrices, g_nat_ints, g_ints)(0, 20))
+
+
+def matrix_float_samples() -> List[Any]:
+    """Generate Matrix[NativeFloat] samples."""
+    matrix_k = min(K, 15)
+    return list(compose(take(matrix_k), g_matrices, g_nat_floats, g_floats)(0, 20))
+
+
+def matrix_complex_samples() -> List[Any]:
+    """Generate Matrix[NativeComplex] samples."""
+    matrix_k = min(K, 15)
+    return list(compose(take(matrix_k), g_matrices, g_nat_complex, g_complex_)(0, 20))
+
+
 # List of all sample generator functions
 SAMPLE_GENERATORS = [
     native_int_samples,
@@ -75,6 +93,9 @@ SAMPLE_GENERATORS = [
     native_complex_samples,
     fp_samples,
     ec_samples,
+    matrix_int_samples,
+    matrix_float_samples,
+    matrix_complex_samples,
 ]
 
 
@@ -87,76 +108,103 @@ def get_all_samples() -> List[Any]:
 
 
 def get_samples_for_protocol(protocol_class) -> List[List[Any]]:
-    """Get all samples that implement the given protocol, grouped by type.
+    """Get all samples that implement the given protocol, grouped by compatible sample generators.
 
-    Returns a list of lists, where each inner list contains samples of the same type.
-    This avoids type mixing issues and reduces repeated type-grouping code.
+    By convention, each xx_samples() function returns homogeneous, compatible samples that
+    implement the same protocols. We group samples by their source generator rather than
+    by Python type to ensure compatibility within each group.
+
+    Returns a list of lists, where each inner list contains samples from the same generator
+    that implements the specified protocol.
     """
-    all_samples = get_all_samples()
-    filtered_samples = [sample for sample in all_samples if isinstance(sample, protocol_class)]
+    sample_groups = []
 
-    # Group by type
-    by_type = {}
-    for sample in filtered_samples:
-        sample_type = type(sample)
-        if sample_type not in by_type:
-            by_type[sample_type] = []
-        by_type[sample_type].append(sample)
+    # Check each sample generator individually
+    for generator in SAMPLE_GENERATORS:
+        samples = generator()
+        if not samples:
+            continue
 
-    return list(by_type.values())
+        # Check if the first sample implements the protocol (homogeneous assumption)
+        if isinstance(samples[0], protocol_class):
+            # All samples from this generator implement the protocol
+            filtered_samples = [sample for sample in samples if isinstance(sample, protocol_class)]
+            if filtered_samples:
+                sample_groups.append(filtered_samples)
 
-
-# Protocol-based test functions
-
-def test_abelian_group_properties():
-    """Test all abelian group properties for all AbelianGroup implementations."""
-    sample_groups = get_samples_for_protocol(AbelianGroup)
-    for sample_list in sample_groups:
-        check_abelian_group(sample_list[:N])  # Limit for performance
+    return sample_groups
 
 
-def test_ring_properties():
-    """Test all ring properties for all Ring implementations."""
-    sample_groups = get_samples_for_protocol(Ring)
-    for sample_list in sample_groups:
-        check_rings(sample_list[:N])  # Limit for performance
+def get_samples_for_protocol_with_ids(protocol_class):
+    """Get samples with pytest IDs for cleaner test naming."""
+    sample_groups = []
+    ids = []
+
+    # Check each sample generator individually
+    for generator in SAMPLE_GENERATORS:
+        samples = generator()
+        if not samples:
+            continue
+
+        # Check if the first sample implements the protocol (homogeneous assumption)
+        if isinstance(samples[0], protocol_class):
+            # All samples from this generator implement the protocol
+            filtered_samples = [sample for sample in samples if isinstance(sample, protocol_class)]
+            if filtered_samples:
+                sample_groups.append(filtered_samples)
+                # Create a clean ID from generator name and sample type
+                generator_name = generator.__name__.replace('_samples', '')
+                sample_type = type(filtered_samples[0]).__name__
+                ids.append(f"{generator_name}_{sample_type}")
+
+    return pytest.param(*sample_groups, ids=ids) if sample_groups else []
 
 
-def test_euclidean_ring_properties():
-    """Test all Euclidean ring properties for all EuclideanRing implementations."""
-    sample_groups = get_samples_for_protocol(EuclideanRing)
-    for sample_list in sample_groups:
-        check_euclidean_rings(sample_list[:N])  # Limit for performance
+# Protocol-based test functions with pytest parametrization
+
+@pytest.mark.parametrize("samples", get_samples_for_protocol(AbelianGroup))
+def test_abelian_group_properties(samples):
+    """Test all abelian group properties for each AbelianGroup implementation."""
+    check_abelian_group(samples[:N])
 
 
-def test_field_properties():
-    """Test all field properties for all Field implementations."""
-    sample_groups = get_samples_for_protocol(Field)
-    for sample_list in sample_groups:
-        check_fields(sample_list[:N])  # Limit for performanceok, 
+@pytest.mark.parametrize("samples", get_samples_for_protocol(Ring))
+def test_ring_properties(samples):
+    """Test all ring properties for each Ring implementation."""
+    check_rings(samples[:N])
 
 
-def test_comparable_properties():
+@pytest.mark.parametrize("samples", get_samples_for_protocol(EuclideanRing))
+def test_euclidean_ring_properties(samples):
+    """Test all Euclidean ring properties for each EuclideanRing implementation."""
+    check_euclidean_rings(samples[:N])
+
+
+@pytest.mark.parametrize("samples", get_samples_for_protocol(Field))
+def test_field_properties(samples):
+    """Test all field properties for each Field implementation."""
+    check_fields(samples[:N])
+
+
+@pytest.mark.parametrize("samples", get_samples_for_protocol(Comparable))
+def test_comparable_properties(samples):
     """Test all Comparable invariants for types that actually support comparison operations."""
-    
-    sample_groups = get_samples_for_protocol(Comparable)
-    for sample_list in sample_groups:
-        if not sample_list:
-            continue
+    if not samples:
+        pytest.skip("No samples provided")
 
-        # WORKAROUND: Python's protocol system has a limitation where isinstance(obj, Protocol)
-        # checks for method existence, not method functionality. Some types (like NativeComplex)
-        # have comparison methods as method-wrappers that exist but raise TypeError at runtime.
-        # This happens because Python automatically provides comparison methods even when
-        # they're not implemented, causing false positives in protocol checks.
-        # We need this runtime check to filter out types that claim Comparable but don't work.
-        try:
-            test_sample = sample_list[0]
-            _ = test_sample <= test_sample  # Test if comparison actually works
-            check_comparables(sample_list[:N])  # If successful, run full tests
-        except (TypeError, NotImplementedError):
-            # Skip types that have comparison methods but they don't actually work
-            continue
+    # WORKAROUND: Python's protocol system has a limitation where isinstance(obj, Protocol)
+    # checks for method existence, not method functionality. Some types (like NativeComplex)
+    # have comparison methods as method-wrappers that exist but raise TypeError at runtime.
+    # This happens because Python automatically provides comparison methods even when
+    # they're not implemented, causing false positives in protocol checks.
+    # We need this runtime check to filter out types that claim Comparable but don't work.
+    try:
+        test_sample = samples[0]
+        _ = test_sample <= test_sample  # Test if comparison actually works
+        check_comparables(samples[:N])  # If successful, run full tests
+    except (TypeError, NotImplementedError):
+        # Skip types that have comparison methods but they don't actually work
+        pytest.skip(f"Comparison not actually supported for {type(test_sample).__name__}")
     
 
 # Discovery functions for debugging

@@ -31,7 +31,6 @@ class Polynomial[T: Ring]:
             raise TypeError(f"expected 1 or 2 arguments, got {len(args)}")
         elif isinstance(args[0], Polynomial):
             self._descent = args[0].descent()
-            self._implements = args[0].implements()
             ps = list(args)  # list of polynomials
             zero = ps[0]._coeffs[0].zero()
             coeffs = []
@@ -40,7 +39,6 @@ class Polynomial[T: Ring]:
                 coeffs[k:k + len(p._coeffs)] = [a + b for a, b in zip(coeffs[k:k + len(p._coeffs)], p._coeffs)]
         else:
             self._descent = [Polynomial] + args[0].descent()
-            self._implements = self.functor_map[args[0].implements()]
             coeffs = list(args)  # list of coefficients
 
         while len(coeffs) > 1 and close_to(coeffs[-1], coeffs[-1].zero()):
@@ -146,6 +144,3 @@ class Polynomial[T: Ring]:
 
     def descent(self):
         return self._descent
-
-    def implements(self):
-        return self._implements

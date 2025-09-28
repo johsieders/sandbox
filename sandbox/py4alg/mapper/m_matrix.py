@@ -3,7 +3,6 @@ from __future__ import annotations
 from math import sqrt
 
 from sandbox.py4alg.cockpit import params
-# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.protocols.p_ring import Ring
 from sandbox.py4alg.util.utils import close_to
 
@@ -30,7 +29,6 @@ class Matrix[T: Ring]:
                 raise TypeError("All blocks must be Matrix objects of the same size")
 
             self._descent = args[0].descent()
-            self._implements = args[0].implements()
             self._size = n * m
             # Build the block matrix using tuple-of-tuples for immutability
             rows = []
@@ -45,7 +43,6 @@ class Matrix[T: Ring]:
         else:
             # Scalar matrix case
             self._descent = [Matrix] + args[0].descent()
-            self._implements = self.functor_map[args[0].implements()]
             self._size = n
             self._data = tuple(
                 tuple(args[i * n + j] for j in range(n))
@@ -142,5 +139,3 @@ class Matrix[T: Ring]:
     def descent(self):
         return self._descent
 
-    def implements(self):
-        return self._implements

@@ -1,9 +1,6 @@
 from __future__ import annotations
 
 
-# AlgebraicType import removed - using protocol-based system instead
-
-
 class Fp:
     def __init__(self, *args: int):
         if len(args) != 2:
@@ -92,8 +89,6 @@ class Fp:
 
     def one(self) -> Fp:
         return Fp(self._p, 1)
-
-    # implements() method removed - using protocol-based system instead
 
     def __str__(self) -> str:
         return f"{self._n} (mod {self._p})"

@@ -22,12 +22,10 @@ class Complex[T: Field]:
 
         if isinstance(a, Complex) and isinstance(b, Complex):
             self._descent = args[0].descent()
-            self._implements = args[0].implements()
             self._re = a._re - b._im
             self._im = a._im + b._re
         else:
             self._descent = [Complex] + args[0].descent()
-            self._implements = self.functor_map[args[0].implements()]
             self._re = a
             self._im = b
 
@@ -106,6 +104,3 @@ class Complex[T: Field]:
 
     def descent(self):
         return self._descent
-
-    def implements(self):
-        return self._implements

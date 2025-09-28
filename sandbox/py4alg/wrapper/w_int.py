@@ -77,5 +77,3 @@ class NativeInt:
 
     def descent(self):
         return [NativeInt]
-
-    # implements() method removed - using protocol-based system instead
