@@ -96,7 +96,7 @@ from __future__ import annotations
 
 from typing import Optional, Iterator
 
-from sandbox.py4alg.util.primes import is_prime, inv_mod
+from sandbox.py4alg.util.primes import is_prime, mod_inverse
 
 
 class ECpoint:
@@ -184,12 +184,12 @@ class ECpoint:
                 return ECpoint(self.a, self.b, p)  # Infinity
             # lambda = (3x1^2 + a) / (2y1) mod p
             num = (3 * x1 * x1 + self.a) % p
-            den = inv_mod(2 * y1, p)
+            den = mod_inverse(2 * y1, p)
         else:
             if x1 == x2:
                 return ECpoint(self.a, self.b, p)  # Infinity (vertical line)
             num = (y2 - y1) % p
-            den = inv_mod(x2 - x1, p)
+            den = mod_inverse(x2 - x1, p)
         lam = (num * den) % p
 
         x3 = (lam * lam - x1 - x2) % p

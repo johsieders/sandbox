@@ -1,6 +1,6 @@
 from sandbox.py4alg.util.primes import (
-    is_prime, get_primes, gcd, lcm, ext_gcd,
-    inv_mod, chinese_remainder, factorize, phi, ord, find_generator
+    is_prime, get_primes, gcd, lcm, gcd_extended,
+    mod_inverse, chinese_remainder, factorize, phi, ord, find_generator
 )
 
 
@@ -23,7 +23,7 @@ def test_ext_gcd_diophantine_invariant():
     """Test that ext_gcd satisfies the Diophantine equation: gcd(a,b) = a*s + b*t."""
     test_pairs = [(48, 18), (17, 13), (100, 25), (12, 8), (21, 14), (97, 31), (1001, 91)]
     for a, b in test_pairs:
-        g, s, t = ext_gcd(a, b)
+        g, s, t = gcd_extended(a, b)
         # Check Diophantine equation
         assert g == a * s + b * t
         # Check that g is indeed the gcd
@@ -39,7 +39,7 @@ def test_inv_mod_multiplicative_inverse_invariant():
     test_cases = [(3, 7), (5, 11), (7, 13), (17, 23), (19, 29), (13, 31)]
     for a, m in test_cases:
         if gcd(a, m) == 1:  # Only test when inverse exists
-            inv = inv_mod(a, m)
+            inv = mod_inverse(a, m)
             assert (a * inv) % m == 1
 
 

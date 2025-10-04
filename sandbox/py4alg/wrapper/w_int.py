@@ -3,7 +3,6 @@ from __future__ import annotations
 import functools
 from typing import Any
 
-# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.util.primes import gcd
 
 

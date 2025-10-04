@@ -7,8 +7,8 @@ Comprehensive testing with edge cases and known mathematical properties.
 import traceback
 
 from sandbox.py4alg.util.primes import (
-    is_prime, get_primes, gcd, ext_gcd,
-    inv_mod, chinese_remainder, factorize, phi, ord, find_generator
+    is_prime, get_primes, gcd, gcd_extended,
+    mod_inverse, chinese_remainder, factorize, phi, ord, find_generator
 )
 
 
@@ -140,7 +140,7 @@ def test_ext_gcd():
 
     for a, b in test_cases:
         try:
-            g, s, t = ext_gcd(a, b)
+            g, s, t = gcd_extended(a, b)
             # Verify that g = gcd(a,b) and g = a*s + b*t
             expected_gcd = gcd(a, b)
             linear_combination = a * s + b * t
@@ -176,7 +176,7 @@ def test_inv_mod():
 
     for a, m in test_cases:
         try:
-            inv = inv_mod(a, m)
+            inv = mod_inverse(a, m)
             # Verify that (a * inv) % m == 1
             if (a * inv) % m == 1:
                 passed += 1
@@ -190,7 +190,7 @@ def test_inv_mod():
 
     # Test error case (no inverse exists)
     try:
-        inv_mod(6, 9)  # gcd(6, 9) = 3 ≠ 1
+        mod_inverse(6, 9)  # gcd(6, 9) = 3 ≠ 1
         print(f"  ✗ inv_mod(6, 9) should raise ValueError")
     except ValueError:
         print(f"  ✓ inv_mod(6, 9) correctly raised ValueError")

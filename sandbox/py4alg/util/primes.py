@@ -90,7 +90,7 @@ def gcd(a: int, b: int) -> int:
     return a
 
 
-def ext_gcd(a: int, b: int) -> Tuple[int, int, int]:
+def gcd_extended(a: int, b: int) -> Tuple[int, int, int]:
     """
     Extended Euclidean algorithm.
 
@@ -109,7 +109,7 @@ def ext_gcd(a: int, b: int) -> Tuple[int, int, int]:
     return a, s, t
 
 
-def inv_mod(a: int, m: int) -> int:
+def mod_inverse(a: int, m: int) -> int:
     """
     Modular multiplicative inverse.
 
@@ -122,9 +122,9 @@ def inv_mod(a: int, m: int) -> int:
     => a * s = 1 - b * t
     => a * s = 1 mod b
     """
-    g, s, t = ext_gcd(a, m)
+    g, s, _ = gcd_extended(a, m)
     if g != 1:  # g must be 1
-        raise ValueError("No inverse for %d modulo %d" % (a, m))
+        raise ValueError(f"Modular inverse of {a} mod {m} does not exist")
     return s % m
 
 
@@ -159,7 +159,7 @@ def chinese_remainder(a: Sequence[int], coprimes: Sequence[int]) -> int:
         N *= coprimes[i]
 
     qs = [N // p for p in coprimes]
-    xs = [inv_mod(qs[i], coprimes[i]) for i in range(n)]
+    xs = [mod_inverse(qs[i], coprimes[i]) for i in range(n)]
 
     x = 0
     for i in range(n):

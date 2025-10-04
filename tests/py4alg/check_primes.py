@@ -1,8 +1,8 @@
 import pytest
 
 from sandbox.py4alg.util.primes import (
-    is_prime, get_primes, gcd, ext_gcd,
-    inv_mod, chinese_remainder, factorize, phi, ord, find_generator
+    is_prime, get_primes, gcd, gcd_extended,
+    mod_inverse, chinese_remainder, factorize, phi, ord, find_generator
 )
 
 # Test cases for is_prime
@@ -107,7 +107,7 @@ def test_gcd(a, b, expected):
 
 @pytest.mark.parametrize("a, b", [(48, 18), (17, 13), (100, 25), (12, 8), (21, 14)])
 def test_ext_gcd(a, b):
-    g, s, t = ext_gcd(a, b)
+    g, s, t = gcd_extended(a, b)
     expected_gcd = gcd(a, b)
     assert g == expected_gcd
     assert g == a * s + b * t
@@ -115,13 +115,13 @@ def test_ext_gcd(a, b):
 
 @pytest.mark.parametrize("a, m, expected_inv", INV_MOD_CASES)
 def test_inv_mod(a, m, expected_inv):
-    inv = inv_mod(a, m)
+    inv = mod_inverse(a, m)
     assert (a * inv) % m == 1
 
 
 def test_inv_mod_error():
     with pytest.raises(ValueError):
-        inv_mod(6, 9)  # gcd(6, 9) = 3 ≠ 1
+        mod_inverse(6, 9)  # gcd(6, 9) = 3 ≠ 1
 
 
 @pytest.mark.parametrize("remainders, moduli, expected", CHINESE_REMAINDER_CASES)
