@@ -42,11 +42,19 @@ def test_inheritance():
     assert fp.m == 7
 
 
-def fp_samples():
+def fp_samples(factory=None):
+    """Generate Fp samples using a factory function.
+
+    :param factory: Callable[[int, int], T] that creates elements like Fp(p, n)
+                   If None, uses Fp directly
+    """
+    if factory is None:
+        factory = Fp
+
     primes = list(get_primes(30))
     samples = []
     for p in primes:
-        samples.append([Fp(p, a) for a in range(2 * p)])
+        samples.append([factory(p, a) for a in range(2 * p)])
     return samples
 
 

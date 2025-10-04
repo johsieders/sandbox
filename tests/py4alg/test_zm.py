@@ -22,20 +22,36 @@ def test_isinstance():
     assert isinstance(n, EuclideanRing)
 
 
-def zm_samples():
+def zm_samples(factory=None):
+    """Generate Zm samples using a factory function.
+
+    :param factory: Callable[[int, int], T] that creates elements like Zm(m, n)
+                   If None, uses Zm directly
+    """
+    if factory is None:
+        factory = Zm
+
     moduli = [4, 6, 8, 9, 10, 12, 15, 16, 18, 20]
     samples = []
     for m in moduli:
-        samples.append([Zm(m, a) for a in range(2 * m)])
+        samples.append([factory(m, a) for a in range(2 * m)])
     return samples
 
 
-def zm_ring_samples():
+def zm_ring_samples(factory=None):
+    """Generate Zm ring samples using a factory function.
+
+    :param factory: Callable[[int, int], T] that creates elements like Zm(m, n)
+                   If None, uses Zm directly
+    """
+    if factory is None:
+        factory = Zm
+
     # Sample composite moduli for ring testing
     moduli = [4, 6, 8, 9, 10, 12, 15, 16, 18, 20]
     samples = []
     for m in moduli:
-        samples.append([Zm(m, a) for a in range(m)])  # Just 0..m-1 to keep test size manageable
+        samples.append([factory(m, a) for a in range(m)])  # Just 0..m-1 to keep test size manageable
     return samples
 
 
@@ -45,12 +61,20 @@ def test_rings(samples):
 
 
 # Only test Euclidean ring properties for prime moduli (which should be very limited since Fp handles those)
-def zm_prime_samples():
+def zm_prime_samples(factory=None):
+    """Generate Zm prime samples using a factory function.
+
+    :param factory: Callable[[int, int], T] that creates elements like Zm(p, n)
+                   If None, uses Zm directly
+    """
+    if factory is None:
+        factory = Zm
+
     # These are technically handled by Fp, but we can test a few small ones
     primes = [2, 3, 5, 7]  # Very small primes only
     samples = []
     for p in primes:
-        samples.append([Zm(p, a) for a in range(p)])
+        samples.append([factory(p, a) for a in range(p)])
     return samples
 
 
