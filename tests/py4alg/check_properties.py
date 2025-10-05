@@ -47,6 +47,7 @@ import pytest
 
 from sandbox.py4alg.util.utils import close_to
 
+
 # ----- Abelian Group tests (additivity) -----
 
 def check_additive_identity(samples):

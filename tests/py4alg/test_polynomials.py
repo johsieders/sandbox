@@ -2,8 +2,8 @@
 
 import pytest
 
+from sandbox.py4alg.mapper import Polynomial
 from sandbox.py4alg.mapper.m_fraction import gcd
-from sandbox.py4alg.mapper.m_polynomial import Polynomial
 from sandbox.py4alg.util.g_samples import (g_ints, g_floats, g_complex_,
                                            g_nat_complex, g_nat_ints, g_nat_floats,
                                            g_fractions, g_polynomials)

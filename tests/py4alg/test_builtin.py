@@ -14,10 +14,10 @@ Note: This testing is redundant since built-in types are already mathematically
 correct, but it proves the universality of our approach.
 """
 
-from typing import List, Any
+from typing import List
 
 from tests.py4alg.check_properties import (
-    check_abelian_group, check_rings, check_fields, check_comparables,
+    check_abelian_group, check_fields, check_comparables,
     check_additive_identity, check_multiplicative_identity,
     check_commutativity_multiplication, check_distributivity
 )
@@ -39,8 +39,8 @@ def float_samples() -> List[float]:
 def complex_samples() -> List[complex]:
     """Generate built-in complex samples."""
     return [
-        0+0j, 1+0j, 0+1j, 1+1j, -1+0j, 0-1j, -1-1j,
-        2+3j, -2-3j, 3.14+2.71j
+        0 + 0j, 1 + 0j, 0 + 1j, 1 + 1j, -1 + 0j, 0 - 1j, -1 - 1j,
+        2 + 3j, -2 - 3j, 3.14 + 2.71j
     ]
 
 
@@ -62,6 +62,13 @@ class FieldMixin(AlgebraicMixin):
             raise ZeroDivisionError(f"{self.__class__.__name__}.inverse(): division by zero")
         return self.__class__(1) / self
 
+    def gcd(self, other):
+        """GCD in a field: 1 if either is non-zero, 0 if both are zero."""
+        if self != self.__class__.zero() or other != other.__class__.zero():
+            return self.__class__.one()
+        else:
+            return self.__class__.zero()
+
 
 # Inheritance-based wrappers that extend built-in types with algebraic methods
 class IntWrapper(int, AlgebraicMixin):
@@ -71,14 +78,25 @@ class IntWrapper(int, AlgebraicMixin):
         return super().__new__(cls, value)
 
     def __add__(self, other): return IntWrapper(super().__add__(other))
+
     def __sub__(self, other): return IntWrapper(super().__sub__(other))
+
     def __mul__(self, other): return IntWrapper(super().__mul__(other))
+
     def __neg__(self): return IntWrapper(super().__neg__())
+
     def __floordiv__(self, other): return IntWrapper(super().__floordiv__(other))
+
     def __mod__(self, other): return IntWrapper(super().__mod__(other))
+
     def __divmod__(self, other):
         q, r = super().__divmod__(other)
         return IntWrapper(q), IntWrapper(r)
+
+    def gcd(self, other):
+        """Euclidean GCD for integers using Python's math.gcd."""
+        import math
+        return IntWrapper(math.gcd(int(self), int(other)))
 
     @classmethod
     def zero(cls): return cls(0)
@@ -94,18 +112,29 @@ class FloatWrapper(float, FieldMixin):
         return super().__new__(cls, value)
 
     def __add__(self, other): return FloatWrapper(super().__add__(other))
+
     def __sub__(self, other): return FloatWrapper(super().__sub__(other))
+
     def __mul__(self, other): return FloatWrapper(super().__mul__(other))
+
     def __truediv__(self, other):
         if other == 0.0:
             raise ZeroDivisionError("Float division by zero")
         return FloatWrapper(super().__truediv__(other))
+
     def __neg__(self): return FloatWrapper(super().__neg__())
-    def __floordiv__(self, other): return FloatWrapper(super().__floordiv__(other))
-    def __mod__(self, other): return FloatWrapper(super().__mod__(other))
+
+    def __floordiv__(self, other):
+        # In a field, floor division is the same as true division
+        return self / other
+
+    def __mod__(self, other):
+        # In a field, remainder is always zero
+        return FloatWrapper.zero()
+
     def __divmod__(self, other):
-        q, r = super().__divmod__(other)
-        return FloatWrapper(q), FloatWrapper(r)
+        # In a field, divmod returns (quotient, 0)
+        return self / other, FloatWrapper.zero()
 
     def __eq__(self, other):
         return abs(self - other) < 1e-10 if isinstance(other, (float, FloatWrapper)) else False
@@ -125,27 +154,45 @@ class ComplexWrapper(complex, FieldMixin):
             return super().__new__(cls, real)
         return super().__new__(cls, real, imag)
 
-    def __add__(self, other): return ComplexWrapper(super().__add__(other))
-    def __sub__(self, other): return ComplexWrapper(super().__sub__(other))
-    def __mul__(self, other): return ComplexWrapper(super().__mul__(other))
+    def __add__(self, other):
+        return ComplexWrapper(super().__add__(other))
+
+    def __sub__(self, other):
+        return ComplexWrapper(super().__sub__(other))
+
+    def __mul__(self, other):
+        return ComplexWrapper(super().__mul__(other))
+
     def __truediv__(self, other):
-        if other == 0+0j:
+        if other == 0 + 0j:
             raise ZeroDivisionError("Complex division by zero")
         return ComplexWrapper(super().__truediv__(other))
-    def __neg__(self): return ComplexWrapper(super().__neg__())
-    def __floordiv__(self, other): return ComplexWrapper(super().__truediv__(other))
-    def __mod__(self, other): return ComplexWrapper(0+0j)
+
+    def __neg__(self):
+        return ComplexWrapper(super().__neg__())
+
+    def __floordiv__(self, other):
+        # In a field, floor division is the same as true division
+        return self / other
+
+    def __mod__(self, other):
+        # In a field, remainder is always zero
+        return ComplexWrapper.zero()
+
     def __divmod__(self, other):
-        return self / other, ComplexWrapper(0+0j)
+        # In a field, divmod returns (quotient, 0)
+        return self / other, ComplexWrapper.zero()
 
     def __eq__(self, other):
         return abs(self - other) < 1e-10 if isinstance(other, (complex, ComplexWrapper)) else False
 
     @classmethod
-    def zero(cls): return cls(0+0j)
+    def zero(cls):
+        return cls(0 + 0j)
 
     @classmethod
-    def one(cls): return cls(1+0j)
+    def one(cls):
+        return cls(1 + 0j)
 
 
 def wrapped_int_samples() -> List[IntWrapper]:

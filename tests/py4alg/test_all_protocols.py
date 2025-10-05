@@ -11,9 +11,7 @@ from typing import List, Any
 
 import pytest
 
-from sandbox.py4alg.mapper.m_fp import Fp
-from sandbox.py4alg.mapper.m_ec import ECpoint
-from sandbox.py4alg.util.g_samples import g_matrices
+from sandbox.py4alg.mapper import ECpoint, Fp
 # Protocol imports
 from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.protocols.p_comparable import Comparable
@@ -22,6 +20,7 @@ from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
 # Sample generation imports
 from sandbox.py4alg.util.g_samples import g_ints, g_floats, g_complex_
+from sandbox.py4alg.util.g_samples import g_matrices
 from sandbox.py4alg.util.g_samples import g_nat_floats, g_nat_complex, g_nat_ints
 from sandbox.py4alg.util.utils import compose, take
 # Property checking imports
@@ -32,6 +31,7 @@ from tests.py4alg.check_properties import (
 
 K = 100
 N = 20
+
 
 def native_int_samples() -> List[Any]:
     """Generate NativeInt samples."""
@@ -205,7 +205,7 @@ def test_comparable_properties(samples):
     except (TypeError, NotImplementedError):
         # Skip types that have comparison methods but they don't actually work
         pytest.skip(f"Comparison not actually supported for {type(test_sample).__name__}")
-    
+
 
 # Discovery functions for debugging
 

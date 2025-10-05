@@ -138,4 +138,3 @@ class Matrix[T: Ring]:
 
     def descent(self):
         return self._descent
-

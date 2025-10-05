@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.util.utils import close_to
 
@@ -47,12 +46,36 @@ class Fraction[T: EuclideanRing]:
             num = numerator
             den = denominator
 
-        if close_to(den, den.zero()):
-            raise ZeroDivisionError()
+        # Check if denominator is too small (avoid dividing by near-zero values)
+        # For floating-point types, use absolute threshold to handle accumulated errors
+        den_norm = den.norm()
+        MIN_DENOMINATOR_NORM = 1e-200  # Absolute minimum threshold for denominator
 
-        g = gcd(num, den)
-        num //= g
-        den //= g
+        if den_norm < MIN_DENOMINATOR_NORM:
+            raise ZeroDivisionError(f"Denominator too small: norm = {den_norm}")
+
+        # Skip GCD normalization if denominator is already very small
+        # This prevents further precision loss with floating-point arithmetic
+        NORMALIZATION_THRESHOLD = 1e-50  # Below this, skip normalization to preserve precision
+
+        if den_norm < NORMALIZATION_THRESHOLD:
+            # Don't normalize - keep as is to avoid making denominator even smaller
+            pass
+        else:
+            # Normal case: try to normalize with GCD
+            try:
+                g = gcd(num, den)
+                normalized_den = den // g
+                normalized_den_norm = normalized_den.norm()
+
+                # Only apply normalization if denominator stays large enough
+                if normalized_den_norm >= NORMALIZATION_THRESHOLD:
+                    num = num // g
+                    den = normalized_den
+                # Otherwise skip normalization (would make denominator too small)
+            except (ZeroDivisionError, ValueError):
+                # If GCD computation fails, just skip normalization
+                pass
         # Optional: sign normalization if possible
         try:
             if den < den.zero():

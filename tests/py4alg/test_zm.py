@@ -2,10 +2,11 @@
 
 import pytest
 
-from sandbox.py4alg.mapper.m_zm import Zm
+from sandbox.py4alg.mapper import Zm
 from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.protocols.p_comparable import Comparable
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
+from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
 from tests.py4alg.check_properties import check_euclidean_rings, check_rings
 
@@ -13,13 +14,16 @@ from tests.py4alg.check_properties import check_euclidean_rings, check_rings
 # ----- Type/sample groupings -----
 
 def test_isinstance():
-    # Test with a composite modulus (not Euclidean ring)
+    # Test with a composite modulus
     n = Zm(6, 3)
+    # Positive assertions
     assert isinstance(n, Zm)
     assert isinstance(n, Comparable)
     assert isinstance(n, AbelianGroup)
     assert isinstance(n, Ring)
     assert isinstance(n, EuclideanRing)
+    # Negative assertions
+    assert not isinstance(n, Field)  # Zm has zero divisors
 
 
 def zm_samples(factory=None):

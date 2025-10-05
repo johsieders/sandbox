@@ -2,7 +2,7 @@
 
 import pytest
 
-from sandbox.py4alg.mapper.m_ec import ECpoint
+from sandbox.py4alg.mapper import ECpoint
 
 
 class TestECPointConstruction:

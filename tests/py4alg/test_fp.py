@@ -2,7 +2,7 @@
 
 import pytest
 
-from sandbox.py4alg.mapper.m_fp import Fp, Zm
+from sandbox.py4alg.mapper import Fp, Zm
 from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.protocols.p_comparable import Comparable
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
@@ -16,6 +16,7 @@ from tests.py4alg.check_properties import check_euclidean_rings, check_fields
 
 def test_isinstance():
     n = Fp(7, 3)
+    # Positive assertions
     assert isinstance(n, Fp)
     assert isinstance(n, Zm)  # Test inheritance
     assert isinstance(n, Comparable)
@@ -23,6 +24,7 @@ def test_isinstance():
     assert isinstance(n, Ring)
     assert isinstance(n, EuclideanRing)
     assert isinstance(n, Field)
+    # Negative assertions (none - Fp is the most specific type and implements all protocols)
 
 
 def test_inheritance():

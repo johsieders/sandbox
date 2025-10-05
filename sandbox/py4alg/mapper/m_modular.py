@@ -98,7 +98,7 @@ class Fp(Zm):
     @property
     def p(self) -> int:
         return self._m
-    
+
     def check_prime(self):
         if not is_prime(self._m):
             raise ValueError(f"{self._m} is not a prime")
@@ -147,6 +147,7 @@ class Fp(Zm):
         return Fp(self._m, inverse)
 
     def gcd(self, a: Fp) -> Fp:
+        """In a field, gcd is 1 unless both components are 0"""
         return self.zero() if (self._n == 0 and a._n == 0) else self.one()
 
     def zero(self) -> Fp:
@@ -160,4 +161,3 @@ class Fp(Zm):
 
     def __repr__(self) -> str:
         return f"Fp({self._m}, {self._n})"
-

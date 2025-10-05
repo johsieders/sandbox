@@ -5,12 +5,7 @@ from itertools import cycle
 from typing import Any, Sequence, Iterator, Callable
 
 from sandbox.py4alg.cockpit import params
-# AlgebraicType import removed - using protocol-based system instead
-from sandbox.py4alg.mapper.m_complex import Complex
-from sandbox.py4alg.mapper.m_fp import Fp
-from sandbox.py4alg.mapper.m_fraction import Fraction
-from sandbox.py4alg.mapper.m_matrix import Matrix
-from sandbox.py4alg.mapper.m_polynomial import Polynomial
+from sandbox.py4alg.mapper import Complex, Fp, Fraction, Matrix, Polynomial
 from sandbox.py4alg.util.utils import close_to, take, compose
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat

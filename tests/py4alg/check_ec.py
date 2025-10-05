@@ -1,7 +1,7 @@
 # py4alg/tests/check_ec.py
 
 
-from sandbox.py4alg.mapper.m_ec import ECpoint
+from sandbox.py4alg.mapper import ECpoint
 
 
 def test_add_mul():

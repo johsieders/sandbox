@@ -73,4 +73,3 @@ class NativeComplex:
 
     def descent(self):
         return [NativeComplex]
-

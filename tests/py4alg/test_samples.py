@@ -58,34 +58,6 @@ def xxx_test_compose():
         assert len(list(islice(s, n))) == n
 
 
-# todo
-def xxx_test_implements():
-    g = compose(g_fractions, g_nat_ints, g_ints)(10, 20)
-    assert next(g).implements() == 4
-    g = compose(g_polynomials, g_nat_ints, g_ints)(10, 20)
-    assert next(g).implements() == 3
-    g = compose(g_matrices, g_nat_ints, g_ints)(10, 20)
-    assert next(g).implements() == 1
-    g = compose(g_complex, g_nat_ints, g_ints)(10, 20)
-    assert next(g).implements() == 2
-
-    g = compose(g_fractions, g_nat_floats, g_floats)(10, 20)
-    assert next(g).implements() == 4
-    g = compose(g_polynomials, g_nat_floats, g_floats)(10, 20)
-    assert next(g).implements() == 3
-    g = compose(g_matrices, g_nat_floats, g_floats)(10, 20)
-    assert next(g).implements() == 1
-    g = compose(g_complex, g_nat_floats, g_floats)(10, 20)
-    assert next(g).implements() == 4
-
-    g = compose(g_fractions, g_fractions, g_nat_ints, g_ints)(10, 20)
-    assert next(g).implements() == 4
-    g = compose(g_polynomials, g_polynomials, g_nat_ints, g_ints)(10, 20)
-    assert next(g).implements() == 3
-    g = compose(g_matrices, g_matrices, g_nat_ints, g_ints)(10, 20)
-    assert next(g).implements() == 1
-    g = compose(g_complex, g_complex, g_nat_ints, g_ints)(10, 20)
-    assert next(g).implements() == 2
 
 
 # todo

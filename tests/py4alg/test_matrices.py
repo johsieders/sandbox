@@ -3,7 +3,7 @@
 
 import pytest
 
-from sandbox.py4alg.mapper.m_matrix import Matrix
+from sandbox.py4alg.mapper import Matrix
 from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.protocols.p_ring import Ring
 from sandbox.py4alg.util.g_samples import (g_ints, g_floats, g_complex_,

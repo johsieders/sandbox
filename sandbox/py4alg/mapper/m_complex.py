@@ -73,6 +73,13 @@ class Complex[T: Field]:
             raise ZeroDivisionError("Complex division by zero")
         return Complex(c / denom, -d / denom)
 
+    def gcd(self, other: Complex[T]) -> Complex[T]:
+        """GCD in a field: 1 if either is non-zero, 0 if both are zero."""
+        if close_to(self, self.zero()) and close_to(other, other.zero()):
+            return self.zero()
+        else:
+            return self.one()
+
     def norm(self) -> float:
         # Returns the "absolute value" (in the base field)
         n = self._re * self._re + self._im * self._im

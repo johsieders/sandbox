@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-
 from typing import Any
+
 from sympy import Symbol, Abs, S
 from sympy.core.numbers import igcd
-
 
 
 class SymbolInt:
