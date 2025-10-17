@@ -6,7 +6,7 @@
 import torch
 from torch import Tensor, tensor
 
-from sandbox.ai.booleans.classifier_fcts import _and, _or, _xor, circle, rings, square, plane
+from sandbox.ai.binary_classifiers.classifier_fcts import _and, _or, _xor, circle, rings, square, plane
 
 
 # Test data
