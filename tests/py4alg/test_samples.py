@@ -3,7 +3,7 @@
 
 from itertools import islice
 
-from sandbox.py4alg.util.g_samples import g_complex, g_fractions, g_matrices, g_polynomials
+from sandbox.py4alg.util.g_samples import g_fractions, g_matrices, g_polynomials
 from sandbox.py4alg.util.g_samples import g_ints, g_floats, g_complex_, g_tuples, g_cycle
 from sandbox.py4alg.util.g_samples import g_nat_ints, g_nat_floats, g_nat_complex
 from sandbox.py4alg.util.utils import compose, take
@@ -56,8 +56,6 @@ def xxx_test_compose():
 
     for s in [s for s in samples if s != '']:
         assert len(list(islice(s, n))) == n
-
-
 
 
 # todo
