@@ -1,4 +1,4 @@
-"""
+3"""
 Dimension-independent algebraic proof of Jacobi identity for Poisson brackets.
 
 We work purely algebraically with abstract gradient symbols, applying only:
@@ -48,10 +48,8 @@ def prove_jacobi_algebraically(verbose=True):
         print()
 
     # Compute {g, h} gradients
-    d_dx_gh = (d2g_dxdx * dh_dp + dg_dx * d2h_dxdp
-               - d2g_dxdp * dh_dx - dg_dp * d2h_dxdx)
-    d_dp_gh = (d2g_dxdp * dh_dp + dg_dx * d2h_dpdp
-               - d2g_dpdp * dh_dx - dg_dp * d2h_dxdp)
+    d_dx_gh = d2g_dxdx * dh_dp + dg_dx * d2h_dxdp - d2g_dxdp * dh_dx - dg_dp * d2h_dxdx
+    d_dp_gh = d2g_dxdp * dh_dp + dg_dx * d2h_dpdp - d2g_dpdp * dh_dx - dg_dp * d2h_dxdp
 
     # Compute {h, f} gradients
     d_dx_hf = (d2h_dxdx * df_dp + dh_dx * d2f_dxdp
@@ -60,10 +58,8 @@ def prove_jacobi_algebraically(verbose=True):
                - d2h_dpdp * df_dx - dh_dp * d2f_dxdp)
 
     # Compute {f, g} gradients
-    d_dx_fg = (d2f_dxdx * dg_dp + df_dx * d2g_dxdp
-               - d2f_dxdp * dg_dx - df_dp * d2g_dxdx)
-    d_dp_fg = (d2f_dxdp * dg_dp + df_dx * d2g_dpdp
-               - d2f_dpdp * dg_dx - df_dp * d2g_dxdp)
+    d_dx_fg = d2f_dxdx * dg_dp + df_dx * d2g_dxdp - d2f_dxdp * dg_dx - df_dp * d2g_dxdx
+    d_dp_fg = d2f_dxdp * dg_dp + df_dx * d2g_dpdp - d2f_dpdp * dg_dx - df_dp * d2g_dxdp
 
     # Compute the three nested brackets
     term1 = df_dx * d_dp_gh - df_dp * d_dx_gh

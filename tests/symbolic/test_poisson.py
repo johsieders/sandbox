@@ -6,8 +6,8 @@ Includes formal verification of the Jacobi identity and concrete examples.
 
 import pytest
 from sympy import symbols, sin, cos, exp, simplify
-from sandbox.symbolic.poisson import poisson_bracket, verify_jacobi_identity, create_phase_space
-from sandbox.symbolic.jacobi_proof import prove_jacobi_algebraically
+from sandbox.symbolics.poisson import poisson_bracket, verify_jacobi_identity, create_phase_space
+from sandbox.symbolics.jacobi_proof import prove_jacobi_algebraically
 
 
 class TestPoissonBracket:

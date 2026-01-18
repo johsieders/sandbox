@@ -3,6 +3,7 @@ archive
 .venv
 .idea
 .json
+.tex
 /.run/
 # Byte-compiled / optimized / DLL files
 __pycache__/

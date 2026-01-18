@@ -13,13 +13,13 @@ from sympy import Matrix, Function, symbols, simplify, expand, diff
 
 def create_phase_space(n_dim: int):
     """
-    Create symbolic phase space coordinates as vectors.
+    Create symbolics phase space coordinates as vectors.
 
     Args:
         n_dim: Number of degrees of freedom (dimension of phase space / 2)
 
     Returns:
-        Tuple of (x, p) where each is a Matrix (column vector) of symbolic variables
+        Tuple of (x, p) where each is a Matrix (column vector) of symbolics variables
     """
     x_vars = symbols(f'x1:{n_dim+1}', real=True)
     p_vars = symbols(f'p1:{n_dim+1}', real=True)
@@ -85,7 +85,7 @@ def verify_jacobi_identity(n_dim: int = 2):
     # Create phase space coordinates as vectors
     x, p = create_phase_space(n_dim)
 
-    # Create arbitrary symbolic functions
+    # Create arbitrary symbolics functions
     # These represent generic functions f(x, p), g(x, p), h(x, p)
     f = Function('f')(*x, *p)
     g = Function('g')(*x, *p)
