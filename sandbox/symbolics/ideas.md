@@ -162,3 +162,37 @@ The engine follows the elegant pattern from `jacobi_proof.py`: work symbolically
 let SymPy handle derivatives, verify identities through simplification.
 
 Ready to derive Maxwell, Navier-Stokes, Einstein equations, and more!
+
+
+
+## An operator based approach.
+I am still thinking and weighing options.
+
+The basic operator is the partial derivative, diff(f, x). 
+My preferred notation is $\partial_x$ if the variables have names, or  $\partial_i$, if they are indexed.
+
+diff accepts a function R^n -> R^1 and a variable by name or index.
+
+The gradient operator, denoted by $\partial$ is the column vector of all $\partial_i$ (i = 1 ... n),
+and the gradient of a scalar valued function $f$ $\partial \cdot f$ is the formal product of the gradient operator and $f$ (a scalar). 
+
+The Laplacian operator is $\partial^2$
+
+The Hessian operator is $\partial \ocross \partial = \partial^{\ocross 2}$ the formal outer product (tensor product) of \partial with itself
+
+The higher derivatives that appear e.g. in the general Taylor formula are just $\partial^{\ocross k}$
+
+Let $F$ be a vector field:
+
+The curl of $F$ is $\partial \cross F$, the curl operator would be lambda F: $\partial \cross F$
+The Jacobian of $F$ is $\partial \ocross F$, the Jacobian operator would be lambda F: $\partial \ocross F$
+
+Here is my approach: It should be easy to write a class that implements this strictly formal mechanism.
+Many identities can be formally proven.
+
+The elements of this class are operators that can be applied to SymPy Functions and Matrices of Functions. 
+I wonder if we can do without the existing classes ScalarField and VectorField and possibly TensorField.
+No problem if we keep them, but I like the operator based thinking.
+
+I want to make sure that dimensions match, that a curl works only in three dimension and so on. 
+

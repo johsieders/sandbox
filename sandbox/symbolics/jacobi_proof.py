@@ -1,4 +1,4 @@
-3"""
+"""
 Dimension-independent algebraic proof of Jacobi identity for Poisson brackets.
 
 We work purely algebraically with abstract gradient symbols, applying only:

@@ -1,31 +1,41 @@
 """
-Symbolic Vector Calculus Engine
+Operator-Based Symbolic Vector Calculus Engine
 
-A wrapper around SymPy that provides dimension-aware vector fields, scalar fields,
-and differential operators for proving vector calculus identities and deriving
-equations like Maxwell's equations.
+A clean operator-based approach to vector calculus built on SymPy.
+Operators (∂, lap_op, ∂×, etc.) are first-class objects that can be applied to
+SymPy functions and matrices.
 
 Design philosophy:
-- Leverage SymPy's differentiation engine (don't rebuild it)
-- Provide clean mathematical notation
-- Work with arbitrary dimensions
-- Automatic identity verification
+- Operators as composable transformations
+- Work directly with SymPy Functions and Matrices
+- Dimension checking at operator level
+- Mathematical notation matches standard vector calculus
+- Lightweight wrappers for convenience (ScalarField, VectorField)
 
 Example usage:
     >>> coords = make_coords('x y z')
+    >>> grad_op = GradientOperator(coords)
+    >>> f = Function('f')(*coords)
+    >>> grad_f = grad_op(f)  # Returns Matrix (column vector)
+
+    >>> # Or use lightweight wrapper
     >>> f = ScalarField('f', coords)
-    >>> grad_f = gradient(f)
-    >>> curl_grad_f = curl(grad_f)
-    >>> curl_grad_f.simplify()  # Should be zero vector
+    >>> grad_f = grad_op(f)
 """
+
+from __future__ import annotations
 
 from sympy import (
     symbols, Function, Matrix, diff, simplify, expand,
-    latex, Symbol, Derivative
+    Symbol, Derivative
 )
-from typing import List, Union, Tuple
-from dataclasses import dataclass
+from typing import List, Union
+from abc import ABC, abstractmethod
 
+
+# ============================================================================
+# Helper Functions
+# ============================================================================
 
 def make_coords(coord_str: str) -> List[Symbol]:
     """
@@ -45,145 +55,506 @@ def make_coords(coord_str: str) -> List[Symbol]:
     return list(symbols(coord_str, real=True))
 
 
-@dataclass
-class ScalarField:
+def evaluate(expr, **kwargs):
     """
-    Represents a scalar field f: R^n → R.
+    Substitute values into a symbolic expression.
 
-    A scalar-valued function of n coordinates with dimension awareness.
+    Args:
+        expr: SymPy expression, Function, or Matrix
+        **kwargs: Variable substitutions (e.g., x=1, y=2)
+
+    Returns:
+        Expression with substituted values
+
+    Example:
+        >>> f = Function('f')(x, y)
+        >>> evaluate(f + sin(x), x=0, y=1)
+        f(0, 1)
+    """
+    return expr.subs(kwargs)
+
+
+# ============================================================================
+# Base Operator Class
+# ============================================================================
+
+class DifferentialOperator(ABC):
+    """
+    Abstract base class for differential operators.
+
+    Operators are callable objects that transform SymPy expressions.
+    """
+
+    @abstractmethod
+    def __call__(self, expr):
+        """Apply the operator to an expression."""
+        pass
+
+    @abstractmethod
+    def __repr__(self):
+        """String representation of the operator."""
+        pass
+
+
+# ============================================================================
+# Core Differential Operators
+# ============================================================================
+
+class PartialDerivativeOperator(DifferentialOperator):
+    """
+    ∂ᵢ - Partial derivative operator with respect to a single coordinate.
 
     Attributes:
-        name: Name of the scalar field (e.g., 'f', 'phi', 'T')
-        coords: List of coordinate symbols [x₁, x₂, ..., xₙ]
-        dim: Dimension of the domain (automatically computed)
-        func: SymPy Function object representing the field
+        coord: The coordinate to differentiate with respect to
+        order: Order of differentiation (default: 1)
+
+    Example:
+        >>> ∂x = PartialDerivativeOperator(x, order=1)
+        >>> ∂x(f)  # Returns df/dx
+    """
+
+    def __init__(self, coord: Symbol, order: int = 1):
+        self.coord = coord
+        self.order = order
+
+    def __call__(self, expr):
+        """Apply partial derivative to expression."""
+        if isinstance(expr, Matrix):
+            # Apply element-wise to matrices
+            return expr.applyfunc(lambda e: diff(e, self.coord, self.order))
+        return diff(expr, self.coord, self.order)
+
+    def __repr__(self):
+        if self.order == 1:
+            return f"∂_{self.coord}"
+        return f"∂_{self.coord}^{self.order}"
+
+
+class GradientOperator(DifferentialOperator):
+    """
+    ∂ - Gradient operator (column vector of partial derivatives).
+
+    For scalar f: R^n → R, returns ∂f = [∂₁f, ∂₂f, ..., ∂ₙf]ᵀ (column vector)
+
+    Attributes:
+        coords: List of coordinate symbols
+        dim: Dimension of the space
 
     Example:
         >>> coords = make_coords('x y z')
-        >>> temperature = ScalarField('T', coords)
-        >>> temperature.func
-        T(x, y, z)
+        >>> grad_op = GradientOperator(coords)
+        >>> f = Function('f')(*coords)
+        >>> grad_op(f)  # Returns column vector of derivatives
     """
-    name: str
-    coords: List[Symbol]
 
-    def __post_init__(self):
-        """Initialize the SymPy function and dimension."""
-        self.dim = len(self.coords)
-        self.func = Function(self.name)(*self.coords)
+    def __init__(self, coords: List[Symbol]):
+        self.coords = coords
+        self.dim = len(coords)
 
-    def __call__(self, *args):
-        """Allow evaluation with different coordinates."""
-        if len(args) != self.dim:
-            raise ValueError(f"Expected {self.dim} arguments, got {len(args)}")
-        return Function(self.name)(*args)
+    def __call__(self, expr):
+        """
+        Apply gradient to scalar expression.
+
+        Returns:
+            Matrix (column vector) of partial derivatives
+        """
+        if isinstance(expr, Matrix):
+            raise TypeError("Gradient applies to scalar functions, not vector fields")
+
+        components = [diff(expr, coord) for coord in self.coords]
+        return Matrix(components)
 
     def __repr__(self):
-        coord_str = ', '.join(str(c) for c in self.coords)
-        return f"ScalarField({self.name}({coord_str}))"
+        return f"∂ (gradient in {self.dim}D)"
 
-    def __str__(self):
-        return self.name
 
-    def diff(self, coord: Symbol, order: int = 1):
+class LaplacianOperator(DifferentialOperator):
+    """
+    lap_op - Laplacian operator (sum of second partial derivatives).
+
+    For scalar f: lap_opf = ∂₁²f + ∂₂²f + ... + ∂ₙ²f = div(grad(f))
+    For vector F: applies component-wise
+
+    Attributes:
+        coords: List of coordinate symbols
+        dim: Dimension of the space
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> lap_op = LaplacianOperator(coords)
+        >>> f = Function('f')(*coords)
+        >>> lap_op(f)  # Returns lap_opf/∂x² + lap_opf/∂y² + lap_opf/∂z²
+    """
+
+    def __init__(self, coords: List[Symbol]):
+        self.coords = coords
+        self.dim = len(coords)
+
+    def __call__(self, expr):
+        """Apply Laplacian to expression."""
+        if isinstance(expr, Matrix):
+            # Component-wise for vector fields
+            return expr.applyfunc(lambda e: sum(diff(e, coord, 2) for coord in self.coords))
+
+        # Scalar Laplacian
+        return sum(diff(expr, coord, 2) for coord in self.coords)
+
+    def __repr__(self):
+        return f"lap_op (Laplacian in {self.dim}D)"
+
+
+class DivergenceOperator(DifferentialOperator):
+    """
+    ∂· - Divergence operator (dot product of gradient with vector field).
+
+    For vector field F: R^n → R^n, returns ∂·F = ∂₁F₁ + ∂₂F₂ + ... + ∂ₙFₙ
+
+    Attributes:
+        coords: List of coordinate symbols
+        dim: Dimension of the space
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> div = DivergenceOperator(coords)
+        >>> F = Matrix([Function(f'F{i}')(*coords) for i in [1,2,3]])
+        >>> div(F)  # Returns ∂F₁/∂x + ∂F₂/∂y + ∂F₃/∂z
+    """
+
+    def __init__(self, coords: List[Symbol]):
+        self.coords = coords
+        self.dim = len(coords)
+
+    def __call__(self, F):
         """
-        Compute partial derivative with respect to a coordinate.
+        Apply divergence to vector field.
 
         Args:
-            coord: Coordinate to differentiate with respect to
-            order: Order of differentiation (default: 1)
+            F: Matrix (column vector) representing vector field
 
         Returns:
-            SymPy expression for the derivative
+            Scalar expression
         """
-        return diff(self.func, coord, order)
+        if not isinstance(F, Matrix):
+            raise TypeError("Divergence applies to vector fields (Matrix)")
 
-    def gradient(self) -> 'VectorField':
+        if len(F) != self.dim:
+            raise ValueError(f"Vector field dimension {len(F)} doesn't match coordinate dimension {self.dim}")
+
+        return sum(diff(F[i], self.coords[i]) for i in range(self.dim))
+
+    def __repr__(self):
+        return f"∂· (divergence in {self.dim}D)"
+
+
+class CurlOperator(DifferentialOperator):
+    """
+    ∂× - Curl operator (cross product of gradient with vector field).
+
+    Only defined in 3D. For F = (F₁, F₂, F₃):
+    ∂×F = (∂yF₃ - ∂zF₂, ∂zF₁ - ∂xF₃, ∂xF₂ - ∂yF₁)
+
+    Attributes:
+        coords: List of 3 coordinate symbols [x, y, z]
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> curl = CurlOperator(coords)
+        >>> F = Matrix([Function(f'F{i}')(*coords) for i in [1,2,3]])
+        >>> curl(F)  # Returns curl vector
+    """
+
+    def __init__(self, coords: List[Symbol]):
+        if len(coords) != 3:
+            raise ValueError(f"Curl only defined for 3D")
+        self.coords = coords
+        self.dim = 3
+
+    def __call__(self, F):
         """
-        Compute gradient: ∇f = (∂f/∂x₁, ∂f/∂x₂, ..., ∂f/∂xₙ)
+        Apply curl to 3D vector field.
+
+        Args:
+            F: Matrix (column vector) with 3 components
 
         Returns:
-            VectorField representing the gradient
+            Matrix (column vector) representing curl
         """
-        components = [diff(self.func, coord) for coord in self.coords]
-        return VectorField(components, self.coords, name=f'∇{self.name}')
+        if not isinstance(F, Matrix):
+            raise TypeError("Curl applies to vector fields (Matrix)")
 
-    def laplacian(self):
+        if len(F) != 3:
+            raise ValueError(f"Curl requires 3D vector field, got {len(F)}D")
+
+        x, y, z = self.coords
+        F1, F2, F3 = F[0], F[1], F[2]
+
+        curl_components = [
+            diff(F3, y) - diff(F2, z),  # i component
+            diff(F1, z) - diff(F3, x),  # j component
+            diff(F2, x) - diff(F1, y),  # k component
+        ]
+
+        return Matrix(curl_components)
+
+    def __repr__(self):
+        return "∂× (curl in 3D)"
+
+
+class JacobianOperator(DifferentialOperator):
+    """
+    ∂⊗ - Jacobian operator (outer product of gradient with vector field).
+
+    For vector field F: R^n → R^m, returns Jacobian matrix J[i,j] = ∂Fᵢ/∂xⱼ
+    Shape: (m, n) where m = len(F), n = len(coords)
+
+    Attributes:
+        coords: List of coordinate symbols
+        dim: Input dimension (n)
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> J = JacobianOperator(coords)
+        >>> F = Matrix([Function(f'F{i}')(*coords) for i in [1,2,3]])
+        >>> J(F)  # Returns 3×3 Jacobian matrix
+    """
+
+    def __init__(self, coords: List[Symbol]):
+        self.coords = coords
+        self.dim = len(coords)
+
+    def __call__(self, F):
         """
-        Compute Laplacian: ∇²f = ∂²f/∂x₁² + ∂²f/∂x₂² + ... + ∂²f/∂xₙ²
+        Compute Jacobian matrix.
+
+        Args:
+            F: Matrix (column vector) representing vector field
 
         Returns:
-            SymPy expression for the Laplacian
+            Matrix representing Jacobian (output_dim × input_dim)
         """
-        return sum(diff(self.func, coord, 2) for coord in self.coords)
+        if not isinstance(F, Matrix):
+            raise TypeError("Jacobian applies to vector fields (Matrix)")
 
-    def hessian(self) -> Matrix:
+        output_dim = len(F)
+        input_dim = self.dim
+
+        J = Matrix.zeros(output_dim, input_dim)
+        for i in range(output_dim):
+            for j in range(input_dim):
+                J[i, j] = diff(F[i], self.coords[j])
+
+        return J
+
+    def __repr__(self):
+        return f"∂⊗ (Jacobian in {self.dim}D)"
+
+
+class HessianOperator(DifferentialOperator):
+    """
+    ∂⊗∂ (or ∂⊗²) - Hessian operator (outer product of gradient with itself).
+
+    For scalar f: R^n → R, returns Hessian matrix H[i,j] = ∂ᵢ∂ⱼf
+    Shape: (n, n) - always square matrix
+
+    Attributes:
+        coords: List of coordinate symbols
+        dim: Dimension of the space
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> H = HessianOperator(coords)
+        >>> f = Function('f')(*coords)
+        >>> H(f)  # Returns 3×3 Hessian matrix
+    """
+
+    def __init__(self, coords: List[Symbol]):
+        self.coords = coords
+        self.dim = len(coords)
+
+    def __call__(self, f):
         """
-        Compute Hessian matrix: H[i,j] = ∂²f/∂xᵢ∂xⱼ
+        Compute Hessian matrix.
+
+        Args:
+            f: Scalar expression
 
         Returns:
-            SymPy Matrix representing the Hessian
+            Matrix representing Hessian (n × n)
         """
+        if isinstance(f, Matrix):
+            raise TypeError("Hessian applies to scalar functions, not vector fields")
+
         n = self.dim
         H = Matrix.zeros(n, n)
         for i in range(n):
             for j in range(n):
-                H[i, j] = diff(self.func, self.coords[i], self.coords[j])
+                H[i, j] = diff(f, self.coords[i], self.coords[j])
+
         return H
+
+    def __repr__(self):
+        return f"∂⊗∂ (Hessian in {self.dim}D)"
+
+
+# ============================================================================
+# Lightweight Wrappers (Optional Convenience)
+# ============================================================================
+
+class ScalarField:
+    """
+    Lightweight wrapper for scalar-valued functions f: R^n → R.
+
+    Just creates a SymPy Function and stores coordinates for convenience.
+    Use operators to compute derivatives, gradients, etc.
+
+    Attributes:
+        name: Name of the field
+        coords: List of coordinate symbols
+        func: Underlying SymPy Function
+        dim: Dimension
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> f = ScalarField('f', coords)
+        >>> grad_op = GradientOperator(coords)
+        >>> grad_op(f)  # Applies gradient to f.func
+    """
+
+    def __init__(self, name: str, coords: List[Symbol]):
+        self.name = name
+        self.coords = coords
+        self.dim = len(coords)
+        self.func = Function(name)(*coords)
+
+    def __call__(self, **kwargs):
+        """Evaluate with substituted coordinates."""
+        return self.func.subs(kwargs)
+
+    def __repr__(self):
+        coord_str = ', '.join(str(c) for c in self.coords)
+        return f"{self.name}({coord_str})"
+
+    def __str__(self):
+        return self.name
+
+    # Enable operators to work directly with ScalarField
+    # They'll extract .func automatically in __call__
+    def _sympy_expr(self):
+        """Return underlying SymPy expression."""
+        return self.func
+
+    # Convenience methods (use operators under the hood)
+    def gradient(self) -> 'VectorField':
+        """Compute gradient using GradientOperator."""
+        grad_op = GradientOperator(self.coords)
+        grad_matrix = grad_op(self.func)
+        return VectorField._from_matrix(grad_matrix, self.coords, name=f'∇{self.name}')
+
+    def laplacian(self):
+        """Compute Laplacian using LaplacianOperator."""
+        lap_op = LaplacianOperator(self.coords)
+        return lap_op(self.func)
+
+    def hessian(self) -> Matrix:
+        """Compute Hessian using HessianOperator."""
+        H = HessianOperator(self.coords)
+        return H(self.func)
+
+    def diff(self, coord: Symbol, order: int = 1):
+        """Compute partial derivative."""
+        grad_op = PartialDerivativeOperator(coord, order)
+        return grad_op(self.func)
 
 
 class VectorField:
     """
-    Represents a vector field F: R^n → R^m.
+    Lightweight wrapper for vector-valued functions F: R^n → R^m.
 
-    A vector-valued function of n coordinates returning m-dimensional vectors.
+    Just wraps a Matrix of SymPy Functions.
+    Use operators to compute divergence, curl, Jacobian, etc.
 
     Attributes:
-        components: List or Matrix of SymPy expressions representing field components
-        coords: List of coordinate symbols [x₁, x₂, ..., xₙ]
-        input_dim: Dimension of the domain (n)
-        output_dim: Dimension of the codomain (m)
-        name: Optional name for the field
+        name: Optional name
+        coords: List of coordinate symbols
+        components: Matrix (column vector) of expressions
+        input_dim: Dimension of domain (n)
+        output_dim: Dimension of codomain (m)
 
     Example:
         >>> coords = make_coords('x y z')
-        >>> # Create electric field E = (E₁(x,y,z), E₂(x,y,z), E₃(x,y,z))
-        >>> E1, E2, E3 = [Function(f'E{i}')(*coords) for i in [1, 2, 3]]
-        >>> E = VectorField([E1, E2, E3], coords, name='E')
+        >>> F = VectorField('E', coords, dim=3)
+        >>> curl = CurlOperator(coords)
+        >>> curl(F)  # Applies curl to F.components
     """
 
-    def __init__(self, components: Union[List, Matrix], coords: List[Symbol], name: str = None):
+    def __init__(self, name_or_components, coords: List[Symbol], dim: int = None, name: str = None):
         """
-        Initialize a vector field.
+        Create a vector field with symbolic components.
 
         Args:
-            components: List or Matrix of symbolic expressions
+            name_or_components: Either a string name (creates symbolic components)
+                               or a list/Matrix of expressions
             coords: Coordinate symbols
-            name: Optional name for pretty printing
+            dim: Output dimension (default: same as len(coords))
+            name: Optional name (used when name_or_components is a list/Matrix)
         """
         self.coords = coords
         self.input_dim = len(coords)
 
-        if isinstance(components, Matrix):
-            self.components = components
+        if isinstance(name_or_components, (list, Matrix)):
+            # Create from explicit components
+            self.components = Matrix(name_or_components) if isinstance(name_or_components, list) else name_or_components
+            self.output_dim = len(self.components)
+            self.name = name
         else:
+            # Create with symbolic function names
+            self.name = name_or_components
+            self.output_dim = dim if dim is not None else self.input_dim
+            components = [Function(f'{self.name}{i+1}')(*coords) for i in range(self.output_dim)]
             self.components = Matrix(components)
 
-        self.output_dim = len(self.components)
-        self.name = name
+    def __call__(self, **kwargs):
+        """Evaluate with substituted coordinates."""
+        return self.components.subs(kwargs)
 
     def __repr__(self):
-        if self.name:
-            return f"VectorField({self.name}, {self.input_dim}D→{self.output_dim}D)"
-        return f"VectorField({self.input_dim}D→{self.output_dim}D)"
+        return f"{self.name}: R^{self.input_dim} → R^{self.output_dim}"
 
     def __str__(self):
-        return self.name if self.name else str(self.components)
+        return self.name
 
     def __getitem__(self, index):
-        """Access components by index."""
+        """Access individual components."""
         return self.components[index]
 
+    # Enable operators to work directly with VectorField
+    def _sympy_expr(self):
+        """Return underlying SymPy Matrix."""
+        return self.components
+
+    @classmethod
+    def _from_matrix(cls, matrix: Matrix, coords: List[Symbol], name: str = None):
+        """Create VectorField from a Matrix."""
+        return cls(matrix, coords, name=name)
+
+    # Convenience methods (use operators under the hood)
+    def divergence(self):
+        """Compute divergence using DivergenceOperator."""
+        div = DivergenceOperator(self.coords)
+        return div(self.components)
+
+    def curl(self) -> 'VectorField':
+        """Compute curl using CurlOperator (3D only)."""
+        curl_op = CurlOperator(self.coords)
+        curl_matrix = curl_op(self.components)
+        return VectorField._from_matrix(curl_matrix, self.coords, name=f'∇×{self.name}' if self.name else 'curl')
+
+    def jacobian(self) -> Matrix:
+        """Compute Jacobian using JacobianOperator."""
+        J = JacobianOperator(self.coords)
+        return J(self.components)
+
+    # Arithmetic and transformations
     def __add__(self, other: 'VectorField') -> 'VectorField':
         """Vector field addition."""
         if not isinstance(other, VectorField):
@@ -193,40 +564,31 @@ class VectorField:
 
         new_components = self.components + other.components
         new_name = f"({self.name} + {other.name})" if self.name and other.name else None
-        return VectorField(new_components, self.coords, name=new_name)
+        return VectorField._from_matrix(new_components, self.coords, name=new_name)
 
     def __mul__(self, scalar) -> 'VectorField':
-        """Scalar multiplication."""
-        new_components = scalar * self.components
-        new_name = f"{scalar}*{self.name}" if self.name else None
-        return VectorField(new_components, self.coords, name=new_name)
+        """Scalar multiplication (field * scalar)."""
+        new_components = self.components * scalar
+        new_name = f"{self.name}*{scalar}" if self.name else None
+        return VectorField._from_matrix(new_components, self.coords, name=new_name)
 
     def __rmul__(self, scalar) -> 'VectorField':
-        """Right scalar multiplication."""
-        return self.__mul__(scalar)
+        """Right scalar multiplication (scalar * field)."""
+        new_components = scalar * self.components
+        new_name = f"{scalar}*{self.name}" if self.name else None
+        return VectorField._from_matrix(new_components, self.coords, name=new_name)
 
     def dot(self, other: 'VectorField'):
-        """
-        Dot product: F · G = Σᵢ Fᵢ Gᵢ
-
-        Returns:
-            SymPy expression for the dot product
-        """
+        """Dot product with another vector field."""
         if not isinstance(other, VectorField):
             raise TypeError("Can only compute dot product with VectorField")
         if self.output_dim != other.output_dim:
             raise ValueError(f"Dimension mismatch: {self.output_dim} vs {other.output_dim}")
 
-        return sum(self.components[i] * other.components[i]
-                   for i in range(self.output_dim))
+        return sum(self.components[i] * other.components[i] for i in range(self.output_dim))
 
     def cross(self, other: 'VectorField') -> 'VectorField':
-        """
-        Cross product: F × G (only for 3D vectors)
-
-        Returns:
-            VectorField representing the cross product
-        """
+        """Cross product with another vector field (3D only)."""
         if self.output_dim != 3 or other.output_dim != 3:
             raise ValueError("Cross product only defined for 3D vectors")
 
@@ -240,197 +602,65 @@ class VectorField:
         ]
 
         new_name = f"({self.name} × {other.name})" if self.name and other.name else None
-        return VectorField(cross_components, self.coords, name=new_name)
-
-    def divergence(self):
-        """
-        Compute divergence: ∇·F = ∂F₁/∂x₁ + ∂F₂/∂x₂ + ... + ∂Fₙ/∂xₙ
-
-        Note: Requires input_dim == output_dim
-
-        Returns:
-            SymPy expression for the divergence
-        """
-        if self.input_dim != self.output_dim:
-            raise ValueError(f"Divergence requires square field: "
-                           f"input_dim={self.input_dim}, output_dim={self.output_dim}")
-
-        return sum(diff(self.components[i], self.coords[i])
-                   for i in range(self.input_dim))
-
-    def curl(self) -> 'VectorField':
-        """
-        Compute curl: ∇×F (only for 3D vector fields)
-
-        For F = (F₁, F₂, F₃):
-        ∇×F = (∂F₃/∂y - ∂F₂/∂z, ∂F₁/∂z - ∂F₃/∂x, ∂F₂/∂x - ∂F₁/∂y)
-
-        Returns:
-            VectorField representing the curl
-        """
-        if self.input_dim != 3 or self.output_dim != 3:
-            raise ValueError("Curl only defined for 3D vector fields")
-
-        x, y, z = self.coords
-        F1, F2, F3 = self.components[0], self.components[1], self.components[2]
-
-        curl_components = [
-            diff(F3, y) - diff(F2, z),  # i component
-            diff(F1, z) - diff(F3, x),  # j component
-            diff(F2, x) - diff(F1, y),  # k component
-        ]
-
-        new_name = f"∇×{self.name}" if self.name else "curl"
-        return VectorField(curl_components, self.coords, name=new_name)
-
-    def jacobian(self) -> Matrix:
-        """
-        Compute Jacobian matrix: J[i,j] = ∂Fᵢ/∂xⱼ
-
-        Returns:
-            SymPy Matrix of shape (output_dim, input_dim)
-        """
-        J = Matrix.zeros(self.output_dim, self.input_dim)
-        for i in range(self.output_dim):
-            for j in range(self.input_dim):
-                J[i, j] = diff(self.components[i], self.coords[j])
-        return J
+        return VectorField._from_matrix(Matrix(cross_components), self.coords, name=new_name)
 
     def simplify(self) -> 'VectorField':
-        """
-        Simplify all components.
-
-        Returns:
-            New VectorField with simplified components
-        """
-        simplified_components = [simplify(c) for c in self.components]
-        return VectorField(simplified_components, self.coords, name=self.name)
+        """Simplify all components."""
+        simplified_components = self.components.applyfunc(simplify)
+        return VectorField._from_matrix(simplified_components, self.coords, name=self.name)
 
     def expand(self) -> 'VectorField':
-        """
-        Expand all components.
-
-        Returns:
-            New VectorField with expanded components
-        """
-        expanded_components = [expand(c) for c in self.components]
-        return VectorField(expanded_components, self.coords, name=self.name)
+        """Expand all components."""
+        expanded_components = self.components.applyfunc(expand)
+        return VectorField._from_matrix(expanded_components, self.coords, name=self.name)
 
     def is_zero(self) -> bool:
-        """
-        Check if all components are zero (after simplification).
-
-        Returns:
-            True if the field is identically zero
-        """
+        """Check if all components are zero (after simplification)."""
         simplified = self.simplify()
         return all(simplify(c) == 0 for c in simplified.components)
 
 
-# Convenience functions for differential operators
+# ============================================================================
+# Operator Enhancement: Allow operators to work with wrappers
+# ============================================================================
 
-def gradient(f: Union[ScalarField, Function]) -> VectorField:
-    """
-    Compute gradient of a scalar field: ∇f
-
-    Args:
-        f: ScalarField or SymPy function with coordinates
-
-    Returns:
-        VectorField representing the gradient
-    """
-    if isinstance(f, ScalarField):
-        return f.gradient()
-    else:
-        # Try to extract coordinates from the function
-        coords = list(f.free_symbols)
-        components = [diff(f, coord) for coord in coords]
-        return VectorField(components, coords, name=f'∇{f.func}')
+def _extract_expr(obj):
+    """Extract SymPy expression from wrapper objects."""
+    if hasattr(obj, '_sympy_expr'):
+        return obj._sympy_expr()
+    return obj
 
 
-def divergence(F: VectorField):
-    """
-    Compute divergence of a vector field: ∇·F
+# Enhance all operators to auto-extract from wrappers
+for op_class in [PartialDerivativeOperator, GradientOperator, LaplacianOperator,
+                 DivergenceOperator, CurlOperator, JacobianOperator, HessianOperator]:
+    original_call = op_class.__call__
 
-    Args:
-        F: VectorField
+    def enhanced_call(self, expr, _original=original_call):
+        return _original(self, _extract_expr(expr))
 
-    Returns:
-        SymPy expression for the divergence
-    """
-    return F.divergence()
+    op_class.__call__ = enhanced_call
 
 
-def curl(F: VectorField) -> VectorField:
-    """
-    Compute curl of a vector field: ∇×F (3D only)
+# ============================================================================
+# Identity Verification Functions
+# ============================================================================
 
-    Args:
-        F: 3D VectorField
-
-    Returns:
-        VectorField representing the curl
-    """
-    return F.curl()
-
-
-def laplacian(f: Union[ScalarField, VectorField]):
-    """
-    Compute Laplacian: ∇²f = ∇·(∇f)
-
-    Args:
-        f: ScalarField or VectorField
-
-    Returns:
-        For scalar: SymPy expression
-        For vector: VectorField (component-wise Laplacian)
-    """
-    if isinstance(f, ScalarField):
-        return f.laplacian()
-    elif isinstance(f, VectorField):
-        # Component-wise Laplacian
-        laplacian_components = []
-        for component in f.components:
-            lap = sum(diff(component, coord, 2) for coord in f.coords)
-            laplacian_components.append(lap)
-        return VectorField(laplacian_components, f.coords, name=f'∇²{f.name}')
-    else:
-        raise TypeError("laplacian requires ScalarField or VectorField")
-
-
-def directional_derivative(f: ScalarField, v: VectorField):
-    """
-    Compute directional derivative: v·∇f
-
-    Args:
-        f: ScalarField
-        v: VectorField (direction)
-
-    Returns:
-        SymPy expression for the directional derivative
-    """
-    grad_f = f.gradient()
-    return grad_f.dot(v)
-
-
-# Vector calculus identity verification functions
-
-def verify_identity(left, right, tolerance=0) -> Tuple[bool, any]:
+def verify_identity(left, right) -> tuple[bool, any]:
     """
     Verify a vector calculus identity by symbolic simplification.
 
     Args:
-        left: Left side of identity (VectorField, ScalarField, or expression)
-        right: Right side of identity
-        tolerance: Not used (for API compatibility)
+        left: Left side (expression or Matrix)
+        right: Right side
 
     Returns:
         Tuple of (is_equal, difference)
     """
-    if isinstance(left, VectorField) and isinstance(right, VectorField):
-        diff_field = left + (-1 * right)
-        simplified = diff_field.simplify()
-        is_equal = simplified.is_zero()
+    if isinstance(left, Matrix) and isinstance(right, Matrix):
+        diff_field = left - right
+        simplified = diff_field.applyfunc(simplify)
+        is_equal = all(simplify(c) == 0 for c in simplified)
         return is_equal, simplified
     else:
         # Scalar expressions
@@ -439,62 +669,180 @@ def verify_identity(left, right, tolerance=0) -> Tuple[bool, any]:
         return is_equal, diff_expr
 
 
-def curl_of_gradient_is_zero(f: ScalarField) -> bool:
+def curl_of_gradient_is_zero(f, coords: List[Symbol] = None) -> bool:
     """
-    Verify identity: ∇×(∇f) = 0 (curl of gradient is always zero)
+    Verify identity: ∂×(∂f) = 0 (curl of gradient is always zero).
 
     Args:
-        f: ScalarField (must be 3D)
+        f: ScalarField or expression
+        coords: Optional coordinates (extracted from ScalarField if not provided)
 
-    Returns:
-        True if identity holds
+    Requires 3D.
     """
-    if f.dim != 3:
-        raise ValueError("This identity requires 3D scalar field")
+    if coords is None:
+        if hasattr(f, 'coords'):
+            coords = f.coords
+        else:
+            raise ValueError("Must provide coords for raw expressions")
 
-    grad_f = gradient(f)
+    grad_op = GradientOperator(coords)
+    curl = CurlOperator(coords)
+
+    grad_f = grad_op(_extract_expr(f))
     curl_grad_f = curl(grad_f)
 
-    return curl_grad_f.is_zero()
+    return all(simplify(c) == 0 for c in curl_grad_f)
 
 
-def divergence_of_curl_is_zero(F: VectorField) -> bool:
+def divergence_of_curl_is_zero(F, coords: List[Symbol] = None) -> bool:
     """
-    Verify identity: ∇·(∇×F) = 0 (divergence of curl is always zero)
+    Verify identity: ∂·(∂×F) = 0 (divergence of curl is always zero).
+
+    Args:
+        F: VectorField or expression
+        coords: Optional coordinates (extracted from VectorField if not provided)
+
+    Requires 3D.
+    """
+    if coords is None:
+        if hasattr(F, 'coords'):
+            coords = F.coords
+        else:
+            raise ValueError("Must provide coords for raw expressions")
+
+    curl = CurlOperator(coords)
+    div = DivergenceOperator(coords)
+
+    curl_F = curl(_extract_expr(F))
+    div_curl_F = div(curl_F)
+
+    return simplify(div_curl_F) == 0
+
+
+def laplacian_is_div_grad(f, coords: List[Symbol] = None) -> bool:
+    """
+    Verify identity: ∂²f = ∂·(∂f) (Laplacian equals divergence of gradient).
+
+    Args:
+        f: ScalarField or expression
+        coords: Optional coordinates (extracted from ScalarField if not provided)
+    """
+    if coords is None:
+        if hasattr(f, 'coords'):
+            coords = f.coords
+        else:
+            raise ValueError("Must provide coords for raw expressions")
+
+    grad_op = GradientOperator(coords)
+    div = DivergenceOperator(coords)
+    lap_op = LaplacianOperator(coords)
+
+    lap_f = lap_op(_extract_expr(f))
+    grad_f = grad_op(_extract_expr(f))
+    div_grad_f = div(grad_f)
+
+    return simplify(lap_f - div_grad_f) == 0
+
+
+# ============================================================================
+# Standalone Convenience Functions (for backward compatibility)
+# ============================================================================
+
+def gradient(f: Union[ScalarField, any]) -> VectorField:
+    """
+    Compute gradient of a scalar field or expression.
+
+    Args:
+        f: ScalarField or SymPy expression
+
+    Returns:
+        VectorField representing the gradient
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> f = ScalarField('f', coords)
+        >>> grad_f = gradient(f)
+    """
+    if isinstance(f, ScalarField):
+        return f.gradient()
+    else:
+        # For raw expressions, extract coordinates and create operator
+        coords = sorted(f.free_symbols, key=lambda s: s.name)
+        grad_op = GradientOperator(coords)
+        grad_matrix = grad_op(f)
+        return VectorField._from_matrix(grad_matrix, coords, name=f'∇{f.func}' if hasattr(f, 'func') else None)
+
+
+def divergence(F: Union[VectorField, any]):
+    """
+    Compute divergence of a vector field.
+
+    Args:
+        F: VectorField
+
+    Returns:
+        Scalar expression representing the divergence
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> F = VectorField('F', coords)
+        >>> div_F = divergence(F)
+    """
+    if isinstance(F, VectorField):
+        return F.divergence()
+    else:
+        raise TypeError("divergence() requires a VectorField")
+
+
+def curl(F: Union[VectorField, any]) -> VectorField:
+    """
+    Compute curl of a vector field (3D only).
 
     Args:
         F: VectorField (must be 3D)
 
     Returns:
-        True if identity holds
+        VectorField representing the curl
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> F = VectorField('F', coords)
+        >>> curl_F = curl(F)
     """
-    if F.input_dim != 3 or F.output_dim != 3:
-        raise ValueError("This identity requires 3D vector field")
-
-    curl_F = curl(F)
-    div_curl_F = divergence(curl_F)
-
-    return simplify(div_curl_F) == 0
+    if isinstance(F, VectorField):
+        return F.curl()
+    else:
+        raise TypeError("curl() requires a VectorField")
 
 
-def laplacian_is_div_grad(f: ScalarField) -> bool:
+def laplacian(f: Union[ScalarField, VectorField, any]):
     """
-    Verify identity: ∇²f = ∇·(∇f) (Laplacian equals divergence of gradient)
+    Compute Laplacian of a scalar field or vector field.
 
     Args:
-        f: ScalarField
+        f: ScalarField or VectorField
 
     Returns:
-        True if identity holds
+        For scalar: expression
+        For vector: VectorField (component-wise Laplacian)
+
+    Example:
+        >>> coords = make_coords('x y z')
+        >>> f = ScalarField('f', coords)
+        >>> lap_f = laplacian(f)
     """
-    lap_f = f.laplacian()
-    grad_f = f.gradient()
-    div_grad_f = grad_f.divergence()
+    if isinstance(f, ScalarField):
+        return f.laplacian()
+    elif isinstance(f, VectorField):
+        lap_op = LaplacianOperator(f.coords)
+        lap_matrix = lap_op(f.components)
+        return VectorField._from_matrix(lap_matrix, f.coords, name=f'∇²{f.name}' if f.name else None)
+    else:
+        # For raw expressions
+        coords = sorted(f.free_symbols, key=lambda s: s.name)
+        lap_op = LaplacianOperator(coords)
+        return lap_op(f)
 
-    return simplify(lap_f - div_grad_f) == 0
-
-
-# Helper function for creating vector fields from function names
 
 def make_vector_field(name: str, coords: List[Symbol], dim: int = None) -> VectorField:
     """
@@ -513,8 +861,4 @@ def make_vector_field(name: str, coords: List[Symbol], dim: int = None) -> Vecto
         >>> E = make_vector_field('E', coords)
         >>> # Creates E = (E₁(x,y,z), E₂(x,y,z), E₃(x,y,z))
     """
-    if dim is None:
-        dim = len(coords)
-
-    components = [Function(f'{name}{i+1}')(*coords) for i in range(dim)]
-    return VectorField(components, coords, name=name)
+    return VectorField(name, coords, dim=dim)
