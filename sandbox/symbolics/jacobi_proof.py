@@ -9,8 +9,9 @@ We work purely algebraically with abstract gradient symbols, applying only:
 No concrete functions, no dimension expansion - just symbol manipulation.
 """
 
-from sympy import symbols, expand, simplify, latex, Add
 from collections import Counter
+
+from sympy import symbols, expand, simplify, latex, Add
 
 
 def prove_jacobi_algebraically(verbose=True):
@@ -209,6 +210,7 @@ def generate_latex_proof(proof_data, use_partial=True):
     Returns:
         String containing LaTeX code
     """
+
     # Custom LaTeX conversion with ∂ notation
     def custom_latex(expr, symbols_map):
         latex_str = latex(expr)
@@ -269,7 +271,8 @@ def generate_latex_proof(proof_data, use_partial=True):
     output.append(r"\end{equation}")
     output.append("")
     output.append(r"\subsection*{Proof}")
-    output.append(r"Using abstract gradient symbols and the product rule $\partial(ab) = (\partial a)b + a(\partial b)$, we expand each nested bracket:")
+    output.append(
+        r"Using abstract gradient symbols and the product rule $\partial(ab) = (\partial a)b + a(\partial b)$, we expand each nested bracket:")
     output.append("")
     output.append(r"\begin{align}")
 

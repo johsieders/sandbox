@@ -21,8 +21,8 @@ def create_phase_space(n_dim: int):
     Returns:
         Tuple of (x, p) where each is a Matrix (column vector) of symbolics variables
     """
-    x_vars = symbols(f'x1:{n_dim+1}', real=True)
-    p_vars = symbols(f'p1:{n_dim+1}', real=True)
+    x_vars = symbols(f'x1:{n_dim + 1}', real=True)
+    p_vars = symbols(f'p1:{n_dim + 1}', real=True)
 
     x = Matrix(x_vars)
     p = Matrix(p_vars)
@@ -117,8 +117,8 @@ if __name__ == "__main__":
     x, p = symbols('x p', real=True)
 
     # Example functions
-    f_example = x**2 + p**2  # Energy-like function
-    g_example = x * p        # Angular momentum-like
+    f_example = x ** 2 + p ** 2  # Energy-like function
+    g_example = x * p  # Angular momentum-like
 
     bracket = poisson_bracket(f_example, g_example, [x], [p])
     print(f"f = {f_example}")
@@ -141,7 +141,7 @@ if __name__ == "__main__":
     print()
 
     # Angular momentum in 2D: L = x1*p2 - x2*p1
-    L = x[0]*p[1] - x[1]*p[0]
+    L = x[0] * p[1] - x[1] * p[0]
     print(f"L = {L}")
 
     # Now compute brackets directly with x and p vectors!

@@ -6,7 +6,7 @@ Verifies fundamental vector calculus identities and operations.
 
 import pytest
 from sympy import symbols, simplify
-from sandbox.symbolics.vector_calculus import (
+from sandbox.symbolics.vector_calculus_1 import (
     make_coords, ScalarField, VectorField,
     gradient, divergence, curl, laplacian,
     make_vector_field,

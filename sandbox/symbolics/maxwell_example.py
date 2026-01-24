@@ -14,8 +14,9 @@ Maxwell's Equations in vacuum:
     ∇×B = μ₀J + μ₀ε₀∂E/∂t  (Ampère-Maxwell law)
 """
 
-from sympy import symbols, Function, simplify, diff, latex
-from sandbox.symbolics.vector_calculus import (
+from sympy import symbols, Function, simplify, diff
+
+from sandbox.symbolics.vector_calculus_1 import (
     make_coords, ScalarField, VectorField, make_vector_field,
     gradient, divergence, curl, laplacian
 )
@@ -320,7 +321,7 @@ def example_plane_wave():
 
     where ω = ck (dispersion relation)
     """
-    from sympy import sin, cos
+    from sympy import sin
 
     coords = make_coords('x y z')
     x, y, z = coords
@@ -331,17 +332,17 @@ def example_plane_wave():
 
     # Electric field: E = E₀ sin(kz - ωt) x̂
     E_components = [
-        E0 * sin(k*z - omega*t),  # x component
-        0,                         # y component
-        0                          # z component
+        E0 * sin(k * z - omega * t),  # x component
+        0,  # y component
+        0  # z component
     ]
     E = VectorField(E_components, coords, name='E')
 
     # Magnetic field: B = (E₀/c) sin(kz - ωt) ŷ
     B_components = [
-        0,                              # x component
-        (E0/c) * sin(k*z - omega*t),   # y component
-        0                               # z component
+        0,  # x component
+        (E0 / c) * sin(k * z - omega * t),  # y component
+        0  # z component
     ]
     B = VectorField(B_components, coords, name='B')
 

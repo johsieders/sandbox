@@ -21,12 +21,13 @@ Example usage:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import List, Union, Tuple
+
 from sympy import (
     symbols, Function, Matrix, diff, simplify, expand,
-    latex, Symbol, Derivative
+    Symbol
 )
-from typing import List, Union, Tuple
-from dataclasses import dataclass
 
 
 def make_coords(coord_str: str) -> List[Symbol]:
@@ -255,7 +256,7 @@ class VectorField:
         """
         if self.input_dim != self.output_dim:
             raise ValueError(f"Divergence requires square field: "
-                           f"input_dim={self.input_dim}, output_dim={self.output_dim}")
+                             f"input_dim={self.input_dim}, output_dim={self.output_dim}")
 
         return sum(diff(self.components[i], self.coords[i])
                    for i in range(self.input_dim))
@@ -518,5 +519,5 @@ def make_vector_field(name: str, coords: List[Symbol], dim: int = None) -> Vecto
     if dim is None:
         dim = len(coords)
 
-    components = [Function(f'{name}{i+1}')(*coords) for i in range(dim)]
+    components = [Function(f'{name}{i + 1}')(*coords) for i in range(dim)]
     return VectorField(components, coords, name=name)

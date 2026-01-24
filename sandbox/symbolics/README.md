@@ -1,11 +1,12 @@
 # Symbolic Vector Calculus Engine
 
-A dimension-aware symbolic calculus engine built on SymPy for proving vector calculus identities 
+A dimension-aware symbolic calculus engine built on SymPy for proving vector calculus identities
 and deriving fundamental equations in mathematical physics.
 
 ## Overview
 
 This module provides clean, mathematical abstractions for:
+
 - **Scalar fields**: f: R^n → R
 - **Vector fields**: F: R^n → R^m
 - **Differential operators**: gradient, divergence, curl, Laplacian, Jacobian
@@ -15,11 +16,13 @@ This module provides clean, mathematical abstractions for:
 ## Philosophy
 
 **Leverage SymPy, don't rebuild it:**
+
 - SymPy's differentiation engine handles all the calculus
 - Product rule, chain rule, mixed partials all work automatically
 - We provide dimension-aware wrappers and domain-specific notation
 
 **Work symbolically:**
+
 - No numerical values needed
 - Proofs work for arbitrary dimensions and functions
 - Follows the approach of `jacobi_proof.py`: pure symbol manipulation
@@ -29,9 +32,9 @@ This module provides clean, mathematical abstractions for:
 No additional dependencies beyond SymPy (already in requirements.txt).
 
 ```python
-from sandbox.symbolics.vector_calculus import (
-    make_coords, ScalarField, VectorField,
-    gradient, divergence, curl, laplacian
+from sandbox.symbolics.vector_calculus_1 import (
+   make_coords, ScalarField, VectorField,
+   gradient, divergence, curl, laplacian
 )
 ```
 
@@ -56,7 +59,7 @@ lap_f = f.laplacian()  # Returns scalar expression
 ### Vector Fields
 
 ```python
-from sandbox.symbolics.vector_calculus import make_vector_field
+from sandbox.symbolics.vector_calculus_1 import make_vector_field
 
 # Create electric field E = (E₁(x,y,z), E₂(x,y,z), E₃(x,y,z))
 coords = make_coords('x y z')
@@ -71,16 +74,16 @@ curl_E = curl(E)
 # Vector operations
 B = make_vector_field('B', coords)
 cross_product = E.cross(B)  # E×B
-dot_product = E.dot(B)       # E·B
+dot_product = E.dot(B)  # E·B
 ```
 
 ### Verifying Identities
 
 ```python
-from sandbox.symbolics.vector_calculus import (
-    curl_of_gradient_is_zero,
-    divergence_of_curl_is_zero,
-    laplacian_is_div_grad
+from sandbox.symbolics.vector_calculus_1 import (
+   curl_of_gradient_is_zero,
+   divergence_of_curl_is_zero,
+   laplacian_is_div_grad
 )
 
 coords = make_coords('x y z')
@@ -128,6 +131,7 @@ E, B = example_plane_wave()
 ```
 
 Output:
+
 ```
 1. Gauss's Law: ∇·E = 0
 2. No Magnetic Monopoles: ∇·B = 0
@@ -173,12 +177,14 @@ lap_phi = phi.laplacian()   # 4D Laplacian
 ### Core Classes
 
 **ScalarField**: Represents scalar-valued functions
+
 - `f.gradient()` → VectorField
 - `f.laplacian()` → scalar
 - `f.hessian()` → Matrix
 - `f.diff(coord, order)` → derivative
 
 **VectorField**: Represents vector-valued functions
+
 - `F.divergence()` → scalar
 - `F.curl()` → VectorField (3D only)
 - `F.jacobian()` → Matrix
@@ -213,11 +219,13 @@ lap_phi = phi.laplacian()   # 4D Laplacian
 ## Testing
 
 Run all tests:
+
 ```bash
 python3 -m pytest tests/symbolics/test_vector_calculus.py -v
 ```
 
 23 tests covering:
+
 - Scalar and vector field operations
 - All differential operators
 - Fundamental vector calculus identities
@@ -232,15 +240,15 @@ All tests pass in ~0.2 seconds.
 ### Current Examples
 
 1. **Poisson Brackets** (`poisson.py`, `jacobi_proof.py`)
-   - Hamiltonian mechanics
-   - Phase space formulation
-   - Jacobi identity proof (dimension-independent)
+    - Hamiltonian mechanics
+    - Phase space formulation
+    - Jacobi identity proof (dimension-independent)
 
 2. **Electromagnetism** (`maxwell_example.py`)
-   - Maxwell's equations
-   - Electromagnetic wave equation
-   - Plane wave solutions
-   - Poynting vector and energy conservation
+    - Maxwell's equations
+    - Electromagnetic wave equation
+    - Plane wave solutions
+    - Poynting vector and energy conservation
 
 ### Future Applications
 
@@ -257,11 +265,13 @@ Ideas for extending the engine:
 SymPy has `sympy.vector` with `CoordSys3D`, `gradient()`, `divergence()`, `curl()`, etc.
 
 **When to use SymPy's vector module:**
+
 - Working specifically in 3D
 - Need built-in coordinate transformations (cylindrical, spherical)
 - Want integrated coordinate system management
 
 **When to use this engine:**
+
 - Need arbitrary dimensions (2D, 4D, n-D)
 - Want cleaner programmatic interface
 - Building domain-specific applications
@@ -291,6 +301,7 @@ SymPy has `sympy.vector` with `CoordSys3D`, `gradient()`, `divergence()`, `curl(
 ### Classes
 
 **ScalarField(name, coords)**
+
 - `.func` - SymPy Function object
 - `.dim` - Dimension
 - `.gradient()` - Compute gradient
@@ -299,6 +310,7 @@ SymPy has `sympy.vector` with `CoordSys3D`, `gradient()`, `divergence()`, `curl(
 - `.diff(coord, order)` - Partial derivative
 
 **VectorField(components, coords, name)**
+
 - `.components` - Matrix of components
 - `.input_dim`, `.output_dim` - Dimensions
 - `.divergence()` - Compute divergence
@@ -312,6 +324,7 @@ SymPy has `sympy.vector` with `CoordSys3D`, `gradient()`, `divergence()`, `curl(
 ## Performance
 
 The engine is optimized for **symbolic** computation, not numerical:
+
 - Fast for moderate expression sizes
 - May be slow for very large expanded expressions
 - Use `simplify()` to reduce expression complexity
@@ -322,6 +335,7 @@ For numerical computation, use NumPy/SciPy instead.
 ## References
 
 ### Implemented Examples
+
 - `sandbox/symbolics/jacobi_proof.py` - Dimension-independent Jacobi identity
 - `sandbox/symbolics/poisson.py` - Poisson brackets with concrete functions
 - `sandbox/symbolics/maxwell_example.py` - Electromagnetic field theory
@@ -329,6 +343,7 @@ For numerical computation, use NumPy/SciPy instead.
 - `tests/symbolic/test_poisson.py` - Poisson bracket tests
 
 ### Mathematical Background
+
 - Vector calculus identities
 - Maxwell's equations
 - Hamiltonian mechanics and Poisson brackets
@@ -344,17 +359,19 @@ To add new applications:
 4. Follow the pattern: define fields → apply operators → verify identities
 
 Example template:
+
 ```python
-from sandbox.symbolics.vector_calculus import (
-    make_coords, ScalarField, VectorField,
-    gradient, divergence, curl
+from sandbox.symbolics.vector_calculus_1 import (
+   make_coords, ScalarField, VectorField,
+   gradient, divergence, curl
 )
 
+
 def my_application():
-    coords = make_coords('x y z')
-    # ... define your fields and operators ...
-    # ... verify your identities ...
-    return results
+   coords = make_coords('x y z')
+   # ... define your fields and operators ...
+   # ... verify your identities ...
+   return results
 ```
 
 ## License

@@ -4,14 +4,15 @@ Quick demonstration of symbolic vector calculus engine.
 Run this to see the engine in action verifying fundamental vector calculus identities.
 """
 
-from sandbox.symbolics.vector_calculus import (
-    make_coords, ScalarField, VectorField, make_vector_field,
+from sympy import simplify
+
+from sandbox.symbolics.vector_calculus_1 import (
+    make_coords, ScalarField, make_vector_field,
     gradient, divergence, curl, laplacian,
     curl_of_gradient_is_zero,
     divergence_of_curl_is_zero,
     laplacian_is_div_grad
 )
-from sympy import simplify
 
 
 def demo_basic_operations():
