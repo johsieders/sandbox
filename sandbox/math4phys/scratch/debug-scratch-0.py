@@ -1,7 +1,6 @@
-from sympy import zeros, IndexedBase, symbols, pprint, simplify
+from sympy import IndexedBase, symbols, pprint, simplify
 
-from sandbox.symbolics.vector_calculus import (curl, divergence, gradient, jacobian, laplacian, poisson,
-                                               make_vector_field, make_scalar_field, expr_equal, matrices_equal)
+from sandbox.math4phys.vector_calculus import (curl, divergence, make_vector_field, expr_equal)
 
 if __name__ == "__main__":
     n_dim = 3
@@ -43,7 +42,7 @@ if __name__ == "__main__":
     print()
 
     print("=" * 60)
-    print("Testing with symbols (scratch-0a.py style)")
+    print("Testing with symbols (test_differentiation.py style)")
     print("=" * 60)
 
     x2 = symbols(f'x_1:{n_dim + 1}', real=True)

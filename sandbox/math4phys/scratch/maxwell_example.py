@@ -16,7 +16,7 @@ Maxwell's Equations in vacuum:
 
 from sympy import symbols, Function, simplify, diff
 
-from sandbox.symbolics.vector_calculus_1 import (
+from math4phys.archive.vector_calculus_1 import (
     make_coords, ScalarField, VectorField, make_vector_field,
     gradient, divergence, curl, laplacian
 )

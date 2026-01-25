@@ -32,7 +32,7 @@ This module provides clean, mathematical abstractions for:
 No additional dependencies beyond SymPy (already in requirements.txt).
 
 ```python
-from sandbox.symbolics.vector_calculus_1 import (
+from math4phys.archive.vector_calculus_1 import (
    make_coords, ScalarField, VectorField,
    gradient, divergence, curl, laplacian
 )
@@ -59,7 +59,7 @@ lap_f = f.laplacian()  # Returns scalar expression
 ### Vector Fields
 
 ```python
-from sandbox.symbolics.vector_calculus_1 import make_vector_field
+from math4phys.archive.vector_calculus_1 import make_vector_field
 
 # Create electric field E = (E₁(x,y,z), E₂(x,y,z), E₃(x,y,z))
 coords = make_coords('x y z')
@@ -80,7 +80,7 @@ dot_product = E.dot(B)  # E·B
 ### Verifying Identities
 
 ```python
-from sandbox.symbolics.vector_calculus_1 import (
+from math4phys.archive.vector_calculus_1 import (
    curl_of_gradient_is_zero,
    divergence_of_curl_is_zero,
    laplacian_is_div_grad
@@ -117,10 +117,10 @@ All fundamental identities are verified in `tests/symbolics/test_vector_calculus
 See `sandbox/symbolics/maxwell_example.py` for a complete implementation:
 
 ```python
-from sandbox.symbolics.maxwell_example import (
-    create_em_fields,
-    print_maxwell_equations,
-    example_plane_wave
+from math4phys.scratch.maxwell_example import (
+   create_em_fields,
+   print_maxwell_equations,
+   example_plane_wave
 )
 
 # Print all four Maxwell equations symbolically
@@ -144,7 +144,7 @@ Output:
 See `sandbox/symbolics/poisson.py` and `sandbox/symbolics/jacobi_proof.py`:
 
 ```python
-from sandbox.symbolics.poisson import poisson_bracket, verify_jacobi_identity
+from math4phys.archive.poisson import poisson_bracket, verify_jacobi_identity
 
 # Verify Jacobi identity: {f, {g, h}} + {g, {h, f}} + {h, {f, g}} = 0
 result, is_zero = verify_jacobi_identity(n_dim=3)
@@ -221,7 +221,7 @@ lap_phi = phi.laplacian()   # 4D Laplacian
 Run all tests:
 
 ```bash
-python3 -m pytest tests/symbolics/test_vector_calculus.py -v
+python3 -m pytest tests/math4phys/test_vector_calculus.py -v
 ```
 
 23 tests covering:
@@ -361,7 +361,7 @@ To add new applications:
 Example template:
 
 ```python
-from sandbox.symbolics.vector_calculus_1 import (
+from math4phys.archive.vector_calculus_1 import (
    make_coords, ScalarField, VectorField,
    gradient, divergence, curl
 )

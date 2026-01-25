@@ -6,7 +6,7 @@ Run this to see the engine in action verifying fundamental vector calculus ident
 
 from sympy import simplify
 
-from sandbox.symbolics.vector_calculus_1 import (
+from math4phys.archive.vector_calculus_1 import (
     make_coords, ScalarField, make_vector_field,
     gradient, divergence, curl, laplacian,
     curl_of_gradient_is_zero,
@@ -271,8 +271,8 @@ if __name__ == "__main__":
     print("=" * 70)
     print()
     print("Next steps:")
-    print("  1. See sandbox/symbolics/maxwell_example.py for Maxwell's equations")
-    print("  2. See sandbox/symbolics/poisson.py for Poisson brackets")
-    print("  3. See sandbox/symbolics/jacobi_proof.py for algebraic proofs")
-    print("  4. Run tests: python3 -m pytest tests/symbolics/test_vector_calculus.py -v")
+    print("  1. See sandbox/math4phys/maxwell_example.py for Maxwell's equations")
+    print("  2. See sandbox/math4phys/poisson.py for Poisson brackets")
+    print("  3. See sandbox/math4phys/jacobi_proof.py for algebraic proofs")
+    print("  4. Run tests: python3 -m pytest tests/math4phys/test_vector_calculus.py -v")
     print("=" * 70)

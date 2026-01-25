@@ -2,7 +2,8 @@
 
 ## Problem Summary
 
-SymPy's `IndexedBase` doesn't automatically recognize that mixed partial derivatives commute (Schwarz's theorem), causing vector calculus identities to fail.
+SymPy's `IndexedBase` doesn't automatically recognize that mixed partial derivatives commute (Schwarz's theorem),
+causing vector calculus identities to fail.
 
 ## Demonstration
 
@@ -56,6 +57,7 @@ p = symbols('p_1:4', real=True)
 ```
 
 **Advantages:**
+
 - Mixed partials commute automatically
 - All vector calculus identities work
 - Cleaner mathematical notation
@@ -64,12 +66,14 @@ p = symbols('p_1:4', real=True)
 ### When to Use IndexedBase
 
 Use IndexedBase for:
+
 - Tensor algebra (summation convention)
 - Array/matrix indexing notation
 - Code generation
 - When you're NOT doing symbolic differentiation
 
 **NOT recommended for:**
+
 - Symbolic vector calculus
 - Computing gradients, curls, divergences
 - Verifying differential identities
@@ -84,4 +88,5 @@ Use IndexedBase for:
 
 **For scratch-0.py to work like scratch-0a.py: Use regular `symbols()` instead of `IndexedBase`.**
 
-The mathematical notation `x[1], x[2], x[3]` looks nice, but SymPy's differentiation engine isn't designed to handle it properly for symbolic calculus operations.
+The mathematical notation `x[1], x[2], x[3]` looks nice, but SymPy's differentiation engine isn't designed to handle it
+properly for symbolic calculus operations.

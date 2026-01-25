@@ -1,6 +1,6 @@
 from sympy import zeros, IndexedBase
 
-from sandbox.symbolics.vector_calculus import (curl, divergence, gradient, jacobian, laplacian, poisson,
+from sandbox.math4phys.vector_calculus import (curl, divergence, gradient, jacobian, laplacian, poisson,
                                                make_vector_field, make_scalar_field, expr_equal, matrices_equal)
 
 if __name__ == "__main__":

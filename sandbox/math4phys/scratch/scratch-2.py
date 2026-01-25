@@ -1,21 +1,14 @@
 from sympy import symbols, sin, Matrix, pprint
 from sympy.abc import r, s, t
 
-from sandbox.symbolics.vector_calculus import (divergence, gradient, make_vector_field, make_scalar_field, evaluate)
+from sandbox.math4phys.vector_calculus import (divergence, gradient, make_vector_field, make_scalar_field, evaluate)
 
 if __name__ == "__main__":
     n_dim = 3
 
-    # x = symbols(f'x_1:{n_dim + 1}', real=True)
-    # p = symbols(f'p_1:{n_dim + 1}', real=True)
-    # v = symbols(f'v_1:{n_dim + 1}', real=True)
-
-    x_1, x_2, x_3 = symbols('x_1, x_2, x_3', real=True)
-    p_1, p_2, p_3 = symbols('p_1, p_2, p_3', real=True)
-    v_1, v_2, v_3 = symbols('v1, v_2, v_3', real=True)
-    x = [x_1, x_2, x_3]
-    p = [p_1, p_2, p_3]
-    v = [v_1, v_2, v_3]
+    x_1, x_2, x_3 = x = symbols(f'x_1:{n_dim + 1}', real=True)
+    p_1, p_2, p_3 = p = symbols(f'p_1:{n_dim + 1}', real=True)
+    v_1, v_2, v_3 = v = symbols(f'v_1:{n_dim + 1}', real=True)
 
     xp = x + p
 
@@ -53,3 +46,7 @@ if __name__ == "__main__":
     X2 = X.T * X
     gx = gradient(X2, x)
     dx = divergence(X, x)
+    
+   
+    g = gradient(x_1, x)
+    pprint(g)

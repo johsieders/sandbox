@@ -26,7 +26,8 @@ if __name__ == "__main__":
 
     # Check what divergence does
     print("Computing divergence manually:")
-    from sandbox.symbolics.vector_calculus import divergence
+    from sandbox.math4phys.vector_calculus import divergence
+
     div_result = divergence(F_list, x_list)
     print("divergence(F, x_list) =")
     pprint(div_result)

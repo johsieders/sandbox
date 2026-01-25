@@ -137,9 +137,9 @@ tests/symbolics/
 ## Quick Start
 
 ```python
-from sandbox.symbolics.vector_calculus_1 import (
-    make_coords, ScalarField, make_vector_field,
-    gradient, divergence, curl
+from math4phys.archive.vector_calculus_1 import (
+   make_coords, ScalarField, make_vector_field,
+   gradient, divergence, curl
 )
 
 # Create 3D coordinates

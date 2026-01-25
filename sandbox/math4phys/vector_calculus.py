@@ -1,3 +1,7 @@
+# vector calculus
+# 25/01/2026
+# Johannes Siedersleben
+
 """
 Operator-Based Symbolic Vector Calculus Engine
 
@@ -13,12 +17,9 @@ Design philosophy:
 """
 
 # todo
-# make args optional, use f.free_symbols if None
 # review evaluate and substitution
-# naming convention x_list, x_base, x?
 # replace x with x(t), apply chain rule
-# forget about IndexedBase
-# hessian1
+
 
 from __future__ import annotations
 
@@ -99,32 +100,49 @@ def matrices_equal(F, G: Matrix) -> bool:
     return all(simplify(element) == 0 for element in F - G)
 
 
-def gradient(f: Expr, args: List[Symbol]) -> Matrix:
-    """return the gradient of f as a (nx1) Matrix of Expr"""
+def gradient(f: Expr, args: List[Symbol] = None) -> Matrix:
+    """
+    return the gradient of f as a (nx1) Matrix of Expr
+    If args is None, uses f.free_symbols sorted alphabetically by name.
+    """
+    if args is None:
+        args = sorted(f.free_symbols, key=lambda s: s.name)
     return Matrix([f.diff(arg) for arg in args])
 
 
-def laplacian(F: Expr | Matrix, args: List[Symbol]) -> Expr | Matrix:
-    """return laplacian of f as an Expr if f is scalar
-       return vector of laplacian(f) if F is a vector
-    
+def laplacian(F: Expr | Matrix, args: List[Symbol] = None) -> Expr | Matrix:
     """
+    return laplacian of f as an Expr if f is scalar
+    return vector of laplacian(f) if F is a vector
+    If args is None, uses f.free_symbols sorted alphabetically by name.
+    """
+    if args is None:
+        args = sorted(F.free_symbols, key=lambda s: s.name)
     if isinstance(F, Expr):
         return sum(F.diff(arg, 2) for arg in args)
     else:
         return Matrix([laplacian(f, args) for f in F])
 
 
-def divergence(F: Matrix, args: List[Symbol]) -> Expr:
-    """return the divergence of F as an Expr"""
+def divergence(F: Matrix, args: List[Symbol] = None) -> Expr:
+    """How would you modify 
+    return the divergence of F as an Expr
+    If args is None, uses f.free_symbols sorted alphabetically by name.
+    """
+    if args is None:
+        args = sorted(F.free_symbols, key=lambda s: s.name)
     return sum(F[i].diff(args[i]) for i in range(len(args)))
 
 
-def curl(F: Matrix, args: List[Symbol]) -> Matrix:
-    """return the curl of F as a (3x1) Matrix of Expr"""
+def curl(F: Matrix, args: List[Symbol] = None) -> Matrix:
+    """
+    return the curl of F as a (3x1) Matrix of Expr
+    If args is None, uses f.free_symbols sorted alphabetically by name.
+    """
+    if args is None:
+        args = sorted(F.free_symbols, key=lambda s: s.name)
     if not (len(args) == 3 and F.shape == (3, 1)):
         raise TypeError
-
     components = [
         F[2].diff(args[1]) - F[1].diff(args[2]),
         F[0].diff(args[2]) - F[2].diff(args[0]),
@@ -133,34 +151,31 @@ def curl(F: Matrix, args: List[Symbol]) -> Matrix:
     return Matrix(components)
 
 
-def hessian(f: Expr, args: List[Symbol]) -> Matrix:
-    """return the hessian of f as a (mxm) Matrix of Expr"""
-    m = len(args)
-    H = Matrix.zeros(m, m)
-    for i in range(m):
-        for j in range(m):
-            H[i, j] = f.diff(args[j]).diff(args[i])
-    return H
-
-
-def hessian1(f: Expr, args: List[Symbol]=None) -> Matrix:
-    """return the hessian of f as a (mxm) Matrix of Expr"""
+def hessian(f: Expr, args: List[Symbol] = None) -> Matrix:
+    """
+    return the hessian of f as a (mxm) Matrix of Expr
+    If args is None, uses f.free_symbols sorted alphabetically by name.
+    """
     if args is None:
-        args = f.free_symbols
-    return Matrix([[diff(f, i, j) for i in args] for j in args ])
+        args = sorted(f.free_symbols, key=lambda s: s.name)
+    return Matrix([[diff(f, i, j) for i in args] for j in args])
 
 
-def jacobian(F: Matrix, args: List[Symbol]=None) -> Matrix:
-    """return the Jacobian of F as a (mxn) Matrix of Expr"""
+def jacobian(F: Matrix, args: List[Symbol] = None) -> Matrix:
+    """
+    return the Jacobian of F as a (mxn) Matrix of Expr
+    If args is None, uses F.free_symbols sorted alphabetically by name.
+    """
     if args is None:
-        args = F.free_symbols
+        args = sorted(F.free_symbols, key=lambda s: s.name)
     rows = [F.diff(arg).T for arg in args]
     return Matrix.vstack(*rows)
 
 
-def poisson(A, B: Expr, xs, ps: List[Symbol]) -> Expr:
-    """return {A, B}
-       xs, ps are supposed to be disjoint subsets of the arguments of A and B.
-       Normally: xs = (x_1, x_2, x_3), ps = (p_1, p_2, p_3), 
+def poisson(A, B: Expr, x, p: List[Symbol]) -> Expr:
     """
-    return (gradient(A, xs).T * gradient(B, ps) - gradient(A, ps).T * gradient(B, xs))[0, 0]
+    return {A, B}
+    x, p are supposed to be disjoint subsets of the arguments of A and B.
+    Normally: x = (x_1, x_2, x_3), p = (p_1, p_2, p_3), 
+    """
+    return (gradient(A, x).T * gradient(B, p) - gradient(A, p).T * gradient(B, x))[0, 0]
