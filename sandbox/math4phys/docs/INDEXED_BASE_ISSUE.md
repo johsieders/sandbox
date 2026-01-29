@@ -19,7 +19,7 @@ f_12 = f.diff(x[0]).diff(x[1])  # ∂²f/∂x₁∂x₂
 f_21 = f.diff(x[1]).diff(x[0])  # ∂²f/∂x₂∂x₁
 
 print(f_12 == f_21)  # True ✓
-print(f_12 - f_21)   # 0 ✓
+print(f_12 - f_21)  # 0 ✓
 ```
 
 ### With IndexedBase (Fails ✗)
@@ -35,7 +35,7 @@ f_12 = f.diff(x_list[0]).diff(x_list[1])  # ∂²f/∂x[1]∂x[2]
 f_21 = f.diff(x_list[1]).diff(x_list[0])  # ∂²f/∂x[2]∂x[1]
 
 print(f_12 == f_21)  # False ✗
-print(f_12 - f_21)   # Derivative(...) - Derivative(...) ✗
+print(f_12 - f_21)  # Derivative(...) - Derivative(...) ✗
 ```
 
 ## Impact on Vector Calculus

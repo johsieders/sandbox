@@ -6,8 +6,7 @@
 Includes formal verification of the Jacobi identity and concrete examples.
 """
 
-import pytest
-from sympy import symbols, sin, cos, simplify, Matrix, sympify, Expr
+from sympy import symbols, sin, cos, Matrix, sympify, Expr, latex
 from sympy.abc import a, b
 
 from sandbox.math4phys.vector_calculus import (poisson,
@@ -17,16 +16,15 @@ n_dim = 3
 
 x_1, x_2, x_3 = x = symbols(f'x_1:{n_dim + 1}', real=True)
 p_1, p_2, p_3 = p = symbols(f'p_1:{n_dim + 1}', real=True)
-xp = x + p
 
 # X, P are n x 1 vectors
 X = Matrix(x)
 P = Matrix(p)
 
 # A, B, C are scalars
-A = make_scalar_field('A', xp)
-B = make_scalar_field('B', xp)
-C = make_scalar_field('C', xp)
+A = make_scalar_field('A', x + p)
+B = make_scalar_field('B', x + p)
+C = make_scalar_field('C', x + p)
 
 # f, g, h are scalars, therefore we need [0, 0]
 f = (X.T * X + P.T * P)[0, 0]
@@ -34,8 +32,12 @@ g = (P.T * P)[0, 0]
 h = (X.T * P)[0, 0]
 
 
+def test_latex():
+    print('\n', latex(A))
+
+
 def test_canonical_commutation_relation():
-    """Test that {x, p} = 1 (canonical commutation relation)."""
+    """Test that {x_i, p_j} = delta_ij (canonical commutation relation)."""
 
     for i in range(len(x)):
         for j in range(len(p)):
@@ -72,17 +74,17 @@ def test_constant_bracket_is_zero():
 
 
 def check_jacobi(R, S, T: Expr) -> None:
-
     assert expr_equal(poisson(R, S, x, p) + poisson(S, R, x, p), 0)
     assert expr_equal(poisson(R, poisson(S, T, x, p), x, p) +
                       poisson(S, poisson(T, R, x, p), x, p) +
                       poisson(T, poisson(R, S, x, p), x, p), 0)
 
+
 def test_jacobi():
     """Test Jacobi identity with various functions."""
     check_jacobi(A, B, C)
     check_jacobi(f, g, h)
-    
+
     u = sin(x_1)
     v = cos(p_1)
     w = u * v
