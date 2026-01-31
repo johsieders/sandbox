@@ -159,7 +159,7 @@ def hessian(f: Expr, args: List[Symbol] = None) -> Matrix:
 
 def jacobian(F: Matrix, args: List[Symbol] = None) -> Matrix:
     """
-    return the Jacobian of F as a (mxn) Matrix of Expr
+    return the Jacobian of F as a (mxn) Matrix of Expr where m = dim(args), n = dim(F).
     If args is None, uses F.free_symbols sorted alphabetically by name.
     """
     if args is None:

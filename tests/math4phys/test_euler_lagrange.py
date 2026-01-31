@@ -1,9 +1,9 @@
 # testing euler-lagrange
-# 28/01/2026
+# 31/01/2026
 # Johannes Siedersleben
 
 from sympy import symbols, Matrix, sqrt, sin, cos, pi, zeros
-from sandbox.math4phys.vector_calculus import (Lagrange)
+from sandbox.math4phys.vector_calculus import (curl, Lagrange)
 
 
 def test_euler_lagrange():
@@ -55,6 +55,7 @@ def test_euler_lagrange():
     X_ = C * sin(omega * t) + D * cos(omega * t)
     border_conditions = {0: D, pi / (2 * omega): C}
     catalogue.append(Lagrange('harmonic oscillator', L, X_, x, v, border_conditions))
+
 
     for sys in catalogue:
         assert sys.verify()
