@@ -33,7 +33,7 @@ This module provides clean, mathematical abstractions for vector calculus and Ha
 No additional dependencies beyond SymPy (already in requirements.txt).
 
 ```python
-from sandbox.math4phys.vector_calculus import (
+from sandbox.math4phys.diff_ops import (
     gradient, divergence, curl, laplacian, hessian, jacobian, poisson,
     make_scalar_field, make_vector_field,
     expr_equal, matrices_equal
@@ -46,7 +46,7 @@ from sandbox.math4phys.vector_calculus import (
 
 ```python
 from sympy import symbols
-from sandbox.math4phys.vector_calculus import make_scalar_field, make_vector_field
+from sandbox.math4phys.diff_ops import make_scalar_field, make_vector_field
 
 # Create coordinate symbols
 x = symbols('x_1:4', real=True)  # x_1, x_2, x_3
@@ -97,7 +97,7 @@ grad_f = gradient(f, x)  # Explicit variables (when order matters)
 
 ```python
 from sympy import symbols, Matrix
-from sandbox.math4phys.vector_calculus import poisson
+from sandbox.math4phys.diff_ops import poisson
 
 # Phase space coordinates
 x = symbols('x_1:4', real=True)  # Position
@@ -123,7 +123,7 @@ Verified in `tests/math4phys/test_diff_ops.py` for 5D:
 
 ```python
 from sympy import symbols, zeros
-from sandbox.math4phys.vector_calculus import *
+from sandbox.math4phys.diff_ops import *
 
 n_dim = 5
 x = symbols(f'x_1:{n_dim + 1}', real=True)
@@ -198,7 +198,7 @@ Verified in `tests/math4phys/test_poisson.py`:
 ```python
 from sympy import symbols, Matrix
 from sympy.abc import a, b
-from sandbox.math4phys.vector_calculus import poisson, make_scalar_field
+from sandbox.math4phys.diff_ops import poisson, make_scalar_field
 
 x = symbols('x_1:4', real=True)
 p = symbols('p_1:4', real=True)

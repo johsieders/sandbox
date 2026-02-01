@@ -2,22 +2,25 @@
 # 25/01/2026
 # Johannes Siedersleben
 
-from sympy import zeros, symbols, pprint
+from sympy import zeros, symbols
 
-from sandbox.math4phys.vector_calculus import (curl, divergence, gradient, hessian, jacobian, laplacian,
-                                               make_vector_field, make_scalar_field, expr_equal, matrices_equal)
+from sandbox.math4phys.diff_ops import (curl, divergence, gradient, hessian, jacobian, laplacian,
+                                        make_vector_field, make_scalar_field, expr_equal, matrices_equal)
+
+
 def test_jacobian():
     n_dim = 3
     x = symbols(f'x_1:{n_dim + 1}', real=True)
 
     F = make_vector_field('F', x, n_dim + 1)
-    
+
     J = jacobian(F)
-    
+
     # print()
     # pprint(J)
     # pprint(F.diff(x[0]).T)
-    
+
+
 def test_diff_ops():
     n_dim = 5
 

@@ -1,7 +1,7 @@
 from sympy import zeros, IndexedBase
 
-from sandbox.math4phys.vector_calculus import (curl, divergence, gradient, jacobian, laplacian, poisson,
-                                               make_vector_field, make_scalar_field, expr_equal, matrices_equal)
+from sandbox.math4phys.diff_ops import (curl, divergence, gradient, jacobian, laplacian, poisson,
+                                        make_vector_field, make_scalar_field, expr_equal, matrices_equal)
 
 if __name__ == "__main__":
     n_dim = 3

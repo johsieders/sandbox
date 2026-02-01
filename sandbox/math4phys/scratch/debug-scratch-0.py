@@ -1,6 +1,6 @@
 from sympy import IndexedBase, symbols, pprint, simplify
 
-from sandbox.math4phys.vector_calculus import (curl, divergence, make_vector_field, expr_equal)
+from sandbox.math4phys.diff_ops import (curl, divergence, make_vector_field, expr_equal)
 
 if __name__ == "__main__":
     n_dim = 3

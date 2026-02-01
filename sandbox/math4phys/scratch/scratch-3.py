@@ -1,7 +1,7 @@
 from sympy import symbols, IndexedBase
 from sympy.abc import r, s, t
 
-from sandbox.math4phys.vector_calculus import (make_scalar_field)
+from sandbox.math4phys.diff_ops import (make_scalar_field)
 
 if __name__ == "__main__":
     n_dim = 3

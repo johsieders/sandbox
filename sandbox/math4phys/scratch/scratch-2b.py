@@ -1,7 +1,7 @@
 
 from sympy import diff, symbols, Function, Matrix, pprint, Eq, latex, Symbol, Expr
 
-from sandbox.math4phys.vector_calculus import gradient, euler_lagrange_equation
+from sandbox.math4phys.diff_ops import gradient, euler_lagrange_equation
 
 
 def test_lagrange1():

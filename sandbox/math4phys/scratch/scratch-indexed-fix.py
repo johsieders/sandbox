@@ -1,7 +1,7 @@
 from sympy import symbols, sin, pprint
 from sympy.abc import r, s, t
 
-from sandbox.math4phys.vector_calculus import (make_scalar_field, evaluate)
+from sandbox.math4phys.diff_ops import (make_scalar_field, evaluate)
 
 if __name__ == "__main__":
     print("=" * 60)
