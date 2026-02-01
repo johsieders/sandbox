@@ -207,7 +207,7 @@ The elements of this class are operators that can be applied to SymPy Functions 
 I wonder if we can do without the existing classes ScalarField and VectorField and possibly TensorField.
 No problem if we keep them, but I like the operator based thinking.
 
-I want to make sure that dimensions match, that a curl works only in three dimension and so on. 
+I want to make sure that dimensions match, that a curl works only in three dimension and so on.
 
 ```{math}
 \left[\begin{matrix}\frac{d^{2}}{d \frac{d}{d t} x_{1}{\left(t \right)}^{2}} 

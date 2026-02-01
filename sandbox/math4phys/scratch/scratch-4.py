@@ -1,7 +1,7 @@
 from sympy import symbols, sin, Matrix, pprint, IndexedBase
 from sympy.abc import r, s, t
 
-from sandbox.math4phys.vector_calculus import (divergence, gradient, make_vector_field, make_scalar_field, evaluate)
+from sandbox.math4phys.diff_ops import (divergence, gradient, make_vector_field, make_scalar_field, evaluate)
 
 if __name__ == "__main__":
     n_dim = 3

@@ -1,11 +1,9 @@
+from sympy import diff, symbols, Function, Matrix, pprint, Eq
 
-from sympy import diff, symbols, Function, Matrix, pprint, Eq, latex, Symbol, Expr
-
-from sandbox.math4phys.vector_calculus import gradient, euler_lagrange_equation
+from sandbox.math4phys.diff_ops import gradient, euler_lagrange_equation
 
 
 def test_lagrange1():
-    
     # Define time and mass variable        
     t = symbols('t', real=True)
     m = symbols('m', positive=True)
@@ -49,8 +47,9 @@ def test_lagrange2():
     # Substitute into the gradient expressions
     # compute gradient first, substitute later
     dL_dx = gradient(L, x).subs(subs_dict)  # Now time-dependent   
-    dL_dv = gradient(L, v).subs(subs_dict)  # Now time-dependent                                                                                                                                                                                                                                  
-                                                                                                                                                                                                                                   
+    dL_dv = gradient(L, v).subs(
+        subs_dict)  # Now time-dependent                                                                                                                                                                                                                                  
+
     # Euler-Lagrange                                                                                                                                                                                                                                                              
     euler_lagrange = Eq(diff(dL_dv, t), dL_dx)
     pprint(euler_lagrange)
@@ -69,7 +68,7 @@ def test_lagrange3():
 
     # Define time  variable
     t = symbols('t', real=True)
-  
+
     # General Lagrangian - function of scalar components (not Matrices!)
     L_general = Function('L', real=True)(*x, *v)
 
@@ -90,7 +89,7 @@ def test_lagrange3():
     pprint(euler_lagrange_general)
     print()
 
-   
+
 def test_lagrange_harmonic1():
     """
     General Euler-Lagrange formulation with substitution of specific Lagrangians.
@@ -135,4 +134,3 @@ def test_lagrange_harmonic1():
     print("Which simplifies to the 3D harmonic oscillator:")
     simplified = euler_lagrange.doit()
     pprint(simplified)
-

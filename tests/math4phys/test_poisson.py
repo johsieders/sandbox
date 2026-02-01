@@ -9,8 +9,8 @@ Includes formal verification of the Jacobi identity and concrete examples.
 from sympy import symbols, sin, cos, Matrix, sympify, Expr, latex
 from sympy.abc import a, b
 
-from sandbox.math4phys.vector_calculus import (poisson,
-                                               make_scalar_field, expr_equal)
+from sandbox.math4phys.diff_ops import (poisson,
+                                        make_scalar_field, expr_equal)
 
 n_dim = 3
 

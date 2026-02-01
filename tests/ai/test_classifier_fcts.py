@@ -4,10 +4,9 @@
 # revived 17.10.2025
 
 import torch
-from torch import Tensor, tensor
+from torch import tensor
 
 from sandbox.ai.binary_classifiers.classifier_fcts import _and, _or, _xor, circle, rings, square, plane
-
 
 # Test data
 X_BOOL = tensor([[0, 0], [0, 1], [1, 0], [1, 1]], dtype=torch.float32)
