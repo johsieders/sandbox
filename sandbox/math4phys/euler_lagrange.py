@@ -28,7 +28,7 @@ from sympy import (
 from math4phys.diff_ops import gradient, matrices_equal
 
 
-def euler_lagrange_equation(L: Expr, x: List[Symbol], v: List[Symbol]) -> Eq:
+def get_euler_lagrange(L: Expr, x: List[Symbol], v: List[Symbol]) -> Eq:
     """
     Derive the Euler-Lagrange equation from a Lagrangian.
 
@@ -45,7 +45,7 @@ def euler_lagrange_equation(L: Expr, x: List[Symbol], v: List[Symbol]) -> Eq:
         >>> v = symbols('v_1:3', real=True)
         >>> m, k = symbols('m k', positive=True)
         >>> L = m * sum(vi**2 for vi in v) / 2 - k * sum(xi**2 for xi in x) / 2
-        >>> eq = euler_lagrange_equation(L, x, v)
+        >>> eq = get_euler_lagrange(L, x, v)
     """
     # Define time variable and time-dependent position functions x_i(t)
     t = symbols('t', real=True)
@@ -64,7 +64,7 @@ def euler_lagrange_equation(L: Expr, x: List[Symbol], v: List[Symbol]) -> Eq:
     return Eq(diff(dL_dv, t), dL_dx).doit()
 
 
-def solve_euler_lagrange(eq: Eq, x: List[Symbol], bcs: Dict[Union[float, Expr], Matrix]) -> Matrix:
+def solve_euler_lagrange(eq: Eq, x: List[Symbol], bcs: Dict[Union[float, Expr], Matrix] = None) -> Matrix:
     """
     Solve the Euler-Lagrange equation with boundary conditions.
 
@@ -97,6 +97,9 @@ def solve_euler_lagrange(eq: Eq, x: List[Symbol], bcs: Dict[Union[float, Expr], 
     # Get general solution with arbitrary constants (C1, C2, ...)
     # dsolve returns a list of Eq objects: [Eq(x_1(t), C1 + C2*t), ...]
     x_sol = dsolve(eq.lhs - eq.rhs, x_t)
+
+    if bcs is None:
+        return Matrix(x_sol)
 
     # Extract integration constants from all solution components
     # These are the unknowns we'll solve for using boundary conditions
@@ -135,7 +138,8 @@ def solve_euler_lagrange(eq: Eq, x: List[Symbol], bcs: Dict[Union[float, Expr], 
     return Matrix([x_sol[i].rhs.subs(constants) for i in range(len(x))])
 
 
-def check_euler_lagrange(solution: Matrix, eq: Eq, x: List[Symbol], bcs: Dict[Union[float, Expr], Matrix]) -> List[
+def check_euler_lagrange(solution: Matrix, eq: Eq, x: List[Symbol], bcs: Dict[Union[float, Expr], Matrix] = None) -> \
+List[
     bool]:
     """
     Verify that a solution satisfies the Euler-Lagrange equation and boundary conditions.
@@ -168,6 +172,9 @@ def check_euler_lagrange(solution: Matrix, eq: Eq, x: List[Symbol], bcs: Dict[Un
     rhs = eq.rhs.subs(subs_dict).doit().simplify()
     result = [matrices_equal(lhs, rhs)]
 
+    if bcs is None:
+        return result
+
     # Verify each boundary condition: x(t_val) should equal boundary_vec
     for t_val, boundary_vec in bcs.items():
         result.append(matrices_equal(solution.subs(t, t_val), boundary_vec))
@@ -181,14 +188,12 @@ def run_euler_lagrange(lagrangian: Expr, x, v: List[Symbol],
     Euler-Lagrange test runner for Lagrangians
     """
 
-    # Solve the system
-    eq = euler_lagrange_equation(lagrangian, x, v)
-    solution = solve_euler_lagrange(eq, x, bcs)
-
-    # Verify solution satisfies equation and boundary conditions
-    success = check_euler_lagrange(solution, eq, x, bcs)
+    # Solve the system and check solution
+    eq = get_euler_lagrange(lagrangian, x, v)
+    x_sol = solve_euler_lagrange(eq, x, bcs)
+    success = check_euler_lagrange(x_sol, eq, x, bcs)
     assert all(success), "Solution failed verification"
 
     # Display results
     print('\nSolution with boundary conditions x(0)=c, x(1)=d:')
-    pprint(solution)
+    pprint(x_sol)
