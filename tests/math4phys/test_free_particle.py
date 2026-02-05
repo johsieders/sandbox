@@ -1,5 +1,5 @@
 # Testing Euler-Lagrange equation solver
-# 01/02/2026
+# 02/02/2026
 # Johannes Siedersleben
 
 """
@@ -18,9 +18,9 @@ from math4phys.euler_lagrange import (
 )
 
 
-def test_euler_lagrange():
+def test_free_particle():
     """
-    Test Euler-Lagrange for various lagrangians
+    Test Euler-Lagrange for free particles
     """
     n_dim = 3
     m = symbols('m', positive=True)
@@ -38,20 +38,20 @@ def test_euler_lagrange():
     v_vec = Matrix(v)
 
     ### Lagrangian of zero acceleration: L = T = (m/2)|v|²
-    lagrangian = m * v_vec.norm() ** 2 / 2
+    L = m * v_vec.norm() ** 2 / 2
     bcs = {0: c_vec, 1: d_vec}
-    run_euler_lagrange(lagrangian, x, v, bcs)
+    run_euler_lagrange(L, x, v, bcs)
 
     ### Lagrangian of constant acceleration: L = T = (m/2)|v|² - m ax
     a = symbols(f'a_1:{n_dim + 1}', real=True)
     a_vec = Matrix(a)
-    lagrangian = m * v_vec.norm() ** 2 / 2 - m * (a_vec.T * x_vec)[0, 0]
+    L = m * v_vec.norm() ** 2 / 2 - m * (a_vec.T * x_vec)[0, 0]
     bcs = {0: c_vec, 1: d_vec}
-    run_euler_lagrange(lagrangian, x, v, bcs)
+    run_euler_lagrange(L, x, v, bcs)
 
-    ### Lagrangian of the harmonic oscillator
+    ### Lagrangian of a harmonic oscillator
     k = symbols('k', positive=True)
     omega = sqrt(k / m)
-    lagrangian = m * v_vec.norm() ** 2 / 2 - k * x_vec.norm() ** 2 / 2
-    bcs = {0: d_vec, pi / (2 * omega): c_vec}
-    run_euler_lagrange(lagrangian, x, v, bcs)
+    L = m * v_vec.norm() ** 2 / 2 - k * x_vec.norm() ** 2 / 2
+    bcs = {0: c_vec, pi / (2 * omega): d_vec}
+    run_euler_lagrange(L, x, v, bcs)
