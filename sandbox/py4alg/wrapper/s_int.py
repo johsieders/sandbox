@@ -6,45 +6,45 @@ from sympy import Symbol, Abs, S
 from sympy.core.numbers import igcd
 
 
-class SymbolInt:
+class SymbolicInt:
 
-    def __init__(self, value: str | Symbol | SymbolInt):
+    def __init__(self, value: str | Symbol | SymbolicInt):
         if isinstance(value, str):
             self._value = Symbol(value, integer=True)
         elif isinstance(value, Symbol):
             self._value = Symbol(str(value), integer=True)
-        elif isinstance(value, SymbolInt):
+        elif isinstance(value, SymbolicInt):
             self._value = value._value
         else:
-            raise TypeError(f"SymbolInt can only wrap Symbol or SymbolInt, got {type(value)}")
+            raise TypeError(f"SymbolicInt can only wrap Symbol or SymbolicInt, got {type(value)}")
 
-    def __add__(self, other: SymbolInt) -> SymbolInt:
-        return SymbolInt(self._value + other._value)
+    def __add__(self, other: SymbolicInt) -> SymbolicInt:
+        return SymbolicInt(self._value + other._value)
 
-    def __sub__(self, other: SymbolInt) -> SymbolInt:
-        return SymbolInt(self._value - other._value)
+    def __sub__(self, other: SymbolicInt) -> SymbolicInt:
+        return SymbolicInt(self._value - other._value)
 
-    def __mul__(self, other: SymbolInt) -> SymbolInt:
-        return SymbolInt(self._value * other._value)
+    def __mul__(self, other: SymbolicInt) -> SymbolicInt:
+        return SymbolicInt(self._value * other._value)
 
-    def __neg__(self) -> SymbolInt:
-        return SymbolInt(-self._value)
+    def __neg__(self) -> SymbolicInt:
+        return SymbolicInt(-self._value)
 
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, SymbolInt) and self._value == other._value
+        return isinstance(other, SymbolicInt) and self._value == other._value
 
-    def __lt__(self, other: SymbolInt) -> bool:
+    def __lt__(self, other: SymbolicInt) -> bool:
         return self._value < other._value
 
-    def __floordiv__(self, other: SymbolInt) -> SymbolInt:
-        return SymbolInt(self._value // other._value)
+    def __floordiv__(self, other: SymbolicInt) -> SymbolicInt:
+        return SymbolicInt(self._value // other._value)
 
-    def __mod__(self, other: SymbolInt) -> SymbolInt:
-        return SymbolInt(self._value % other._value)
+    def __mod__(self, other: SymbolicInt) -> SymbolicInt:
+        return SymbolicInt(self._value % other._value)
 
-    def __divmod__(self, other: SymbolInt) -> tuple[SymbolInt, SymbolInt]:
+    def __divmod__(self, other: SymbolicInt) -> tuple[SymbolicInt, SymbolicInt]:
         q, r = divmod(self._value, other._value)
-        return (SymbolInt(q), SymbolInt(r))
+        return (SymbolicInt(q), SymbolicInt(r))
 
     def norm(self) -> Abs:
         return Abs(self._value)
@@ -52,19 +52,19 @@ class SymbolInt:
     def __bool__(self):
         return bool(self._value)
 
-    def gcd(self, a: SymbolInt) -> SymbolInt:
-        if isinstance(a, SymbolInt):
-            return SymbolInt(igcd(self._value, a._value))
+    def gcd(self, a: SymbolicInt) -> SymbolicInt:
+        if isinstance(a, SymbolicInt):
+            return SymbolicInt(igcd(self._value, a._value))
         else:
             raise TypeError("Expected SymbolInt for gcd operation")
 
     @classmethod
-    def zero(cls) -> SymbolInt:
-        return SymbolInt(S.Zero)
+    def zero(cls) -> SymbolicInt:
+        return SymbolicInt(S.Zero)
 
     @classmethod
-    def one(cls) -> SymbolInt:
-        return SymbolInt(S.One)
+    def one(cls) -> SymbolicInt:
+        return SymbolicInt(S.One)
 
     def to_symbol(self) -> Symbol:
         return self._value
@@ -76,4 +76,4 @@ class SymbolInt:
         return f"Int({self._value})"
 
     def descent(self):
-        return [SymbolInt]
+        return [SymbolicInt]

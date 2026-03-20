@@ -52,7 +52,7 @@ def poly_args(n):
             compose(take(n), g_fractions, g_nat_floats, g_floats)(10, 20))
 
 
-@pytest.mark.parametrize("samples", poly_samples(20)[5:6])
+@pytest.mark.parametrize("samples", poly_samples(2)[:1])
 def test_gcd(samples):
     for p in samples:
         for q in samples:
@@ -76,7 +76,7 @@ def poly_table(n):
     return zip(poly_samples(n), poly_args(n))
 
 
-@pytest.mark.parametrize("samples,args", poly_table(100))
+@pytest.mark.parametrize("samples, args", poly_table(100))
 def test_poly_poly(samples, args):
     q = Polynomial(*samples)
     for x in args:

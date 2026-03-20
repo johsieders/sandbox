@@ -2,7 +2,7 @@
 
 import random
 from itertools import cycle
-from typing import Any, Sequence, Iterator, Callable
+from typing import Any, Sequence, Iterator, Iterable, Callable, Tuple
 
 from sandbox.py4alg.cockpit import params
 from sandbox.py4alg.mapper import Complex, Fp, Fraction, Matrix, Polynomial
@@ -44,10 +44,11 @@ def g_complex_(a, b: float, no_zeros=params['no_zeros']) -> Iterator[complex]:
             yield complex(re, im)
 
 
-def g_tuples(min, max: int, samples: Iterator[Any]) -> Iterator[tuple]:
+def g_tuples(min, max: int, samples: Iterable[Any]) -> Iterator[tuple]:
     """
     This generator returns the samples as tuples of size between min and max included.
     """
+    samples = iter(samples)
     while True:
         k = random.randint(min, max)
         next_sample = []
@@ -57,7 +58,7 @@ def g_tuples(min, max: int, samples: Iterator[Any]) -> Iterator[tuple]:
 
 
 def g_make(type, min=1, max=1, min_norm=params['min_norm']) -> Callable[[Any], Any]:
-    def generate(samples: Iterator[Any]):
+    def generate(samples: Iterable[Any]):
         t = g_tuples(min, max, samples)
         while True:
             args = next(t)
@@ -73,10 +74,35 @@ g_nat_ints = g_make(NativeInt)
 g_nat_floats = g_make(NativeFloat)
 g_nat_complex = g_make(NativeComplex)
 
-g_fractions = g_make(Fraction, 1, 2)
-g_complex = g_make(Complex, 1, 2)
+g_fractions = g_make(Fraction, min=1, max=2)
+g_complex = g_make(Complex, min=1, max=2)
 g_polynomials = g_make(Polynomial, params['poly_min'], params['poly_max'])
 g_matrices = g_make(Matrix, params['matrix_size'], params['matrix_size'])
+
+
+def d_nat_ints(nn: Iterable[int]) -> Sequence[NativeInt]:
+    return [NativeInt(n) for n in nn]
+
+def d_nat_floats(ff: Iterable[float]) -> Sequence[NativeFloat]:
+    return [NativeFloat(f) for f in ff]
+
+def d_nat_complex(cc: Iterable[complex]) -> Sequence[NativeComplex]:
+    return [NativeComplex(c) for c in cc]
+
+def d_int_fractions(rr: Iterable[Tuple[int, int]]) -> Sequence[Fraction]:
+    result = []
+    for r in rr:
+        result.append(Fraction(*d_nat_ints((r[0], r[1]))))
+    return result
+
+def d_float_fractions(rr: Iterable[Tuple[float, float]]) -> Sequence[Fraction]:
+    result = []
+    for r in rr:
+        result.append(Fraction(*d_nat_floats((r[0], r[1]))))
+    return result
+
+
+
 
 # meaning of successors:
 # g_x -> g_y means that g_y accepts g_x as argument
