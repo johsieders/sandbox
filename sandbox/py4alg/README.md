@@ -32,13 +32,15 @@ EuclideanRing → Ring → Ring    →    EuclideanRing
 
 These parameterless classes provide the foundation of the algebraic hierarchy:
 
-| Type            | Protocols                     | Description                      |
-|-----------------|-------------------------------|----------------------------------|
-| `NativeInt`     | `EuclideanRing`, `Comparable` | Integers with division algorithm |
-| `NativeFloat`   | `Field`, `Comparable`         | Floating-point field             |
-| `NativeComplex` | `Field`, `Comparable`         | Complex number field             |
-| `Fp`            | `Field`, `Comparable`         | Finite field Z/pZ                |
-| `ECpoint`       | `AbelianGroup`                | Elliptic curve points            |
+| Type            | Protocols                     | Description                         |
+|-----------------|-------------------------------|-------------------------------------|
+| `NativeInt`     | `EuclideanRing`, `Comparable` | Integers with division algorithm    |
+| `NativeFloat`   | `Field`, `Comparable`         | Floating-point field (with tolerance) |
+| `NativeComplex` | `Field`                       | Complex number field                |
+| `Fp`            | `Field`, `Comparable`         | Finite field Z/pZ (prime modulus)   |
+| `Zm`            | `EuclideanRing`, `Comparable` | Integers mod m (any modulus)        |
+| `ZmProduct`     | `Ring`                        | Direct product of Zm rings          |
+| `ECpoint`       | `AbelianGroup`                | Elliptic curve points over Fp       |
 
 Each base type implements specific **protocols** that define their algebraic behavior through method signatures.
 
@@ -46,13 +48,13 @@ Each base type implements specific **protocols** that define their algebraic beh
 
 These parameterized classes are **functors** that lift algebraic structures to more complex domains:
 
-| Constructor     | Signature               | Result Protocol | Description                             |
-|-----------------|-------------------------|-----------------|-----------------------------------------|
-| `Matrix[T]`     | `Ring → Ring`           | `Ring`          | Matrix algebra over rings               |
-| `Complex[T]`    | `Field → Field`         | `Field`         | Complex numbers over arbitrary fields   |
-| `Fraction[T]`   | `EuclideanRing → Field` | `Field`         | Field of fractions (quotient field)     |
-| `Polynomial[T]` | `Ring → Ring`           | `Ring`          | Polynomial rings                        |
-| `Polynomial[T]` | `Field → EuclideanRing` | `EuclideanRing` | Polynomials over fields (with division) |
+| Constructor          | Signature               | Result Protocol | Description                             |
+|----------------------|-------------------------|-----------------|-----------------------------------------|
+| `Matrix[T]`          | `Ring → Ring`           | `Ring`          | Matrix algebra over rings               |
+| `Complex[T]`         | `Field → Field`         | `Field`         | Complex numbers over arbitrary fields   |
+| `Fraction[T]`        | `EuclideanRing → Field` | `Field`         | Field of fractions (quotient field)     |
+| `Polynomial[T]`      | `Ring → Ring`           | `Ring`          | Polynomial rings                        |
+| `FieldPolynomial[T]` | `Field → EuclideanRing` | `EuclideanRing` | Polynomials over fields (with division) |
 
 ### Functor Properties
 
@@ -77,16 +79,24 @@ class Ring(AbelianGroup, Protocol):
 ### Protocol Hierarchy
 
 ```
-AbelianGroup
+AbelianGroup          __bool__, zero()
     ↓
-   Ring
+   Ring               __mul__, one()
     ↓
-EuclideanRing  ←→  Field
-    ↓               ↓
-    └─── (both) ────┘
+EuclideanRing         __floordiv__, __mod__, __divmod__, euclidean_function(), normalize()
+    ↓
+  Field               __truediv__, inverse()
 ```
 
 **Comparable** forms an orthogonal hierarchy for ordered structures.
+
+### Required Method Contracts
+
+- **`normalize()`**: Maps associates to the same canonical form. Fields/units: `one()` if nonzero, `zero()` if zero. Integers: `abs(self)`. Polynomials over fields: divide by leading coefficient (monic).
+- **`euclidean_function()`**: Returns `int`. Raises `ValueError` on zero. Fields: `1`. Integers: `abs(value)`. Polynomials: `degree()`.
+- **`zero()`**: Instance method (not classmethod) for parameterized types, preserving instance parameters.
+- **`__bool__()`**: Tests for non-zeroness. NativeFloat uses tolerance from `cockpit.params`.
+- **GCD**: Free function in `util/primes.py` using the generic Euclidean algorithm. Not a method on types.
 
 ## Compositional Examples
 
@@ -128,36 +138,25 @@ The compositional system generates **infinitely many valid types**:
 
 ## Rigorous Testing Framework
 
-### Protocol-Based Testing
+### Property Verification (`check_properties.py`)
 
-The testing system automatically validates algebraic properties:
+The testing system validates algebraic axioms through composable check functions:
 
-```python
-def test_ring_properties():
-    """Test all ring axioms for any Ring implementation."""
-    sample_groups = get_samples_for_protocol(Ring)
-    for sample_list in sample_groups:
-        check_rings(sample_list)  # Verifies all ring axioms
-```
+- **`check_abelian_group(samples)`**: Identity, inverse, commutativity, associativity of addition
+- **`check_rings(samples)`**: All abelian group checks + multiplicative identity, associativity, commutativity, distributivity, annihilator
+- **`check_euclidean_rings(samples)`**: All ring checks + division, divmod, GCD properties (divisibility, commutativity, associativity, identity)
+- **`check_fields(samples)`**: All Euclidean ring checks + true division and inverse
 
-### Axiomatic Property Verification
+### Sample Generation (`util/gen_samples.py`)
 
-Tests verify mathematical **axioms directly**:
+Factory functions create typed sample lists for testing:
 
-- **Associativity**: `(a + b) + c = a + (b + c)`
-- **Commutativity**: `a + b = b + a`
-- **Distributivity**: `a × (b + c) = (a × b) + (a × c)`
-- **Identity elements**: `a + 0 = a`, `a × 1 = a`
-- **Inverse elements**: `a + (-a) = 0`
+- `def_nat_ints(...)`, `def_nat_floats(...)`, `def_nat_complex(...)` — base types
+- `def_fractions(...)`, `def_polynomials(...)`, `def_field_polynomials(...)` — composite types
 
-### Automatic Type Discovery
+### Known Limitations
 
-The framework automatically:
-
-1. **Discovers** all types implementing each protocol
-2. **Groups** samples by type to avoid mixing incompatible structures
-3. **Tests** each group against appropriate axioms
-4. **Reports** which types satisfy which protocols
+- Deep type towers over floats (e.g., `Fraction[FieldPolynomial[NativeFloat]]`) can fail associativity due to floating-point accumulation in polynomial GCD and cross-multiplication
 
 ## Implementation Details
 
@@ -178,10 +177,9 @@ complex_poly = Complex[Polynomial[NativeInt]]()
 complex_poly.descent()  # → [Complex, Polynomial, NativeInt]
 ```
 
-### Error Propagation
+### Fraction Simplification
 
-The system gracefully handles undefined values (like division by zero) using Excel-style error propagation through
-string values.
+The `Fraction` constructor divides numerator and denominator by their GCD directly (without normalizing the GCD first). This ensures that field-valued fractions (e.g., `Fraction[NativeFloat]`) actually simplify, preventing coefficient blowup in deep type towers.
 
 ## Usage Examples
 
@@ -194,9 +192,9 @@ from py4alg.mapper import Polynomial
 # Create a polynomial ring over integers
 P = Polynomial[NativeInt]
 p = P([1, 2, 3])  # represents 1 + 2x + 3x²
-q = P([4, 5])     # represents 4 + 5x
+q = P([4, 5])  # represents 4 + 5x
 
-result = p * q    # polynomial multiplication
+result = p * q  # polynomial multiplication
 assert isinstance(result, Ring)  # automatic protocol satisfaction
 ```
 

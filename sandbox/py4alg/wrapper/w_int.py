@@ -3,8 +3,6 @@ from __future__ import annotations
 import functools
 from typing import Any
 
-from sandbox.py4alg.util.primes import gcd
-
 
 @functools.total_ordering
 class NativeInt:
@@ -45,17 +43,16 @@ class NativeInt:
         q, r = divmod(self._value, other._value)
         return (NativeInt(q), NativeInt(r))
 
-    def norm(self) -> int:
-        return abs(self._value)
-
     def __bool__(self):
         return bool(self._value)
 
-    def gcd(self, a: NativeInt) -> NativeInt:
-        if isinstance(a, NativeInt):
-            return NativeInt(gcd(self._value, a._value))
-        else:
-            raise TypeError("Expected NativeInt for gcd operation")
+    def euclidean_function(self) -> int:
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return abs(self._value)
+
+    def normalize(self) -> NativeInt:
+        return NativeInt(abs(self._value))
 
     @classmethod
     def zero(cls) -> NativeInt:
@@ -64,9 +61,6 @@ class NativeInt:
     @classmethod
     def one(cls) -> NativeInt:
         return cls(1)
-
-    def to_int(self) -> int:
-        return self._value
 
     def __str__(self) -> str:
         return str(self._value)

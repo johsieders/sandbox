@@ -1,13 +1,7 @@
 from __future__ import annotations
 
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
-from sandbox.py4alg.util.utils import close_to
-
-
-def gcd[T](a: T, b: T) -> T:
-    while not close_to(b.norm(), 0.):
-        a, b = b, a % b
-    return a
+from sandbox.py4alg.util.primes import gcd
 
 
 class Fraction[T: EuclideanRing]:
@@ -19,10 +13,6 @@ class Fraction[T: EuclideanRing]:
     For any two fractions r, s !=0, the invariant is
     Fraction(r, s) == r / s
     """
-
-    # functor_map removed - using protocol-based system instead
-
-    # resulting_type() method removed - using protocol-based system instead
 
     def __init__(self, *args: T | Fraction[T]):
 
@@ -46,42 +36,17 @@ class Fraction[T: EuclideanRing]:
             num = numerator
             den = denominator
 
-        # Check if denominator is too small (avoid dividing by near-zero values)
-        # For floating-point types, use absolute threshold to handle accumulated errors
-        den_norm = den.norm()
-        MIN_DENOMINATOR_NORM = 1e-200  # Absolute minimum threshold for denominator
-
-        if den_norm < MIN_DENOMINATOR_NORM:
-            raise ZeroDivisionError(f"Denominator too small: norm = {den_norm}")
-
-        # Skip GCD normalization if denominator is already very small
-        # This prevents further precision loss with floating-point arithmetic
-        NORMALIZATION_THRESHOLD = 1e-50  # Below this, skip normalization to preserve precision
-
-        if den_norm < NORMALIZATION_THRESHOLD:
-            # Don't normalize - keep as is to avoid making denominator even smaller
-            pass
-        else:
-            # Normal case: try to normalize with GCD
-            try:
-                g = gcd(num, den)
-                normalized_den = den // g
-                normalized_den_norm = normalized_den.norm()
-
-                # Only apply normalization if denominator stays large enough
-                if normalized_den_norm >= NORMALIZATION_THRESHOLD:
-                    num = num // g
-                    den = normalized_den
-                # Otherwise skip normalization (would make denominator too small)
-            except (ZeroDivisionError, ValueError):
-                # If GCD computation fails, just skip normalization
-                pass
-        # Optional: sign normalization if possible
+        if den:
+            g = gcd(num, den)
+            if g:
+                num = num // g
+                den = den // g
+        # this works for Comparables, but not for Complex, Polynomials:
         try:
             if den < den.zero():
                 num = -num
                 den = -den
-        except (TypeError, AttributeError):
+        except TypeError:
             pass
 
         self._num = num
@@ -111,7 +76,7 @@ class Fraction[T: EuclideanRing]:
     def __eq__(self, other: object) -> bool:
         return (
                 isinstance(other, Fraction)
-                and close_to(self._num * other._den, self._den * other._num)
+                and self._num * other._den == self._den * other._num
         )
 
     def __floordiv__(self, other: Fraction) -> Fraction:
@@ -123,29 +88,27 @@ class Fraction[T: EuclideanRing]:
     def __divmod__(self, other: Fraction) -> tuple[Fraction, Fraction]:
         return (self / other, self.zero())
 
+    def __bool__(self) -> bool:
+        return bool(self._num)
+
     def inverse(self) -> Fraction:
-        if close_to(self._num, self._num.zero()):
+        if not self._num:
             raise ZeroDivisionError("Fraction division by zero")
         return Fraction(self._den, self._num)
 
-    def degree(self) -> int | float:
-        return self._num.degree() - self._den.degree()
+    def euclidean_function(self) -> int:
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return 1
 
-    def norm(self) -> float:
-        return self._num.norm() / self._den.norm()
+    def normalize(self) -> Fraction:
+        return self.one() if self else self.zero()
 
     def zero(self) -> Fraction:
         return Fraction(self._num.zero(), self._num.one())
 
     def one(self) -> Fraction:
         return Fraction(self._num.one(), self._num.one())
-
-    def gcd(self, other: Fraction) -> Fraction:
-        """GCD for field of fractions: gcd(a,b) = 1 if either is non-zero, 0 if both are zero."""
-        if close_to(self, self.zero()) and close_to(other, other.zero()):
-            return self.zero()
-        else:
-            return self.one()
 
     @property
     def numerator(self) -> T:
@@ -154,9 +117,6 @@ class Fraction[T: EuclideanRing]:
     @property
     def denominator(self) -> T:
         return self._den
-
-    def to_pair(self) -> tuple[T, T]:
-        return (self._num, self._den)
 
     def __str__(self) -> str:
         return f"{self._num}/{self._den}"

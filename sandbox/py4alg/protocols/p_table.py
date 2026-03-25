@@ -3,7 +3,7 @@ from __future__ import annotations
 from sandbox.py4alg.mapper.m_complex import Complex
 from sandbox.py4alg.mapper.m_fraction import Fraction
 from sandbox.py4alg.mapper.m_matrix import Matrix
-from sandbox.py4alg.mapper.m_polynomial import Polynomial
+from sandbox.py4alg.mapper.m_polynomial import Polynomial, FieldPolynomial
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat
 from sandbox.py4alg.wrapper.w_int import NativeInt
@@ -23,7 +23,7 @@ pt = {(NativeInt, Mtype.N): Mtype.E,
       (Fraction, Mtype.R): Mtype.R,
       (Fraction, Mtype.E): Mtype.F,
       (Polynomial, Mtype.R): Mtype.R,
-      (Polynomial, Mtype.F): Mtype.E,
+      (FieldPolynomial, Mtype.F): Mtype.E,
       (Matrix, Mtype.R): Mtype.R,
       }
 

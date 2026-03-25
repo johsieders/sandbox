@@ -150,11 +150,9 @@ class ECpoint:
         # Use Euclidean distance from origin as a simple norm
         return float((self.x * self.x + self.y * self.y) ** 0.5)
 
-    @classmethod
-    def zero(cls) -> 'ECpoint':
-        """Return the zero element (point at infinity) with default curve parameters."""
-        # Use a default curve y^2 = x^3 + x + 1 mod 7 for the zero element
-        return cls(1, 1, 7)
+    def zero(self) -> 'ECpoint':
+        """Return the zero element (point at infinity) on the same curve."""
+        return ECpoint(self.a, self.b, self.p)
 
     def __neg__(self) -> ECpoint:
         if self.is_infinity():

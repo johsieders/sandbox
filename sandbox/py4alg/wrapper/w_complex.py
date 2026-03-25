@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from sandbox.py4alg.cockpit import params
+
 
 class NativeComplex:
 
@@ -26,7 +28,13 @@ class NativeComplex:
         return NativeComplex(-self._value)
 
     def __eq__(self, other: Any) -> bool:
-        return isinstance(other, NativeComplex) and self._value == other._value
+        return (isinstance(other, NativeComplex)
+                and abs(self._value - other._value) <= params['atol'] + params['rtol'] * max(abs(self._value), abs(other._value)))
+
+    def __truediv__(self, other: NativeComplex) -> NativeComplex:
+        if not other:
+            raise ZeroDivisionError("Complex.__truediv__(): division by zero")
+        return NativeComplex(self._value / other._value)
 
     def __floordiv__(self, other: NativeComplex) -> NativeComplex:
         return NativeComplex(self._value / other._value)
@@ -35,24 +43,21 @@ class NativeComplex:
         return self.zero()
 
     def __divmod__(self, other: NativeComplex) -> tuple[NativeComplex, NativeComplex]:
-        return (self / other, self.zero())
-
-    def __truediv__(self, other: NativeComplex) -> NativeComplex:
-        return NativeComplex(self._value / other._value)
+        return self / other, self.zero()
 
     def inverse(self) -> NativeComplex:
-        if self._value == 0:
-            raise ZeroDivisionError("Complex.inverse(): division by zero")
         return NativeComplex(1 / self._value)
 
-    def gcd(self, a: NativeComplex) -> NativeComplex:
-        return self.one() if self or a else self.zero()
-
-    def norm(self) -> float:
-        return abs(self._value)
+    def normalize(self) -> NativeComplex:
+        return self.one() if self else self.zero()
 
     def __bool__(self) -> bool:
-        return bool(self._value)
+        return not self == self.zero()
+
+    def euclidean_function(self) -> int:
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return 1
 
     @classmethod
     def zero(cls) -> NativeComplex:
@@ -61,9 +66,6 @@ class NativeComplex:
     @classmethod
     def one(cls) -> NativeComplex:
         return cls(1 + 0j)
-
-    def to_complex(self) -> complex:
-        return self._value
 
     def __str__(self) -> str:
         return str(self._value)

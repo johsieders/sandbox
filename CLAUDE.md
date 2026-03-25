@@ -23,8 +23,8 @@ development.
 - **Architecture**: Protocol-based design with wrappers and mappers
 - **Protocols** (`protocols/`): Abstract algebraic structures (Ring, Field, EuclideanRing, etc.)
 - **Wrappers** (`wrapper/`): Native type wrappers (NativeInt, NativeFloat, NativeComplex)
-- **Mappers** (`mapper/`): Complex algebraic types (Polynomial, Matrix, Complex, Fraction, Fp)
-- **Configuration**: `cockpit.py` contains all test parameters and sample generation
+- **Mappers** (`mapper/`): Complex algebraic types (Polynomial, FieldPolynomial, Matrix, Complex, Fraction, Fp, Zm, ZmProduct, ECpoint)
+- **Configuration**: `cockpit.py` contains test parameters; `util/gen_samples.py` for sample generation
 - **Key pattern**: Types use `_descent` attribute to track construction hierarchy
 
 ### Other Modules
@@ -69,13 +69,25 @@ Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest
 - Uses Python 3.13+ generics syntax: `class Polynomial[T: Ring]`
 - `_descent` attribute tracks type construction hierarchy
 - Functor system maps algebraic properties through type constructors
+- `Polynomial[T: Ring]` is the base ring; `FieldPolynomial[T: Field]` adds `//`, `%`, `divmod`, and `normalize`
+
+### Key Conventions for Algebraic Types
+
+- **`normalize()`**: Required by the `EuclideanRing` protocol. Must map associates to the same canonical form. For fields/units, return `one()` for nonzero, `zero()` for zero. For integers, return `abs(self)`. For polynomials over fields, make monic (divide by leading coefficient).
+- **`euclidean_function()`**: Required by `EuclideanRing`. Returns an `int`. Must raise `ValueError` on zero. For fields return `1`; for integers return `abs(value)`; for polynomials return `degree()`.
+- **`zero()`**: Must be an instance method (not classmethod) for parameterized types so it preserves the instance's parameters (e.g., curve parameters for ECpoint, modulus for Zm).
+- **`__bool__()`**: Required by `AbelianGroup`. Tests for non-zeroness. Used for trailing-zero trimming in polynomials and for GCD termination.
+- **`__eq__()`**: Fraction uses cross-multiplication (`a.num * b.den == a.den * b.num`), not `close_to`. NativeFloat uses tolerance-based comparison (configured via `cockpit.params`).
+- **GCD**: Defined as a free function in `util/primes.py`, not as a method. Uses the generic Euclidean algorithm on any `EuclideanRing`. Commutativity depends on correct `normalize()`.
+- **Fraction simplification**: The `Fraction` constructor divides numerator and denominator by their GCD directly (without normalizing the GCD first), so that field-valued fractions actually simplify.
 
 ### Testing Strategy
 
 - **Property-based testing**: Tests mathematical axioms and invariants rather than specific expected values
-- **Axiomatic approach**: Ring/field axioms, commutativity, associativity, distributivity
-- **Tolerance-based equality**: Uses `close_to` predicate for numerical stability
-- **Sample generation**: Centralized in `cockpit.py` with configurable parameters
+- **Axiomatic approach**: `check_properties.py` verifies ring/field/Euclidean ring axioms (commutativity, associativity, distributivity, GCD properties)
+- **Tolerance-based equality**: NativeFloat uses `atol`/`rtol` from `cockpit.params`; all other types use exact equality
+- **Sample generation**: `util/gen_samples.py` provides factory functions (`def_nat_ints`, `def_nat_floats`, `def_polynomials`, `def_field_polynomials`, `def_fractions`, etc.)
+- **Known limitation**: Deep type towers over floats (e.g., `Fraction[FieldPolynomial[NativeFloat]]`) can fail associativity due to floating-point accumulation in polynomial GCD and cross-multiplication
 
 ### Error Handling
 

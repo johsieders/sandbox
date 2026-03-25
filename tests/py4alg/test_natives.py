@@ -7,8 +7,9 @@ from sandbox.py4alg.protocols.p_comparable import Comparable
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
-from sandbox.py4alg.util.g_samples import g_ints, g_floats, g_complex_
-from sandbox.py4alg.util.g_samples import g_nat_floats, g_nat_complex, g_nat_ints
+from sandbox.py4alg.util.gen_samples import gen_ints, gen_floats, gen_complex_
+from sandbox.py4alg.util.gen_samples import gen_nat_floats, gen_nat_complex, gen_nat_ints
+from sandbox.py4alg.util.primes import gcd
 from sandbox.py4alg.util.utils import compose, take
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat
@@ -60,12 +61,12 @@ def test_isinstance():
 
 
 def native_samples(n: int):
-    return (compose(take(n), g_nat_ints, g_ints)(0, 20),
-            compose(take(n), g_nat_ints, g_nat_ints, g_ints)(0, 20),
-            compose(take(n), g_nat_floats, g_floats)(0, 20),
-            compose(take(n), g_nat_floats, g_nat_floats, g_floats)(0, 20),
-            compose(take(n), g_nat_complex, g_complex_)(0, 20),
-            compose(take(n), g_nat_complex, g_nat_complex, g_complex_)(0, 20))
+    return (compose(take(n), gen_nat_ints, gen_ints)(0, 20),
+            compose(take(n), gen_nat_ints, gen_nat_ints, gen_ints)(0, 20),
+            compose(take(n), gen_nat_floats, gen_floats)(0, 20),
+            compose(take(n), gen_nat_floats, gen_nat_floats, gen_floats)(0, 20),
+            compose(take(n), gen_nat_complex, gen_complex_)(0, 20),
+            compose(take(n), gen_nat_complex, gen_nat_complex, gen_complex_)(0, 20))
 
 
 @pytest.mark.parametrize("samples", native_samples(40)[:4])
@@ -87,6 +88,6 @@ def test_fields(samples):
 def test_gcd(samples):
     for a in samples:
         for b in samples:
-            g = a.gcd(b)
+            g = gcd(a, b)
             assert not g or a == a // g * g
             assert not g or b == b // g * g

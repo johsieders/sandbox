@@ -121,10 +121,13 @@ class ZmProduct:
     def __bool__(self) -> bool:
         return any(v != 0 for v in self._values)
 
-    def gcd(self, other: ZmProduct) -> ZmProduct:
-        self._assert_compatible(other)
-        new_values = [gcd(a, b) for a, b in zip(self._values, other._values)]
-        return ZmProduct(self._moduli, new_values)
+    def euclidean_function(self) -> int:
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return sum(abs(v) for v in self._values)
+    
+    def normalize(self) -> ZmProduct:
+        return self.one() if self else self.zero()
 
     def zero(self) -> ZmProduct:
         return ZmProduct(self._moduli, [0] * len(self._moduli))

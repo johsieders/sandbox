@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sandbox.py4alg.util.primes import gcd, is_prime, mod_inverse
+from sandbox.py4alg.util.primes import is_prime, mod_inverse
 
 
 class Zm:
@@ -70,9 +70,13 @@ class Zm:
     def __bool__(self) -> bool:
         return bool(self._n)
 
-    def gcd(self, a: Zm) -> Zm:
-        result = gcd(self._n, a._n)
-        return Zm(self._m, result)
+    def euclidean_function(self) -> int:
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return abs(self._n)
+
+    def normalize(self) -> Zm:
+        return self.one() if self else self.zero()
 
     def zero(self) -> Zm:
         return Zm(self._m, 0)
@@ -146,9 +150,13 @@ class Fp(Zm):
         inverse = mod_inverse(self._n, self._m)
         return Fp(self._m, inverse)
 
-    def gcd(self, a: Fp) -> Fp:
-        """In a field, gcd is 1 unless both components are 0"""
-        return self.zero() if (self._n == 0 and a._n == 0) else self.one()
+    def euclidean_function(self) -> int:
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return 1
+
+    def normalize(self) -> Fp:
+        return self.one() if self else self.zero()
 
     def zero(self) -> Fp:
         return Fp(self._m, 0)

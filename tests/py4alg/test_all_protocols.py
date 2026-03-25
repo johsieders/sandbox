@@ -19,9 +19,9 @@ from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
 # Sample generation imports
-from sandbox.py4alg.util.g_samples import g_ints, g_floats, g_complex_
-from sandbox.py4alg.util.g_samples import g_matrices
-from sandbox.py4alg.util.g_samples import g_nat_floats, g_nat_complex, g_nat_ints
+from sandbox.py4alg.util.gen_samples import gen_ints, gen_floats, gen_complex_
+from sandbox.py4alg.util.gen_samples import gen_matrices
+from sandbox.py4alg.util.gen_samples import gen_nat_floats, gen_nat_complex, gen_nat_ints
 from sandbox.py4alg.util.utils import compose, take
 # Property checking imports
 from tests.py4alg.check_properties import (
@@ -35,17 +35,17 @@ N = 20
 
 def native_int_samples() -> List[Any]:
     """Generate NativeInt samples."""
-    return list(compose(take(K), g_nat_ints, g_ints)(0, 20))
+    return list(compose(take(K), gen_nat_ints, gen_ints)(0, 20))
 
 
 def native_float_samples() -> List[Any]:
     """Generate NativeFloat samples."""
-    return list(compose(take(K), g_nat_floats, g_floats)(0, 20))
+    return list(compose(take(K), gen_nat_floats, gen_floats)(0, 20))
 
 
 def native_complex_samples() -> List[Any]:
     """Generate NativeComplex samples."""
-    return list(compose(take(K), g_nat_complex, g_complex_)(0, 20))
+    return list(compose(take(K), gen_nat_complex, gen_complex_)(0, 20))
 
 
 def fp_samples() -> List[Any]:
@@ -71,19 +71,19 @@ def ec_samples() -> List[Any]:
 def matrix_int_samples() -> List[Any]:
     """Generate Matrix[NativeInt] samples."""
     matrix_k = min(K, 15)  # Smaller K since we have multiple matrix types
-    return list(compose(take(matrix_k), g_matrices, g_nat_ints, g_ints)(0, 20))
+    return list(compose(take(matrix_k), gen_matrices, gen_nat_ints, gen_ints)(0, 20))
 
 
 def matrix_float_samples() -> List[Any]:
     """Generate Matrix[NativeFloat] samples."""
     matrix_k = min(K, 15)
-    return list(compose(take(matrix_k), g_matrices, g_nat_floats, g_floats)(0, 20))
+    return list(compose(take(matrix_k), gen_matrices, gen_nat_floats, gen_floats)(0, 20))
 
 
 def matrix_complex_samples() -> List[Any]:
     """Generate Matrix[NativeComplex] samples."""
     matrix_k = min(K, 15)
-    return list(compose(take(matrix_k), g_matrices, g_nat_complex, g_complex_)(0, 20))
+    return list(compose(take(matrix_k), gen_matrices, gen_nat_complex, gen_complex_)(0, 20))
 
 
 # List of all sample generator functions

@@ -2,13 +2,10 @@ from __future__ import annotations
 
 from math import sqrt
 
-from sandbox.py4alg.cockpit import params
 from sandbox.py4alg.protocols.p_ring import Ring
-from sandbox.py4alg.util.utils import close_to
 
 
 class Matrix[T: Ring]:
-    # functor_map removed - using protocol-based system instead
 
     def __init__(self, *args: T | Matrix[T]):
         """
@@ -87,7 +84,8 @@ class Matrix[T: Ring]:
         return (
                 isinstance(other, Matrix)
                 and self._size == other._size
-                and close_to(self, other)
+                and all(self._data[i][j] == other._data[i][j]
+                        for i in range(self._size) for j in range(self._size))
         )
 
     def zero(self) -> Matrix[T]:
@@ -105,7 +103,7 @@ class Matrix[T: Ring]:
             for i in range(self._size)])
 
     def __bool__(self) -> bool:
-        return self.norm() < params['atol']
+        return any(bool(a) for row in self._data for a in row)
 
     def norm(self) -> float:
         return max(a.norm() for row in self._data for a in row)
