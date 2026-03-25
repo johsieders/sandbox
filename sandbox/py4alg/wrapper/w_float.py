@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 from typing import Any
 
-from sandbox.py4alg.util.utils import close_to
+from sandbox.py4alg.cockpit import params
 
 
 @functools.total_ordering
@@ -29,10 +29,15 @@ class NativeFloat:
 
     def __eq__(self, other: Any) -> bool:
         return (isinstance(other, NativeFloat)
-                and close_to(self._value, other._value))
+                and abs(self._value - other._value) <= params['atol'] + params['rtol'] * max(abs(self._value), abs(other._value)))
 
     def __lt__(self, other: NativeFloat) -> bool:
         return self._value < other._value
+
+    def __truediv__(self, other: NativeFloat) -> NativeFloat:
+        if not other:
+            raise ZeroDivisionError("Float.__truediv__(): division by zero")
+        return NativeFloat(self._value / other._value)
 
     def __floordiv__(self, other: NativeFloat) -> NativeFloat:
         return NativeFloat(self._value / other._value)  # Field: // as /
@@ -41,24 +46,21 @@ class NativeFloat:
         return self.zero()
 
     def __divmod__(self, other: NativeFloat) -> tuple[NativeFloat, NativeFloat]:
-        return (self / other, self.zero())
-
-    def __truediv__(self, other: NativeFloat) -> NativeFloat:
-        return NativeFloat(self._value / other._value)
+        return self / other, self.zero()
 
     def inverse(self) -> NativeFloat:
-        if close_to(self._value, 0.0):
-            raise ZeroDivisionError("Float.inverse(): division by zero")
         return NativeFloat(1.0 / self._value)
 
-    def gcd(self, a: NativeFloat) -> NativeFloat:
-        return self.one() if (self or a) else self.zero()
-
     def __bool__(self) -> bool:
-        return bool(self._value)
+        return not self == self.zero()
 
-    def norm(self) -> float:
-        return abs(self._value)
+    def euclidean_function(self) -> int:
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return 1
+
+    def normalize(self) -> NativeFloat:
+        return self.one() if self else self.zero()
 
     @classmethod
     def zero(cls) -> NativeFloat:
@@ -67,9 +69,6 @@ class NativeFloat:
     @classmethod
     def one(cls) -> NativeFloat:
         return cls(1.0)
-
-    def to_float(self) -> float:
-        return self._value
 
     def __str__(self) -> str:
         return str(self._value)

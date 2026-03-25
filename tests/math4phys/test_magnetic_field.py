@@ -130,8 +130,8 @@ def test_general_mf():
     RHS = Matrix([rhs[xi] for xi in x_ddot_t])
 
     # RHS2: Using Jacobian difference
-    # The formula is: q/m * (∇A - (∇A)^T) * v = q/m * (J_A - J_A^T) * v
-    RHS2 = (q / m * (jacobian(A, x) - jacobian(A, x).T) * V).subs(subs_xt_xdot)
+    # The formula is:  q/m * (J_A^T - J_A) * v
+    RHS2 = (q / m * (jacobian(A, x).T - jacobian(A, x)) * V).subs(subs_xt_xdot)
 
     # RHS3: Using cross product v × B
     B = curl(A, x)

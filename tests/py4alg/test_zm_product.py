@@ -7,6 +7,7 @@ from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
+from sandbox.py4alg.util.primes import gcd
 from tests.py4alg.check_properties import check_rings, check_euclidean_rings
 from tests.py4alg.test_fp import fp_samples
 from tests.py4alg.test_zm import zm_ring_samples, zm_prime_samples
@@ -169,10 +170,10 @@ def test_zmproduct_gcd():
     a = ZmProduct(moduli, [4, 6])
     b = ZmProduct(moduli, [2, 4])
 
-    g = a.gcd(b)
+    g = gcd(a, b).normalize()
     # gcd(4, 2) = 2 in Z/5Z
     # gcd(6, 4) = 2 in Z/7Z
-    assert g.values == (2, 2)
+    assert g.values == (1, 1)
 
 
 def zmproduct_samples():

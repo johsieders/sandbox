@@ -97,7 +97,7 @@ def matrices_equal(F, G: Matrix) -> bool:
 
 def gradient(f: Expr, args: List[Symbol] = None) -> Matrix:
     """
-    return the gradient of f as a (nx1) Matrix of Expr
+    return the gradient of f as a (mx1) Matrix of Expr
     If args is None, uses f.free_symbols sorted alphabetically by name.
     """
     if args is None:
@@ -158,13 +158,13 @@ def hessian(f: Expr, args: List[Symbol] = None) -> Matrix:
 
 def jacobian(F: Matrix, args: List[Symbol] = None) -> Matrix:
     """
-    return the Jacobian of F as a (mxn) Matrix of Expr where m = dim(args), n = dim(F).
+    return the Jacobian of F as a (n x m) Matrix of Expr where m = dim(args), n = dim(F).
     If args is None, uses F.free_symbols sorted alphabetically by name.
     """
     if args is None:
         args = sorted(F.free_symbols, key=lambda s: s.name)
-    rows = [F.diff(arg).T for arg in args]
-    return Matrix.vstack(*rows)
+    cols = [F.diff(arg) for arg in args]
+    return Matrix.hstack(*cols)
 
 
 def poisson(A, B: Expr, x, p: List[Symbol]) -> Expr:

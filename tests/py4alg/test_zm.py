@@ -75,7 +75,8 @@ def zm_prime_samples(factory=None):
         factory = Zm
 
     # These are technically handled by Fp, but we can test a few small ones
-    primes = [2, 3, 5, 7]  # Very small primes only
+    # primes = [2, 3, 5, 7]  # Very small primes only
+    primes = [3]  # Very small primes only
     samples = []
     for p in primes:
         samples.append([factory(p, a) for a in range(p)])

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import Any
 
 from sympy import Symbol, Abs, S
-from sympy.core.numbers import igcd
 
 
 class SymbolicInt:
@@ -52,11 +51,13 @@ class SymbolicInt:
     def __bool__(self):
         return bool(self._value)
 
-    def gcd(self, a: SymbolicInt) -> SymbolicInt:
-        if isinstance(a, SymbolicInt):
-            return SymbolicInt(igcd(self._value, a._value))
-        else:
-            raise TypeError("Expected SymbolInt for gcd operation")
+    def euclidean_function(self) -> int:
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return Abs(self._value)
+
+    def normalize(self) -> SymbolicInt:
+        return SymbolicInt(Abs(self._value))
 
     @classmethod
     def zero(cls) -> SymbolicInt:

@@ -43,6 +43,8 @@ Generated for rapid prototyping of algebraic structures and cryptographic primit
 
 from typing import Tuple, List, Sequence, Generator
 
+from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
+
 
 def is_prime(n: int) -> bool:
     """
@@ -77,17 +79,18 @@ def get_primes(n: int) -> Generator[int, None, None]:
             yield i
 
 
-def gcd(a: int, b: int) -> int:
+def gcd[T: EuclideanRing](a: T, b: T) -> T:
     """
     Euclidean algorithm for greatest common divisor.
 
-    :param a: an integer
-    :param b: an integer
+    :param a: an element of an Euclidean ring
+    :param b: another element of an Euclidean ring
     :return: gcd of a and b
     """
     while b:
         a, b = b, a % b
     return a
+        
 
 
 def gcd_extended(a: int, b: int) -> Tuple[int, int, int]:

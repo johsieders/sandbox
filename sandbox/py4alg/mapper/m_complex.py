@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-# AlgebraicType import removed - using protocol-based system instead
 from sandbox.py4alg.protocols.p_field import Field
-from sandbox.py4alg.util.utils import close_to
 
 
 class Complex[T: Field]:
-    # If arg[0] implements a Field, Complex implements a Field
-    # functor_map removed - using protocol-based system instead
 
     def __init__(self, *args: T | Complex[T]):
 
@@ -46,8 +42,11 @@ class Complex[T: Field]:
 
     def __eq__(self, other: object) -> bool:
         return (isinstance(other, Complex) and
-                close_to(self._re, other._re) and
-                close_to(self._im, other._im))
+                self._re == other._re and
+                self._im == other._im)
+
+    def __bool__(self) -> bool:
+        return bool(self._re) or bool(self._im)
 
     def __truediv__(self, other: Complex[T]) -> Complex[T]:
         # (a+bi)/(c+di) = [(a+bi)*(c-di)] / (c^2 + d^2)
@@ -69,25 +68,17 @@ class Complex[T: Field]:
     def inverse(self) -> Complex[T]:
         c, d = self._re, self._im
         denom = c * c + d * d
-        if close_to(denom, denom.zero()):
+        if not denom:
             raise ZeroDivisionError("Complex division by zero")
         return Complex(c / denom, -d / denom)
 
-    def gcd(self, other: Complex[T]) -> Complex[T]:
-        """GCD in a field: 1 if either is non-zero, 0 if both are zero."""
-        if close_to(self, self.zero()) and close_to(other, other.zero()):
-            return self.zero()
-        else:
-            return self.one()
+    def euclidean_function(self) -> int:
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return 1
 
-    def norm(self) -> float:
-        # Returns the "absolute value" (in the base field)
-        n = self._re * self._re + self._im * self._im
-        return n.norm()
-
-    def degree(self) -> int | float:
-        # For compatibility: use max degree of components
-        return max(self._re.degree(), self._im.degree())
+    def normalize(self) -> Complex:
+        return self.one() if self else self.zero()
 
     def zero(self) -> Complex[T]:
         return Complex(self._re.zero(), self._im.zero())

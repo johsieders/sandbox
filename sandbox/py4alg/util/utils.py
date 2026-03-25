@@ -3,21 +3,6 @@
 from itertools import islice
 from typing import Callable, Iterator
 
-from sandbox.py4alg.cockpit import params
-
-
-def close_to(x, y, rtol=params['rtol'], atol=params['atol']):
-    """
-    rtol: relative tolerance parameter.
-    atol: absolute tolerance parameter.
-    Return True if x and y are close to their norm().
-    """
-    try:
-        return (x - y).norm() <= atol + rtol * max(x.norm(), y.norm())
-    except AttributeError:
-        # Fallback to built-in abs if .norm() is not available
-        return abs(x - y) <= atol + rtol * max(abs(x), abs(y))
-
 
 def compose(*funs):
     """
