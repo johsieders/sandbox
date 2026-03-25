@@ -195,6 +195,9 @@ class ComplexWrapper(complex, FieldMixin):
     def normalize(self):
         return self.one() if self else self.zero()
 
+    def normalize(self):
+        return self.one() if self else self.zero()
+
     @classmethod
     def zero(cls):
         return cls(0 + 0j)
