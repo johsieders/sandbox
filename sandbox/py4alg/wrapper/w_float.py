@@ -3,7 +3,7 @@ from __future__ import annotations
 import functools
 from typing import Any
 
-from sandbox.py4alg.cockpit import params
+from sandbox.py4alg.util.utils import params
 
 
 @functools.total_ordering
@@ -29,7 +29,8 @@ class NativeFloat:
 
     def __eq__(self, other: Any) -> bool:
         return (isinstance(other, NativeFloat)
-                and abs(self._value - other._value) <= params['atol'] + params['rtol'] * max(abs(self._value), abs(other._value)))
+                and abs(self._value - other._value) <= params['atol'] + params['rtol'] * max(abs(self._value),
+                                                                                             abs(other._value)))
 
     def __lt__(self, other: NativeFloat) -> bool:
         return self._value < other._value

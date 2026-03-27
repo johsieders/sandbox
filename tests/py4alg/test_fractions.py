@@ -4,8 +4,7 @@ import pytest
 from sandbox.py4alg.mapper import Fraction, Polynomial, FieldPolynomial
 from sandbox.py4alg.util.gen_samples import (gen_cycle, gen_ints, gen_floats, gen_complex_,
                                              gen_nat_complex, gen_nat_ints, gen_nat_floats,
-                                             gen_fractions, gen_field_polynomials, def_nat_ints, def_nat_floats, def_nat_complex,
-                                             def_fractions)
+                                             gen_fractions)
 from sandbox.py4alg.util.utils import compose, take
 from tests.py4alg.check_properties import check_division, check_divmod, check_euclidean_rings, check_fields
 
@@ -18,8 +17,8 @@ def fraction_samples(n: int):
             compose(take(n), gen_fractions, gen_nat_floats, gen_floats)(1., 100.),
             compose(take(n), gen_fractions, gen_fractions, gen_nat_floats, gen_floats)(1., 100.),
             compose(take(n), gen_fractions, gen_nat_complex, gen_complex_)(1, 100),)
-            
-            # compose(take(n), gen_fractions, gen_field_polynomials, gen_nat_floats, gen_floats)(1., 100.))
+
+    # compose(take(n), gen_fractions, gen_field_polynomials, gen_nat_floats, gen_floats)(1., 100.))
 
 
 @pytest.mark.parametrize("samples", fraction_samples(10))
@@ -63,7 +62,3 @@ def test_poly_rat():
     r = p * q
     s = r * one
     assert s == r
-
-
-
-

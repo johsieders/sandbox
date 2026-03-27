@@ -1,20 +1,18 @@
 # py4alg/tests/test_polynomials.py
 
-import pytest
-
 from typing import Any, List, Sequence, Tuple
 
-from tests.py4alg.check_properties import check_gcd_commutativity
-from tests.py4alg.check_properties import check_gcd_associativity
-from sandbox.py4alg.mapper import Polynomial, FieldPolynomial
-from sandbox.py4alg.util.primes import gcd
+from sandbox.py4alg.mapper import FieldPolynomial
 from sandbox.py4alg.util.gen_samples import (def_nat_complex, def_nat_ints, def_nat_floats,
                                              def_fractions, def_polynomials, def_field_polynomials)
+from sandbox.py4alg.util.primes import gcd
 from sandbox.py4alg.wrapper.w_float import NativeFloat
 from tests.py4alg.check_properties import check_rings, check_euclidean_rings, check_fields
 
+
 def to_pairs(xs: Sequence[Any]) -> List[Tuple[Any, Any]]:
     return list(zip(xs[::2], xs[1::2]))
+
 
 def to_coeffs(xs: Sequence[Any], cs: Sequence[int]) -> List[Sequence[Any]]:
     result = []
@@ -72,7 +70,8 @@ def test_poly_gcd():
 def test_d():
     ints = def_nat_ints(0, 3, 4, 5, 6, 7, 8, 9, 6, 7, 8, 9, 4, 5, 6, 7)
     floats = def_nat_floats(0., 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 6.0, 7.0, 8.0, 9.0, 4.0, 5.0, 6.0, 7.0)
-    complexs = def_nat_complex(0+0j, 3.0+1j, 4.0+2j, 5+0j, 0+0j, 3.0+1j, 4.0+2j, 5+0j, 0+0j, 3.0+1j, 4.0+2j, 5+0j, 4.0+2j, 5+0j, 0+0j, 3.0+1j)
+    complexs = def_nat_complex(0 + 0j, 3.0 + 1j, 4.0 + 2j, 5 + 0j, 0 + 0j, 3.0 + 1j, 4.0 + 2j, 5 + 0j, 0 + 0j, 3.0 + 1j,
+                               4.0 + 2j, 5 + 0j, 4.0 + 2j, 5 + 0j, 0 + 0j, 3.0 + 1j)
 
     fractions_int = def_fractions(*to_pairs(ints))
     fractions_float = def_fractions(*to_pairs(floats))

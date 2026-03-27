@@ -232,7 +232,6 @@ def check_rings(samples):
     check_annihilator_properties(samples)
 
 
-
 def check_euclidean_rings(samples):
     """Check all Euclidean ring properties."""
     check_rings(samples)

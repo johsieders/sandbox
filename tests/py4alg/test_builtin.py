@@ -100,7 +100,7 @@ class IntWrapper(int, AlgebraicMixin):
 
     def normalize(self):
         return self.one() if self else self.zero()
-    
+
     @classmethod
     def zero(cls): return cls(0)
 
@@ -191,7 +191,7 @@ class ComplexWrapper(complex, FieldMixin):
 
     def __eq__(self, other):
         return abs(self - other) < 1e-10 if isinstance(other, (complex, ComplexWrapper)) else False
-    
+
     def normalize(self):
         return self.one() if self else self.zero()
 

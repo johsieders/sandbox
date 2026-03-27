@@ -3,7 +3,7 @@
 
 from itertools import islice
 
-from sandbox.py4alg.util.gen_samples import gen_fractions, gen_matrices, gen_polynomials, gen_field_polynomials
+from sandbox.py4alg.util.gen_samples import gen_fractions, gen_polynomials, gen_field_polynomials
 from sandbox.py4alg.util.gen_samples import gen_ints, gen_floats, gen_complex_, gen_tuples, gen_cycle
 from sandbox.py4alg.util.gen_samples import gen_nat_ints, gen_nat_floats, gen_nat_complex
 from sandbox.py4alg.util.utils import compose, take

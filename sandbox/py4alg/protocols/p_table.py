@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sandbox.py4alg.mapper.m_complex import Complex
+from sandbox.py4alg.mapper.m_complex import Complex, FieldComplex
 from sandbox.py4alg.mapper.m_fraction import Fraction
 from sandbox.py4alg.mapper.m_matrix import Matrix
 from sandbox.py4alg.mapper.m_polynomial import Polynomial, FieldPolynomial
@@ -19,7 +19,8 @@ class Mtype:
 pt = {(NativeInt, Mtype.N): Mtype.E,
       (NativeFloat, Mtype.N): Mtype.F,
       (NativeComplex, Mtype.N): Mtype.F,
-      (Complex, Mtype.F): Mtype.F,
+      (Complex, Mtype.R): Mtype.R,
+      (FieldComplex, Mtype.F): Mtype.F,
       (Fraction, Mtype.R): Mtype.R,
       (Fraction, Mtype.E): Mtype.F,
       (Polynomial, Mtype.R): Mtype.R,

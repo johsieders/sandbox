@@ -2,8 +2,8 @@
 
 import pytest
 
-from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.mapper import ECpoint
+from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from tests.py4alg.check_properties import check_abelian_group
 
 
@@ -463,9 +463,9 @@ class TestECPointInvariants:
 
 
 def test_abelian_group():
-        pt = list(ECpoint.gen_points(a=2, b=2, p=17))
-        check_abelian_group(pt)
-        
-        
+    pt = list(ECpoint.gen_points(a=2, b=2, p=17))
+    check_abelian_group(pt)
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

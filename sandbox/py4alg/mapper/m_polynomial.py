@@ -151,3 +151,6 @@ class FieldPolynomial[T: Field](Polynomial[T]):
             return FieldPolynomial(*[c / self._coeffs[-1] for c in self._coeffs])
         else:
             return self
+
+    def __repr__(self) -> str:
+        return f"FieldPolynomial({self._coeffs})"

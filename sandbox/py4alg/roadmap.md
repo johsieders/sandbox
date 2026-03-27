@@ -39,10 +39,10 @@ Here is my plam:
 25.3.2026 A
 
 5. Remove normalize from primes.gcd, because (a) it is mathematically wrong (b) it makes checks asymmetric.
-   It is up to the caller to normalize ot not to normalize (see constructor of Fraction) 
+   It is up to the caller to normalize ot not to normalize (see constructor of Fraction)
    Add the necessary normalize calls to all relevant tests.
 
-6. Testing divmod and %: After r = a%b I want to add something like 
+6. Testing divmod and %: After r = a%b I want to add something like
    assert r.euclidean_function() < b.euclidean_function().
    Euclidean_function is undefined on zero and should raise an exception (ValueError)
 

@@ -90,7 +90,6 @@ def gcd[T: EuclideanRing](a: T, b: T) -> T:
     while b:
         a, b = b, a % b
     return a
-        
 
 
 def gcd_extended(a: int, b: int) -> Tuple[int, int, int]:

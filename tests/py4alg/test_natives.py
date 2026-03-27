@@ -9,11 +9,11 @@ from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
 from sandbox.py4alg.util.gen_samples import gen_ints, gen_floats, gen_complex_
 from sandbox.py4alg.util.gen_samples import gen_nat_floats, gen_nat_complex, gen_nat_ints
+from sandbox.py4alg.util.primes import gcd
 from sandbox.py4alg.util.utils import compose, take
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat
 from sandbox.py4alg.wrapper.w_int import NativeInt
-from sandbox.py4alg.util.primes import gcd
 from tests.py4alg.check_properties import check_euclidean_rings, check_fields, check_comparables
 
 

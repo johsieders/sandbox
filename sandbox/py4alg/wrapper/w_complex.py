@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from sandbox.py4alg.cockpit import params
+from sandbox.py4alg.util.utils import params
 
 
 class NativeComplex:
@@ -29,7 +29,8 @@ class NativeComplex:
 
     def __eq__(self, other: Any) -> bool:
         return (isinstance(other, NativeComplex)
-                and abs(self._value - other._value) <= params['atol'] + params['rtol'] * max(abs(self._value), abs(other._value)))
+                and abs(self._value - other._value) <= params['atol'] + params['rtol'] * max(abs(self._value),
+                                                                                             abs(other._value)))
 
     def __truediv__(self, other: NativeComplex) -> NativeComplex:
         if not other:

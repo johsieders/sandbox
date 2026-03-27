@@ -135,7 +135,7 @@ def get_samples_for_protocol(protocol_class) -> List[List[Any]]:
     return sample_groups
 
 
-def get_samples_for_protocol_with_ids(protocol_class):
+def _get_samples_for_protocol_with_ids(protocol_class):
     """Get samples with pytest IDs for cleaner test naming."""
     sample_groups = []
     ids = []

@@ -125,7 +125,7 @@ class ZmProduct:
         if not self:
             raise ValueError("euclidean_function is undefined on zero")
         return sum(abs(v) for v in self._values)
-    
+
     def normalize(self) -> ZmProduct:
         return self.one() if self else self.zero()
 

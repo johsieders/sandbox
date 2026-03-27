@@ -1,5 +1,6 @@
 # py4alg/core/utils.py
 
+import random
 from itertools import islice
 from typing import Callable, Iterator
 
@@ -29,3 +30,24 @@ def take(n: int) -> Callable[[Iterator], list]:
         return list(islice(t, n))
 
     return aux
+
+
+params = {'rtol': 1e-9,
+          'atol': 1e-12,
+          'lower_bound': 10,
+          'upper_bound': 20,
+          'seed': 102,
+          'min_norm': 0,
+          'no_zeros': True,
+          'poly_min': 1,
+          'poly_max': 5,
+          'prime': 17,
+          'nonprime': 21,
+          'matrix_size': 9}
+
+
+def set_test_seed():
+    """
+    run this before each test session to get identical results
+    """
+    random.seed(params['seed'])

@@ -3,10 +3,10 @@
 import pytest
 
 from sandbox.py4alg.mapper import Polynomial, FieldPolynomial
-from sandbox.py4alg.util.primes import gcd
 from sandbox.py4alg.util.gen_samples import (gen_ints, gen_floats, gen_complex_,
                                              gen_nat_complex, gen_nat_ints, gen_nat_floats,
                                              gen_fractions, gen_polynomials, gen_field_polynomials)
+from sandbox.py4alg.util.primes import gcd
 from sandbox.py4alg.util.utils import compose, take
 from sandbox.py4alg.wrapper.w_float import NativeFloat
 from tests.py4alg.check_properties import check_rings, check_euclidean_rings

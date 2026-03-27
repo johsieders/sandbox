@@ -32,15 +32,15 @@ EuclideanRing → Ring → Ring    →    EuclideanRing
 
 These parameterless classes provide the foundation of the algebraic hierarchy:
 
-| Type            | Protocols                     | Description                         |
-|-----------------|-------------------------------|-------------------------------------|
-| `NativeInt`     | `EuclideanRing`, `Comparable` | Integers with division algorithm    |
+| Type            | Protocols                     | Description                           |
+|-----------------|-------------------------------|---------------------------------------|
+| `NativeInt`     | `EuclideanRing`, `Comparable` | Integers with division algorithm      |
 | `NativeFloat`   | `Field`, `Comparable`         | Floating-point field (with tolerance) |
-| `NativeComplex` | `Field`                       | Complex number field                |
-| `Fp`            | `Field`, `Comparable`         | Finite field Z/pZ (prime modulus)   |
-| `Zm`            | `EuclideanRing`, `Comparable` | Integers mod m (any modulus)        |
-| `ZmProduct`     | `Ring`                        | Direct product of Zm rings          |
-| `ECpoint`       | `AbelianGroup`                | Elliptic curve points over Fp       |
+| `NativeComplex` | `Field`                       | Complex number field                  |
+| `Fp`            | `Field`, `Comparable`         | Finite field Z/pZ (prime modulus)     |
+| `Zm`            | `EuclideanRing`, `Comparable` | Integers mod m (any modulus)          |
+| `ZmProduct`     | `Ring`                        | Direct product of Zm rings            |
+| `ECpoint`       | `AbelianGroup`                | Elliptic curve points over Fp         |
 
 Each base type implements specific **protocols** that define their algebraic behavior through method signatures.
 
@@ -63,9 +63,11 @@ Each type constructor preserves and transforms algebraic structure:
 - **Covariant**: If `S ⊆ T` in the protocol hierarchy, then `F[S] ⊆ F[T]`
 - **Structure-preserving**: Algebraic operations are lifted consistently
 - **Composable**: Multiple constructors can be applied sequentially
-- **Idempotent (flattening)**: `Polynomial`, `Complex`, and `Fraction` detect when their 
-- argument is already of the same type and flatten automatically. `Polynomial[Polynomial]` yields a `Polynomial` (by expanding the nested coefficients), 
-- `Fraction[Fraction]` yields a `Fraction` (by cross-multiplying), and `Complex[Complex]` yields a `Complex`. In contrast, `Matrix` is **not** idempotent: `Matrix(Matrix)` produces a genuine matrix of matrices.
+- **Idempotent (flattening)**: `Polynomial`, `Complex`, and `Fraction` detect when their argument is already of the same
+  type and flatten automatically. `Polynomial[Polynomial]` yields a `Polynomial` (by expanding the nested coefficients),
+- `Fraction[Fraction]` yields a `Fraction` (by cross-multiplying), `Complex[Complex]` yields a `Complex`, and
+  `Matrix[Matrix]` produces the tensor product, a matrix of size
+  $mn\times mn$ if $n \times n$ and $m \times m$ are the sizes of the input matrices.
 
 ## Protocol System
 
@@ -75,6 +77,7 @@ The library uses Python's `@runtime_checkable` protocols to define algebraic str
 @runtime_checkable
 class Ring(AbelianGroup, Protocol):
     def __mul__(self, other: Any) -> Any: ...
+
     def one(self) -> Any: ...
     # ... inherits additive structure from AbelianGroup
 ```
@@ -95,8 +98,10 @@ EuclideanRing         __floordiv__, __mod__, __divmod__, euclidean_function(), n
 
 ### Required Method Contracts
 
-- **`normalize()`**: Maps associates to the same canonical form. Fields/units: `one()` if nonzero, `zero()` if zero. Integers: `abs(self)`. Polynomials over fields: divide by leading coefficient (monic).
-- **`euclidean_function()`**: Returns `int`. Raises `ValueError` on zero. Fields: `1`. Integers: `abs(value)`. Polynomials: `degree()`.
+- **`normalize()`**: Maps associates to the same canonical form. Fields/units: `one()` if nonzero, `zero()` if zero.
+  Integers: `abs(self)`. Polynomials over fields: divide by leading coefficient (monic).
+- **`euclidean_function()`**: Returns `int`. Raises `ValueError` on zero. Fields: `1`. Integers: `abs(value)`.
+  Polynomials: `degree()`.
 - **`zero()`**: Instance method (not classmethod) for parameterized types, preserving instance parameters.
 - **`__bool__()`**: Tests for non-zeroness. NativeFloat uses tolerance from `cockpit.params`.
 - **GCD**: Free function in `util/primes.py` using the generic Euclidean algorithm. Not a method on types.
@@ -146,8 +151,10 @@ The compositional system generates **infinitely many valid types**:
 The testing system validates algebraic axioms through composable check functions:
 
 - **`check_abelian_group(samples)`**: Identity, inverse, commutativity, associativity of addition
-- **`check_rings(samples)`**: All abelian group checks + multiplicative identity, associativity, commutativity, distributivity, annihilator
-- **`check_euclidean_rings(samples)`**: All ring checks + division, divmod, GCD properties (divisibility, commutativity, associativity, identity)
+- **`check_rings(samples)`**: All abelian group checks + multiplicative identity, associativity, commutativity,
+  distributivity, annihilator
+- **`check_euclidean_rings(samples)`**: All ring checks + division, divmod, GCD properties (divisibility, commutativity,
+  associativity, identity)
 - **`check_fields(samples)`**: All Euclidean ring checks + true division and inverse
 
 ### Sample Generation (`util/gen_samples.py`)
@@ -159,7 +166,8 @@ Factory functions create typed sample lists for testing:
 
 ### Known Limitations
 
-- Deep type towers over floats (e.g., `Fraction[FieldPolynomial[NativeFloat]]`) can fail associativity due to floating-point accumulation in polynomial GCD and cross-multiplication
+- Deep type towers over floats (e.g., `Fraction[FieldPolynomial[NativeFloat]]`) can fail associativity due to
+  floating-point accumulation in polynomial GCD and cross-multiplication
 
 ## Implementation Details
 
@@ -182,7 +190,9 @@ complex_poly.descent()  # → [Complex, Polynomial, NativeInt]
 
 ### Fraction Simplification
 
-The `Fraction` constructor divides numerator and denominator by their GCD directly (without normalizing the GCD first). This ensures that field-valued fractions (e.g., `Fraction[NativeFloat]`) actually simplify, preventing coefficient blowup in deep type towers.
+The `Fraction` constructor divides numerator and denominator by their GCD directly (without normalizing the GCD first).
+This ensures that field-valued fractions (e.g., `Fraction[NativeFloat]`) actually simplify, preventing coefficient
+blowup in deep type towers.
 
 ## Usage Examples
 
