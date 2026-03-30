@@ -51,12 +51,12 @@ from sympy.physics.mechanics import dynamicsymbols, LagrangesMethod
 
 # --- Symbols and generalized coordinate ---
 m = symbols('m', positive=True)
-x = dynamicsymbols('x')        # x(t)
+x = dynamicsymbols('x')  # x(t)
 xdot = dynamicsymbols('x', 1)  # dx/dt
 
 # --- Lagrangian with generic V(x) ---
 V = Function('V')
-T = Rational(1, 2) * m * xdot**2
+T = Rational(1, 2) * m * xdot ** 2
 L = T - V(x)
 
 LM = LagrangesMethod(L, [x])
@@ -72,7 +72,7 @@ pprint(LM.rhs())
 
 # --- Harmonic oscillator: V = 1/2 k x^2 ---
 k = symbols('k', positive=True)
-L_ho = Rational(1, 2) * m * xdot**2 - Rational(1, 2) * k * x**2
+L_ho = Rational(1, 2) * m * xdot ** 2 - Rational(1, 2) * k * x ** 2
 
 LM_ho = LagrangesMethod(L_ho, [x])
 eom_ho = LM_ho.form_lagranges_equations()
@@ -85,7 +85,7 @@ pprint(LM_ho.rhs())
 
 # --- Free fall: V = m g x ---
 g = symbols('g', positive=True)
-L_ff = Rational(1, 2) * m * xdot**2 - m * g * x
+L_ff = Rational(1, 2) * m * xdot ** 2 - m * g * x
 
 LM_ff = LagrangesMethod(L_ff, [x])
 eom_ff = LM_ff.form_lagranges_equations()

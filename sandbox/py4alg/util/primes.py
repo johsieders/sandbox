@@ -83,10 +83,15 @@ def gcd[T: EuclideanRing](a: T, b: T) -> T:
     """
     Euclidean algorithm for greatest common divisor.
 
+    Dispatches to a.gcd(b) if available (e.g. FieldPolynomial provides
+    a numerically stable variant).
+
     :param a: an element of an Euclidean ring
     :param b: another element of an Euclidean ring
     :return: gcd of a and b
     """
+    if hasattr(a, 'gcd'):
+        return a.gcd(b)
     while b:
         a, b = b, a % b
     return a

@@ -7,7 +7,10 @@ scikit-learn
 seaborn
 torch
 pytest-benchmark
+pytest-xdist
 openai
 tiktoken
 py-enigma
 sympy
+highspy
+pypsa

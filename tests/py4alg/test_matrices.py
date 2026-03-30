@@ -11,7 +11,7 @@ from sandbox.py4alg.util.gen_samples import (gen_ints, gen_floats, gen_complex_,
                                              gen_complex, gen_fractions, gen_matrices)
 from sandbox.py4alg.util.utils import compose, take
 from sandbox.py4alg.wrapper.w_int import NativeInt
-from tests.py4alg.check_properties import check_rings
+from tests.py4alg.check_protocols import check_rings
 
 
 # ----- Type/sample groupings -----

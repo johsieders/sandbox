@@ -1,4 +1,4 @@
-# tests/py4alg/make_samples.py
+# tests/py4alg/test_gen_tools.py
 
 
 from itertools import islice

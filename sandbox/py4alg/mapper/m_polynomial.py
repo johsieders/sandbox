@@ -36,7 +36,7 @@ class Polynomial[T: Ring]:
                 coeffs += [zero] * len(p._coeffs)
                 coeffs[k:k + len(p._coeffs)] = [a + b for a, b in zip(coeffs[k:k + len(p._coeffs)], p._coeffs)]
         else:
-            self._descent = [Polynomial] + args[0].descent()
+            self._descent = [type(self)] + args[0].descent()
             coeffs = list(args)  # list of coefficients
 
         while len(coeffs) > 1 and not coeffs[-1]:
@@ -118,6 +118,19 @@ class FieldPolynomial[T: Field](Polynomial[T]):
     def __mod__(self, other: FieldPolynomial[T]) -> FieldPolynomial[T]:
         _, r = self.__divmod__(other)
         return r
+
+    def gcd(self, other: FieldPolynomial[T]) -> FieldPolynomial[T]:
+        """Numerically stable GCD via monic Euclidean algorithm.
+
+        Normalizes (makes monic) at each step to prevent coefficient explosion
+        that occurs with floating-point arithmetic.
+        """
+        a, b = self, other
+        while b:
+            a, b = b, (a % b)
+            if b:
+                b = b.normalize()
+        return a.normalize()
 
     def __divmod__(self, other: FieldPolynomial[T]) -> tuple[FieldPolynomial[T], FieldPolynomial[T]]:
         if not other:

@@ -8,4 +8,4 @@ setup(
     package_dir={"math4phys": "."},
     # Current dir becomes the package                                                                                                     
     install_requires=["sympy"],
-)                                                  
+)

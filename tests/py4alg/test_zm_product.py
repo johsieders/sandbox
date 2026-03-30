@@ -8,7 +8,7 @@ from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
 from sandbox.py4alg.util.primes import gcd
-from tests.py4alg.check_properties import check_rings, check_euclidean_rings
+from tests.py4alg.check_protocols import check_rings, check_euclidean_rings
 from tests.py4alg.test_fp import fp_samples
 from tests.py4alg.test_zm import zm_ring_samples, zm_prime_samples
 
