@@ -9,7 +9,7 @@ from sandbox.py4alg.util.gen_samples import gen_gen, gen_ints, gen_floats, gen_c
 from sandbox.py4alg.util.utils import set_test_seed, compose, descent_str
 from tests.py4alg.check_protocols import check_any, print_exception_report
 
-DEPTH = 3
+DEPTH = 3 
 N = 3
 
 set_test_seed()

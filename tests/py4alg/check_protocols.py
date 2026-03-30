@@ -124,14 +124,20 @@ def check_left_distributivity(samples):
     for a in samples:
         for b in samples:
             for c in samples:
-                assert a * (b + c) == (a * b) + (a * c)
+                try:
+                    assert a * (b + c) == (a * b) + (a * c)
+                except AssertionError as e:
+                    report_exception('left_distributivity', samples, e)
 
 
 def check_right_distributivity(samples):
     for a in samples:
         for b in samples:
             for c in samples:
-                assert (a + b) * c == (a * c) + (b * c)
+                try:
+                    assert (a + b) * c == (a * c) + (b * c)
+                except AssertionError as e:
+                    report_exception('right_distributivity', samples, e)
 
 
 def check_bulk_mul(samples):
@@ -155,7 +161,7 @@ def check_division(samples):
                 assert a == q * b + r
                 if r:
                     assert r.euclidean_function() < b.euclidean_function()
-            except ZeroDivisionError as e:
+            except (AssertionError, ZeroDivisionError) as e:
                 report_exception('check_division', samples, e)
 
 
@@ -169,7 +175,7 @@ def check_divmod(samples):
                 assert q == a // b
                 assert r == a % b
                 assert a == q * b + r
-            except ZeroDivisionError as e:
+            except (AssertionError, ZeroDivisionError) as e:
                 report_exception('check_divmod', samples, e)
 
 

@@ -77,10 +77,9 @@ samples = (ints, floats, complexs, fractions_int, fractions_fractions_int,
            fractions_float, fractions_complex, polynomials_float, polynomials_complex, polynomials_polynomials_float,  
            polynomials_fractions_float,
            polynomials_fractions_complex, 
-           # fractions_polynomials_float,
-           # fractions_polynomials_complex
+           fractions_polynomials_float,
+           fractions_polynomials_complex
            )
-
 
 @pytest.mark.parametrize("samples", samples)
 def test_any(samples):
