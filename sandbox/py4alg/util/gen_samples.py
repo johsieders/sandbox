@@ -2,7 +2,7 @@
 
 import random
 from itertools import cycle
-from typing import Any, Sequence, Iterator, Iterable, Callable
+from typing import Any, Sequence, Iterator, Iterable, Callable, List
 
 from sandbox.py4alg.mapper import Complex, FieldComplex, Fp, Fraction, Matrix, Polynomial, FieldPolynomial
 from sandbox.py4alg.mapper.m_modular import Zm
@@ -112,24 +112,26 @@ SUCCESSORS = {gen_ints: (gen_nat_ints,),  # compose(gen_nat_ints, gen_ints)
                                 gen_polynomials, gen_field_polynomials),
               gen_complex: (gen_complex, gen_matrices, gen_polynomials,),
               gen_field_complex: (gen_field_complex, gen_fractions, gen_field_polynomials),
-              gen_fractions: (gen_fractions, gen_complex, gen_field_complex, gen_matrices, gen_polynomials),
+              gen_fractions: (gen_fractions, gen_complex, gen_field_complex, gen_matrices, gen_polynomials,
+                              gen_field_polynomials),
               gen_matrices: (gen_matrices, gen_complex, gen_polynomials),
               gen_polynomials: (gen_polynomials, gen_matrices, gen_complex),
-              gen_field_polynomials: (gen_field_polynomials, gen_matrices)
+              gen_field_polynomials: (gen_field_polynomials, gen_matrices, gen_fractions)
               }
 
 
-def gen_gen(sources, depth=3, n=5):
+def gen_gen(sources, depth=3, n=5) -> List[Any]:
     """
     This function generates all paths of the given depth, starting from one of the sources
     param n: length of samples
     """
+    successors = SUCCESSORS
     result = []
     pool = [[arg] for arg in sources]
     while pool:
         gs = pool.pop()
         if len(gs) <= depth:
-            for g in SUCCESSORS[gs[-1]]:
+            for g in successors[gs[-1]]:
                 hs = gs + [g]
                 pool.append(hs)
         else:

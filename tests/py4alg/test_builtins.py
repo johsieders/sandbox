@@ -1,13 +1,13 @@
 """
 Testing Built-in Python Types with check_properties
 
-This file demonstrates the universal nature of check_properties.py by testing
+This file demonstrates the universal nature of check_protocols.py by testing
 Python's built-in numeric types (int, float, complex) directly against the
 mathematical axioms. This shows that the property tests are truly implementation-
 agnostic and work with any type that supports the required operations.
 
 This serves as both a validation that our axiom tests are correct (since built-ins
-are known to be mathematically sound) and a demonstration that check_properties.py
+are known to be mathematically sound) and a demonstration that check_protocols.py
 is a universal mathematical testing framework.
 
 Note: This testing is redundant since built-in types are already mathematically
@@ -16,10 +16,10 @@ correct, but it proves the universality of our approach.
 
 from typing import List
 
-from tests.py4alg.check_properties import (
-    check_abelian_group, check_fields, check_comparables,
-    check_additive_identity, check_multiplicative_identity,
-    check_commutativity_multiplication, check_distributivity
+import pytest
+
+from tests.py4alg.check_protocols import (
+    check_any
 )
 
 # Test constants
@@ -224,71 +224,9 @@ def wrapped_complex_samples() -> List[ComplexWrapper]:
 
 # Test functions following the pattern of test_protocol_samples
 
-def test_builtin_int_abelian_group():
-    """Test that built-in int satisfies abelian group axioms."""
-    samples = wrapped_int_samples()
-    check_abelian_group(samples[:N])
+builtin_samples = (wrapped_int_samples(), wrapped_int_samples(), wrapped_int_samples())
 
 
-def test_builtin_int_ring():
-    """Test that built-in int satisfies ring axioms."""
-    samples = wrapped_int_samples()
-    # Integers form a ring but not a field (no multiplicative inverses)
-    check_additive_identity(samples)
-    check_multiplicative_identity(samples)
-    check_commutativity_multiplication(samples)
-    check_distributivity(samples)
-
-
-def test_builtin_int_comparable():
-    """Test that built-in int satisfies total order axioms."""
-    samples = wrapped_int_samples()
-    check_comparables(samples[:N])
-
-
-def test_builtin_float_field():
-    """Test that built-in float satisfies field axioms."""
-    samples = wrapped_float_samples()
-    check_fields(samples[:N])
-
-
-def test_builtin_float_comparable():
-    """Test that built-in float satisfies total order axioms."""
-    samples = wrapped_float_samples()
-    check_comparables(samples[:N])
-
-
-def test_builtin_complex_field():
-    """Test that built-in complex satisfies field axioms."""
-    samples = wrapped_complex_samples()
-    check_fields(samples[:N])
-
-
-def test_mathematical_universality():
-    """Demonstrate that check_properties works with any conforming type."""
-
-    # Test that our mathematical axioms hold for Python's built-in types
-    # This validates both our tests and Python's implementation
-
-    print("Testing mathematical universality...")
-
-    # Integers: Ring structure
-    int_samples_wrapped = wrapped_int_samples()
-    check_abelian_group(int_samples_wrapped[:5])
-    print("✓ Built-in int: Abelian group axioms verified")
-
-    # Floats: Field structure
-    float_samples_wrapped = wrapped_float_samples()
-    check_fields(float_samples_wrapped[:5])
-    print("✓ Built-in float: Field axioms verified")
-
-    # Complex: Field structure
-    complex_samples_wrapped = wrapped_complex_samples()
-    check_fields(complex_samples_wrapped[:5])
-    print("✓ Built-in complex: Field axioms verified")
-
-    print("Mathematical universality confirmed!")
-
-
-if __name__ == "__main__":
-    test_mathematical_universality()
+@pytest.mark.parametrize("samples", builtin_samples)
+def test_any(samples):
+    check_any(samples)

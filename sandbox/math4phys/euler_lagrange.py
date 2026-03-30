@@ -139,8 +139,8 @@ def solve_euler_lagrange(eq: Eq, x: List[Symbol], bcs: Dict[Union[float, Expr], 
 
 
 def check_euler_lagrange(solution: Matrix, eq: Eq, x: List[Symbol], bcs: Dict[Union[float, Expr], Matrix] = None) -> \
-List[
-    bool]:
+        List[
+            bool]:
     """
     Verify that a solution satisfies the Euler-Lagrange equation and boundary conditions.
 

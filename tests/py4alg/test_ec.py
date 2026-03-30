@@ -4,7 +4,7 @@ import pytest
 
 from sandbox.py4alg.mapper import ECpoint
 from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
-from tests.py4alg.check_properties import check_abelian_group
+from tests.py4alg.check_protocols import check_abelian_group
 
 
 class TestECPointConstruction:

@@ -30,7 +30,7 @@ project_sync:
     storage_name: Cadence Storage
     uri: ""
     exclude:
-      - /.venv/**
+      - /..venv/**
     include: [ ]
     sync_back: false
     snapshots: true

@@ -1,9 +1,10 @@
-venv
+.venv
 archive
 .venv
 .idea
 .json
 .tex
+.benchmarks
 /.run/
 # Byte-compiled / optimized / DLL files
 __pycache__/

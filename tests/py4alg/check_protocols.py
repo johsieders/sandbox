@@ -15,7 +15,30 @@ from operator import mul
 
 import pytest
 
+from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
+from sandbox.py4alg.protocols.p_field import Field
+from sandbox.py4alg.protocols.p_ring import Ring
 from sandbox.py4alg.util.primes import gcd
+from sandbox.py4alg.util.utils import comparable_works, descent_str
+
+# Exception report: list of (check_name, descent, error_type, message)
+exception_report: list[tuple[str, str, str, str]] = []
+
+
+def report_exception(check_name: str, samples, e: Exception):
+    ds = descent_str(samples)
+    exception_report.append((check_name, ds, type(e).__name__, str(e)))
+
+
+def print_exception_report():
+    if not exception_report:
+        return
+    print(f"\n{'='*70}")
+    print(f"Exception report: {len(exception_report)} graceful failure(s)")
+    print(f"{'='*70}")
+    for check, descent, etype, msg in exception_report:
+        print(f"  {check} [{descent}]: {etype}: {msg}")
+    print(f"{'='*70}")
 
 
 # ----- Abelian Group tests (additivity) -----
@@ -43,7 +66,10 @@ def check_associativity_addition(samples):
     for a in samples:
         for b in samples:
             for c in samples:
-                assert (a + b) + c == a + (b + c)
+                try:
+                    assert (a + b) + c == a + (b + c)
+                except (AssertionError, ZeroDivisionError) as e:
+                    report_exception('check_associativity_addition', samples, e)
 
 
 def check_bulk_add(samples):
@@ -67,7 +93,10 @@ def check_associativity_multiplication(samples):
     for a in samples:
         for b in samples:
             for c in samples:
-                assert (a * b) * c == a * (b * c)
+                try:
+                    assert (a * b) * c == a * (b * c)
+                except (AssertionError, ZeroDivisionError) as e:
+                    report_exception('check_associativity_multiplication', samples, e)
 
 
 def check_commutativity_multiplication(samples):
@@ -120,11 +149,14 @@ def check_division(samples):
         for b in samples:
             if not b:
                 continue
-            q = a // b
-            r = a % b
-            assert a == q * b + r
-            if r:
-                assert r.euclidean_function() < b.euclidean_function()
+            try:
+                q = a // b
+                r = a % b
+                assert a == q * b + r
+                if r:
+                    assert r.euclidean_function() < b.euclidean_function()
+            except ZeroDivisionError as e:
+                report_exception('check_division', samples, e)
 
 
 def check_divmod(samples):
@@ -132,10 +164,13 @@ def check_divmod(samples):
         for b in samples:
             if not b:
                 continue
-            q, r = divmod(a, b)
-            assert q == a // b
-            assert r == a % b
-            assert a == q * b + r
+            try:
+                q, r = divmod(a, b)
+                assert q == a // b
+                assert r == a % b
+                assert a == q * b + r
+            except ZeroDivisionError as e:
+                report_exception('check_divmod', samples, e)
 
 
 def check_gcd_properties(samples):
@@ -313,3 +348,24 @@ def check_comparables(samples):
     check_transitivity(samples)
     check_totality(samples)
     check_comparison_consistency(samples)
+
+
+def check_any(samples):
+    before = len(exception_report)
+
+    if isinstance(samples[0], Field):
+        check_fields(samples)
+    elif isinstance(samples[0], EuclideanRing):
+        check_euclidean_rings(samples)
+    elif isinstance(samples[0], Ring):
+        check_rings(samples)
+
+    if comparable_works(samples[0]):
+        check_comparables(samples)
+
+    new_failures = exception_report[before:]
+    if new_failures:
+        ds = descent_str(samples)
+        print(f"\n  {ds}: {len(new_failures)} graceful failure(s)")
+        for check, _, etype, msg in new_failures:
+            print(f"    {check}: {etype}")

@@ -22,7 +22,7 @@ class Complex[T: Ring]:
             self._re = a._re - b._im
             self._im = a._im + b._re
         else:
-            self._descent = [Complex] + args[0].descent()
+            self._descent = [type(self)] + args[0].descent()
             self._re = a
             self._im = b
 

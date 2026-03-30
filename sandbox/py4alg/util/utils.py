@@ -40,7 +40,7 @@ params = {'rtol': 1e-9,
           'min_norm': 0,
           'no_zeros': True,
           'poly_min': 1,
-          'poly_max': 5,
+          'poly_max': 4,
           'prime': 17,
           'nonprime': 21,
           'matrix_size': 9}
@@ -51,3 +51,15 @@ def set_test_seed():
     run this before each test session to get identical results
     """
     random.seed(params['seed'])
+
+
+def comparable_works(sample):
+    """Test whether comparison actually works at runtime."""
+    try:
+        _ = sample <= sample
+        return True
+    except (TypeError, NotImplementedError):
+        return False
+
+def descent_str(samples):
+    return ' > '.join(cls.__name__ for cls in samples[0].descent())
