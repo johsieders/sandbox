@@ -13,7 +13,7 @@ from sandbox.py4alg.util.utils import compose, take
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat
 from sandbox.py4alg.wrapper.w_int import NativeInt
-from tests.py4alg.check_protocols import check_any
+from tests.py4alg.check_protocols import check_axioms
 
 
 # ----- Type/sample groupings -----
@@ -75,4 +75,4 @@ def native_samples(n: int):
 
 @pytest.mark.parametrize("samples", native_samples(N))
 def test_any(samples):
-    check_any(samples)
+    check_axioms(samples)

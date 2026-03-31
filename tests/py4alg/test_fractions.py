@@ -6,7 +6,7 @@ from sandbox.py4alg.util.gen_samples import (gen_cycle, gen_ints, gen_floats, ge
                                              gen_nat_complex, gen_nat_ints, gen_nat_floats,
                                              gen_fractions)
 from sandbox.py4alg.util.utils import compose, take
-from tests.py4alg.check_protocols import check_any
+from tests.py4alg.check_protocols import check_axioms
 
 
 # ----- Type/sample groupings -----
@@ -50,4 +50,4 @@ def test_poly_rat():
 
 @pytest.mark.parametrize("samples", fraction_samples(10))
 def test_any(samples):
-    check_any(samples)
+    check_axioms(samples)

@@ -12,7 +12,7 @@ from sandbox.py4alg.util.gen_samples import (gen_ints, gen_floats, gen_complex_,
 from sandbox.py4alg.util.primes import gcd
 from sandbox.py4alg.util.utils import compose, take
 from sandbox.py4alg.wrapper.w_float import NativeFloat
-from tests.py4alg.check_protocols import check_any
+from tests.py4alg.check_protocols import check_axioms
 
 
 def to_pairs(xs: Sequence[Any]) -> List[Tuple[Any, Any]]:
@@ -51,14 +51,14 @@ def test_gcd():
 
 def test_gcd_basics():
     ints = def_nat_ints(0, 7, 17, 27, 37)
-    check_any(ints)
+    check_axioms(ints)
 
     poly_samples_int = def_polynomials(*to_coeffs(ints, (1, 1, 3)))
-    check_any(poly_samples_int)
+    check_axioms(poly_samples_int)
 
     floats = def_nat_floats(0., 7., 1., 0., 1.)
     poly_samples_float = def_field_polynomials(*to_coeffs(floats, (1, 1, 3)))
-    check_any(poly_samples_float)
+    check_axioms(poly_samples_float)
 
 
 def test_poly_gcd():
@@ -68,8 +68,8 @@ def test_poly_gcd():
     poly_1 = def_field_polynomials(*to_coeffs(floats_1, (4, 4, 4, 4)))
     poly_2 = def_field_polynomials(*to_coeffs(floats_2, (4, 4, 4, 4)))
 
-    check_any(poly_1)
-    check_any(poly_2)
+    check_axioms(poly_1)
+    check_axioms(poly_2)
 
 
 # ----- Type/sample groupings -----
@@ -106,7 +106,7 @@ def test_gcd(samples):
 @pytest.mark.parametrize("samples", poly_samples(10))
 # samples 0 and 1 are non-euclidean rings
 def test_any(samples):
-    check_any(samples)
+    check_axioms(samples)
 
 
 def poly_table(n):

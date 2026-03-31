@@ -9,7 +9,7 @@ from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
 from sandbox.py4alg.util.primes import get_primes
-from tests.py4alg.check_protocols import check_any
+from tests.py4alg.check_protocols import check_axioms
 
 
 # ----- Type/sample groupings -----
@@ -62,4 +62,4 @@ def fp_samples(factory=None):
 
 @pytest.mark.parametrize("samples", fp_samples())
 def test_any(samples):
-    check_any(samples)
+    check_axioms(samples)

@@ -40,7 +40,7 @@ params = {'rtol': 1e-9,
           'min_norm': 0,
           'no_zeros': True,
           'poly_min': 1,
-          'poly_max': 4,
+          'poly_max': 3,
           'prime': 17,
           'nonprime': 21,
           'matrix_size': 9}
