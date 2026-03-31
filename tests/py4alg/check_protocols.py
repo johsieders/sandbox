@@ -10,6 +10,7 @@ Each test function corresponds directly to a mathematical axiom:
 - check_field_division: ∀a≠0: ∃a⁻¹: a×a⁻¹ = 1
 """
 
+from collections import deque
 from functools import reduce
 from operator import mul
 
@@ -24,42 +25,45 @@ from sandbox.py4alg.util.utils import comparable_works, descent_str
 # Exception report: list of (check_name, descent, error_type, message)
 exception_report: list[tuple[str, str, str, str]] = []
 
+# Black box: records the last 5 samples passed to check_axioms.
+# Survives timeouts — inspect after a hang to see what was running.
+black_box: deque[str] = deque(maxlen=5)
+
 
 def report_exception(check_name: str, samples, e: Exception):
     ds = descent_str(samples)
     exception_report.append((check_name, ds, type(e).__name__, str(e)))
 
 
-def print_exception_report():
-    if not exception_report:
-        return
-    print(f"\n{'='*70}")
-    print(f"Exception report: {len(exception_report)} graceful failure(s)")
-    print(f"{'='*70}")
-    for check, descent, etype, msg in exception_report:
-        print(f"  {check} [{descent}]: {etype}: {msg}")
-    print(f"{'='*70}")
-
 
 # ----- Abelian Group tests (additivity) -----
 
 def check_additive_identity(samples):
     for a in samples:
-        zero = a.zero()
-        assert a + zero == a
-        assert zero + a == a
+        try:
+            zero = a.zero()
+            assert a + zero == a
+            assert zero + a == a
+        except (AssertionError, ZeroDivisionError) as e:
+            report_exception('check_additive_identity', samples, e)
 
 
 def check_additive_inverse(samples):
     for a in samples:
-        zero = a.zero()
-        assert a + (-a) == zero
+        try:
+            zero = a.zero()
+            assert a + (-a) == zero
+        except (AssertionError, ZeroDivisionError) as e:
+            report_exception('check_additive_inverse', samples, e)
 
 
 def check_commutativity_addition(samples):
     for a in samples:
         for b in samples:
-            assert a + b == b + a
+            try:
+                assert a + b == b + a
+            except (AssertionError, ZeroDivisionError) as e:
+                report_exception('check_commutativity_addition', samples, e)
 
 
 def check_associativity_addition(samples):
@@ -73,20 +77,26 @@ def check_associativity_addition(samples):
 
 
 def check_bulk_add(samples):
-    samples_rev = reversed(list(samples))
-    zero = samples[0].zero()
-    total = sum(samples, zero)
-    total_rev = sum(samples_rev, zero)
-    assert total == total_rev
+    try:
+        samples_rev = reversed(list(samples))
+        zero = samples[0].zero()
+        total = sum(samples, zero)
+        total_rev = sum(samples_rev, zero)
+        assert total == total_rev
+    except (AssertionError, ZeroDivisionError) as e:
+        report_exception('check_bulk_add', samples, e)
 
 
 # ----- Ring tests -----
 
 def check_multiplicative_identity(samples):
     for a in samples:
-        one = a.one()
-        assert a * one == a
-        assert one * a == a
+        try:
+            one = a.one()
+            assert a * one == a
+            assert one * a == a
+        except (AssertionError, ZeroDivisionError) as e:
+            report_exception('check_multiplicative_identity', samples, e)
 
 
 def check_associativity_multiplication(samples):
@@ -103,15 +113,21 @@ def check_commutativity_multiplication(samples):
     """Check multiplicative commutativity: a * b = b * a."""
     for a in samples:
         for b in samples:
-            assert a * b == b * a
+            try:
+                assert a * b == b * a
+            except (AssertionError, ZeroDivisionError) as e:
+                report_exception('check_commutativity_multiplication', samples, e)
 
 
 def check_annihilator_properties(samples):
     """Check annihilator properties: 0 * a = a * 0 = 0."""
     for a in samples:
-        zero = a.zero()
-        assert zero * a == zero, f"Left annihilator failed: 0 * {a} != 0"
-        assert a * zero == zero, f"Right annihilator failed: {a} * 0 != 0"
+        try:
+            zero = a.zero()
+            assert zero * a == zero, f"Left annihilator failed: 0 * {a} != 0"
+            assert a * zero == zero, f"Right annihilator failed: {a} * 0 != 0"
+        except (AssertionError, ZeroDivisionError) as e:
+            report_exception('check_annihilator_properties', samples, e)
 
 
 def check_distributivity(samples):
@@ -126,7 +142,7 @@ def check_left_distributivity(samples):
             for c in samples:
                 try:
                     assert a * (b + c) == (a * b) + (a * c)
-                except AssertionError as e:
+                except (AssertionError, ZeroDivisionError) as e:
                     report_exception('left_distributivity', samples, e)
 
 
@@ -136,16 +152,19 @@ def check_right_distributivity(samples):
             for c in samples:
                 try:
                     assert (a + b) * c == (a * c) + (b * c)
-                except AssertionError as e:
+                except (AssertionError, ZeroDivisionError) as e:
                     report_exception('right_distributivity', samples, e)
 
 
 def check_bulk_mul(samples):
-    samples_rev = reversed(list(samples))
-    one = samples[0].one()
-    prod = reduce(mul, samples, one)
-    prod_rev = reduce(mul, samples_rev, one)
-    assert prod == prod_rev
+    try:
+        samples_rev = reversed(list(samples))
+        one = samples[0].one()
+        prod = reduce(mul, samples, one)
+        prod_rev = reduce(mul, samples_rev, one)
+        assert prod == prod_rev
+    except (AssertionError, ZeroDivisionError) as e:
+        report_exception('check_bulk_mul', samples, e)
 
 
 # ----- EuclideanRing tests -----
@@ -183,25 +202,30 @@ def check_gcd_properties(samples):
     """Check basic gcd properties: gcd(a,b) divides both a and b."""
     for a in samples:
         for b in samples:
-            g = gcd(a, b)
-            if g:
-                assert a % g == a.zero(), f"gcd({a},{b}) = {g} does not divide {a}"
-
-            if g:
-                assert b % g == b.zero(), f"gcd({a},{b}) = {g} does not divide {b}"
+            try:
+                g = gcd(a, b)
+                if g:
+                    assert a % g == a.zero(), f"gcd({a},{b}) = {g} does not divide {a}"
+                if g:
+                    assert b % g == b.zero(), f"gcd({a},{b}) = {g} does not divide {b}"
+            except (AssertionError, ZeroDivisionError) as e:
+                report_exception('check_gcd_properties', samples, e)
 
 
 def check_gcd_commutativity(samples):
     """Check gcd commutativity: gcd(a,b) = gcd(b,a) up to normalization."""
     for a in samples:
         for b in samples:
-            g1 = gcd(a, b)
-            g2 = gcd(b, a)
-            if g1:
-                g1 = g1.normalize()
-            if g2:
-                g2 = g2.normalize()
-            assert g1 == g2, f"gcd not commutative: gcd({a},{b}) != gcd({b},{a})"
+            try:
+                g1 = gcd(a, b)
+                g2 = gcd(b, a)
+                if g1:
+                    g1 = g1.normalize()
+                if g2:
+                    g2 = g2.normalize()
+                assert g1 == g2, f"gcd not commutative: gcd({a},{b}) != gcd({b},{a})"
+            except (AssertionError, ZeroDivisionError) as e:
+                report_exception('check_gcd_commutativity', samples, e)
 
 
 def check_gcd_associativity(samples):
@@ -209,41 +233,49 @@ def check_gcd_associativity(samples):
     for a in samples:
         for b in samples:
             for c in samples:
-                u = gcd(gcd(a, b), c)
-                v = gcd(a, gcd(b, c))
-                if u:
-                    u = u.normalize()
-                if v:
-                    v = v.normalize()
-                assert u == v, f"gcd not associative: gcd(gcd({a},{b}), {c}) != gcd({a}, gcd({b},{c}))"
+                try:
+                    u = gcd(gcd(a, b), c)
+                    v = gcd(a, gcd(b, c))
+                    if u:
+                        u = u.normalize()
+                    if v:
+                        v = v.normalize()
+                    assert u == v, f"gcd not associative: gcd(gcd({a},{b}), {c}) != gcd({a}, gcd({b},{c}))"
+                except (AssertionError, ZeroDivisionError) as e:
+                    report_exception('check_gcd_associativity', samples, e)
 
 
 def check_gcd_identity(samples):
     """Check gcd identity: gcd(a,0) = a (up to normalization), gcd(a,1) = 1 when a≠0."""
     for a in samples:
-        zero = a.zero()
-        one = a.one()
-
-        if not a:
-            assert gcd(zero, zero) == zero, f"gcd identity failed: gcd(0,0) != 0"
-        else:
-            g = gcd(a, zero)
-            assert g.normalize() == a.normalize(), f"gcd identity failed: gcd({a}, {zero}).normalize() != {a}.normalize()"
-            g1 = gcd(a, one)
-            assert g1.normalize() == one, f"gcd identity failed: gcd({a}, {one}).normalize() != {one}"
+        try:
+            zero = a.zero()
+            one = a.one()
+            if not a:
+                assert gcd(zero, zero) == zero, f"gcd identity failed: gcd(0,0) != 0"
+            else:
+                g = gcd(a, zero)
+                assert g.normalize() == a.normalize(), f"gcd identity failed: gcd({a}, {zero}).normalize() != {a}.normalize()"
+                g1 = gcd(a, one)
+                assert g1.normalize() == one, f"gcd identity failed: gcd({a}, {one}).normalize() != {one}"
+        except (AssertionError, ZeroDivisionError) as e:
+            report_exception('check_gcd_identity', samples, e)
 
 
 # ----- Field tests -----
 
 def check_truediv_and_inverse(samples):
     for a in samples:
-        one = a.one()
         if not a:
             continue
-        inv = a.inverse()
-        assert a * inv == one
-        assert inv * a == one
-        assert a / a == one
+        try:
+            one = a.one()
+            inv = a.inverse()
+            assert a * inv == one
+            assert inv * a == one
+            assert a / a == one
+        except (AssertionError, ZeroDivisionError) as e:
+            report_exception('check_truediv_and_inverse', samples, e)
 
 
 def check_field_division_by_zero(samples):
@@ -356,18 +388,22 @@ def check_comparables(samples):
     check_comparison_consistency(samples)
 
 
-def check_any(samples):
+def check_axioms(samples):
+    black_box.append(descent_str(samples))
     before = len(exception_report)
 
-    if isinstance(samples[0], Field):
-        check_fields(samples)
-    elif isinstance(samples[0], EuclideanRing):
-        check_euclidean_rings(samples)
-    elif isinstance(samples[0], Ring):
-        check_rings(samples)
+    try:
+        if isinstance(samples[0], Field):
+            check_fields(samples)
+        elif isinstance(samples[0], EuclideanRing):
+            check_euclidean_rings(samples)
+        elif isinstance(samples[0], Ring):
+            check_rings(samples)
 
-    if comparable_works(samples[0]):
-        check_comparables(samples)
+        if comparable_works(samples[0]):
+            check_comparables(samples)
+    except BaseException as e:
+        report_exception('timeout', samples, e)
 
     new_failures = exception_report[before:]
     if new_failures:

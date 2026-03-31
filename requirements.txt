@@ -7,6 +7,7 @@ scikit-learn
 seaborn
 torch
 pytest-benchmark
+pytest-timeout
 pytest-xdist
 openai
 tiktoken

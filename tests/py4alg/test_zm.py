@@ -8,7 +8,7 @@ from sandbox.py4alg.protocols.p_comparable import Comparable
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
-from tests.py4alg.check_protocols import check_euclidean_rings, check_any
+from tests.py4alg.check_protocols import check_euclidean_rings, check_axioms
 
 
 # ----- Type/sample groupings -----
@@ -61,7 +61,7 @@ def zm_ring_samples(factory=None):
 
 @pytest.mark.parametrize("samples", zm_ring_samples())
 def test_any(samples):
-    check_any(samples)
+    check_axioms(samples)
 
 
 # Only test Euclidean ring properties for prime moduli (which should be very limited since Fp handles those)
@@ -90,7 +90,7 @@ def test_euclidean_rings_prime_moduli(samples):
 
 @pytest.mark.parametrize("samples", zm_prime_samples())
 def test_any(samples):
-    check_any(samples)
+    check_axioms(samples)
 
 
 def test_zm_basic_operations():

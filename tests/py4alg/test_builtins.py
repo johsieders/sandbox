@@ -19,7 +19,7 @@ from typing import List
 import pytest
 
 from tests.py4alg.check_protocols import (
-    check_any
+    check_axioms
 )
 
 # Test constants
@@ -229,4 +229,4 @@ builtin_samples = (wrapped_int_samples(), wrapped_int_samples(), wrapped_int_sam
 
 @pytest.mark.parametrize("samples", builtin_samples)
 def test_any(samples):
-    check_any(samples)
+    check_axioms(samples)
