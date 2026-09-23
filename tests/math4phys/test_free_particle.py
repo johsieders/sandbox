@@ -13,7 +13,7 @@ These tests verify that the solver correctly:
 
 from sympy import symbols, Matrix, sqrt, pi
 
-from math4phys.euler_lagrange import (
+from sandbox.math4phys.euler_lagrange import (
     run_euler_lagrange
 )
 

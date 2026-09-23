@@ -25,7 +25,7 @@ from sympy import (
     diff, dsolve, Eq, symbols, Function, Matrix, Symbol, Expr, solve, pprint
 )
 
-from math4phys.diff_ops import gradient, matrices_equal
+from sandbox.math4phys.diff_ops import gradient, matrices_equal
 
 
 def get_euler_lagrange(L: Expr, x: List[Symbol], v: List[Symbol]) -> Eq:

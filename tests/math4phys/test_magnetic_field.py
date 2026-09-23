@@ -13,10 +13,10 @@ These tests verify that the solver correctly:
 
 from sympy import diff, solve, symbols, Function, Matrix, pi, pprint, dsolve
 
-from math4phys.diff_ops import (
+from sandbox.math4phys.diff_ops import (
     curl, jacobian, make_vector_field, matrices_equal
 )
-from math4phys.euler_lagrange import (
+from sandbox.math4phys.euler_lagrange import (
     get_euler_lagrange,
     run_euler_lagrange
 )
