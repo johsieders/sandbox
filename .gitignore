@@ -1,16 +1,26 @@
-.venv
-archive
-.venv
-.idea
-.json
-.tex
-.benchmarks
+# Environments and IDE
+.venv/
+.idea/
 /.run/
+.claude/settings.local.json
+
+# macOS
+.DS_Store
+
+# Build / packaging
+*.egg-info/
+
+# Test and benchmark output
+.pytest_cache/
+.benchmarks/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 
-/archive/test_fields/
-/archive/fields/
+# Misc
+*.json
+*.tex
+archive/
 /sandbox/py4alg/util/scratch.py

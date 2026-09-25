@@ -52,7 +52,8 @@ pytest tests/ --benchmark-only
 
 ### Dependencies
 
-Install requirements: `pip install -r requirements.txt`
+Activate the venv first (`source .venv/bin/activate`; Mac venv is 3.13, Pi venv is 3.12), then install requirements:
+`pip install -r requirements.txt`
 
 Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest-benchmark
 
@@ -108,4 +109,5 @@ Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest
 - Step functions use binary search for O(log n) evaluation
 - Efficient N-ary operations via single-pass breakpoint merging
 - Normalized canonical forms eliminate redundant breakpoints
-- Test suite runs in ~15 seconds on MacBook Air M4
+- The full suite has ~31,000 tests (~30,000 of them parametrized step function tests) and takes well over 5 minutes even with
+  `pytest -n auto`; run targeted modules during development
