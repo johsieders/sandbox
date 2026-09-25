@@ -52,8 +52,9 @@ pytest tests/ --benchmark-only
 
 ### Dependencies
 
-Activate the venv first (`source .venv/bin/activate`; Mac venv is 3.13, Pi venv is 3.12), then install requirements:
-`pip install -r requirements.txt`
+Python 3.14.7 on Mac and Pi, managed by uv and pinned in `.python-version`. Activate the venv first
+(`source .venv/bin/activate`), then install requirements: `uv pip install -r requirements.txt --torch-backend=auto`
+(on the Pi, `remote-setup.sh` does this)
 
 Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest-benchmark
 
