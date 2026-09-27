@@ -217,6 +217,37 @@ guard against a half-finished change on the Mac.
 4. Update the link in `/usr/local/bin` and, if its name encodes the version, the PyCharm
    interpreter.
 
+### 4.7 (Re)connect the Pi
+
+After the Pi was switched off, rebooted, moved or reinstalled, or after the Mac was away from home.
+
+1. **Reachable?**
+   ```bash
+   ssh jean@192.168.178.115 'hostname; uptime'
+   ```
+   - *Timeout / no route:* the Pi is off, still booting (allow a minute), or on a different
+     address. Look it up in the router's device list (FRITZ!Box: Home Network → Network), then
+     give it a fixed address there ("always assign the same IPv4 address") so it doesn't change
+     again.
+   - *`REMOTE HOST IDENTIFICATION HAS CHANGED`:* expected after a reinstall of the Pi (new host
+     key), otherwise a reason to stop and look. Remove the old key with
+     `ssh-keygen -R 192.168.178.115` and connect again.
+   - *Asks for a password:* the Mac's key is not in `~/.ssh/authorized_keys` on the Pi (e.g.
+     after a reinstall): `ssh-copy-id -i ~/.ssh/id_ed25519 jean@192.168.178.115`.
+2. **New address?** Change it in all three places: `PI` in `tools/sync_pi.sh`, `PI_HOST` in
+   `tools/compare_hosts.py`, and the host of the SSH configuration used by deployment "pi5"
+   (Settings → Tools → SSH Configurations, §5). The SSH interpreter follows the deployment.
+3. **Catch up the mirror.** Files saved in PyCharm while the Pi was unreachable were *not*
+   uploaded, and PyCharm does not retry. Run `tools/sync_pi.sh -n`, then `tools/sync_pi.sh`.
+4. **Check the venv** (only needed if `uv.lock` changed meanwhile, or after a reinstall):
+   `ssh jean@192.168.178.115 'bash ~/sandbox/remote-setup.sh'`. After a reinstall also repeat the
+   setup of §3.1 and §3.3 (uv, the `/usr/local/bin/python3.14` link, passwordless sudo).
+5. **PyCharm.** If the SSH interpreter shows as invalid, reopen it once (Settings → Python →
+   Interpreter); PyCharm reconnects and refreshes `~/.pycharm_helpers` if necessary.
+6. **Smoke test:** `python tools/compare_hosts.py tests/py4alg/test_polynomials.py --check-sync`.
+
+From outside the home network, `192.168.178.115` is not reachable at all; see §8.
+
 
 ## 5. PyCharm: Where Things Live
 
