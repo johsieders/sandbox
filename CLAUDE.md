@@ -60,6 +60,9 @@ Python 3.14.7 on Mac and Pi, managed by uv and pinned in `.python-version`. Depe
 - On the Pi: after syncing the mirror, `bash ~/sandbox/remote-setup.sh` (runs `uv sync --locked`)
 - torch: regular PyPI build on the Mac (MPS), CPU-only build on Linux/Pi via `[tool.uv.sources]`
 
+Mac/Pi 5 setup (Pi `~/sandbox` is a git-free mirror, never edit/pull there; run `tools/sync_pi.sh`
+after edits made outside PyCharm): see `docs/multi_platform.md`.
+
 Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest-benchmark
 
 ## Architecture Patterns

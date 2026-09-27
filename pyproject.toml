@@ -35,6 +35,9 @@ include = ["sandbox*", "tests*"]   # tests import each other as `tests.py4alg...
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "stress: slow or fragile cases; deselect with -m 'not stress'",
+]
 
 # CPU-only torch on the Pi (Linux): the default PyPI build for linux-aarch64
 # pulls in ~3.3 GB of CUDA libraries. The Mac keeps the regular PyPI build (MPS).

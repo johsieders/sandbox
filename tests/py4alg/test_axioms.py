@@ -22,9 +22,20 @@ complex_samples = []
 
 TIMEOUT = 10
 
+# Cases that exceed TIMEOUT (coefficient explosion in nested fraction/polynomial GCDs).
+# On the Pi, this one ran > 38 min in a full xdist run although its timeout had not fired.
+STRESS = {
+    "Complex > Matrix > Fraction > FieldPolynomial > Fraction > NativeInt",
+}
+
+
+def with_marks(samples):
+    ds = descent_str(samples)
+    return pytest.param(samples, marks=pytest.mark.stress if ds in STRESS else (), id=ds)
+
 
 @pytest.mark.timeout(TIMEOUT)
-@pytest.mark.parametrize("samples", int_samples, ids=[descent_str(s) for s in int_samples])
+@pytest.mark.parametrize("samples", [with_marks(s) for s in int_samples])
 def test_int(samples):
     check_axioms(samples)
 
