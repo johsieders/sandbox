@@ -17,9 +17,10 @@ Notes:
 - The Pi copy must be in sync with the Mac. By default ~/sandbox is used, which
   PyCharm keeps up to date by auto-upload (deployment server "pi5"); use
   --pi-root to point elsewhere. --check-sync reports differing files via
-  rsync dry run.
-- The Pi venv is Python 3.12, the Mac venv 3.13: ratios compare interpreter
-  versions as well as hardware.
+  rsync dry run; tools/sync_pi.sh fixes them.
+- Both venvs run Python 3.14.7 with the same package versions (uv.lock), so
+  ratios compare hardware. Only torch differs: MPS build on the Mac, CPU build
+  on the Pi.
 - Durations are wall-clock times as measured by pytest (setup + call + teardown).
 """
 
@@ -31,7 +32,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
-
+    
 PI_HOST = "jean@192.168.178.115"
 PI_ROOT = "/home/jean/sandbox"  # PyCharm deployment mapping (server "pi5")
 PI_PYTHON = "/home/jean/sandbox/.venv/bin/python"

@@ -331,4 +331,3 @@ design.
 - **Hailo from the venv.** `python3-hailort` is an apt package for the system Python 3.11; the
   project venv (3.14) cannot import it yet.
 - **Python 3.15** once torch and highspy publish wheels.
-- `tools/compare_hosts.py`: its docstring still mentions Python 3.12 / 3.13.
