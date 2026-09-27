@@ -1,0 +1,47 @@
+[project]
+name = "sandbox"
+version = "0.1"
+requires-python = ">=3.14"
+dependencies = [
+    "numpy>=2.5.3",
+    "pandas>=3.0.6",
+    "matplotlib>=3.11.2",
+    "matplotlib-inline>=0.2.2",
+    "scikit-learn>=1.9.1",
+    "seaborn>=0.13.2",
+    "torch>=2.14.0",
+    "openai>=3.19.2",
+    "tiktoken>=0.14.0",
+    "py-enigma>=1.0.2",
+    "sympy>=1.14.0",
+    "highspy>=1.15.1",
+    "pypsa>=1.3.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-benchmark>=5.3.0",
+    "pytest-timeout>=2.4.0",
+    "pytest-xdist>=3.8.0",
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["sandbox*", "tests*"]   # tests import each other as `tests.py4alg...`
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+# CPU-only torch on the Pi (Linux): the default PyPI build for linux-aarch64
+# pulls in ~3.3 GB of CUDA libraries. The Mac keeps the regular PyPI build (MPS).
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

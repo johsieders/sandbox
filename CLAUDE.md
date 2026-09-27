@@ -52,9 +52,13 @@ pytest tests/ --benchmark-only
 
 ### Dependencies
 
-Python 3.14.7 on Mac and Pi, managed by uv and pinned in `.python-version`. Activate the venv first
-(`source .venv/bin/activate`), then install requirements: `uv pip install -r requirements.txt --torch-backend=auto`
-(on the Pi, `remote-setup.sh` does this)
+Python 3.14.7 on Mac and Pi, managed by uv and pinned in `.python-version`. Dependencies are declared in
+`pyproject.toml` (test tools in the `dev` group) and pinned in `uv.lock`; commit both together.
+
+- Install / update the venv: `uv sync` (creates `.venv`, installs exact locked versions, editable `sandbox`)
+- Add a dependency: `uv add <pkg>` (test tool: `uv add --dev <pkg>`); upgrade: `uv lock --upgrade && uv sync`
+- On the Pi: after syncing the mirror, `bash ~/sandbox/remote-setup.sh` (runs `uv sync --locked`)
+- torch: regular PyPI build on the Mac (MPS), CPU-only build on Linux/Pi via `[tool.uv.sources]`
 
 Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest-benchmark
 

@@ -8,7 +8,7 @@
 #   tools/sync_pi.sh        # sync, listing changed/deleted files
 #   tools/sync_pi.sh -n     # dry run: only show what would change
 #
-# After requirements.txt changed, run on the Pi: bash ~/sandbox/remote-setup.sh
+# After pyproject.toml / uv.lock changed, run on the Pi: bash ~/sandbox/remote-setup.sh
 
 PI="jean@192.168.178.115:sandbox/"
 PROJECT="$(cd "$(dirname "$0")/.." && pwd)"
