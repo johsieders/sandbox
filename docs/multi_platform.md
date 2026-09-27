@@ -23,16 +23,16 @@ little ceremony as possible.
 ## 2. Architecture
 
 ```
-            Mac  (master)                                  Pi 5  (mirror)
-  ~/PycharmProjects/sandbox                               ~/sandbox
-  ┌──────────────────────────┐   PyCharm auto-upload    ┌──────────────────────────┐
-  │ git repo  ── push ──▶ GitHub │ ───── (SFTP) ──────▶ │ plain files, no git      │
-  │ PyCharm, Claude Code     │   tools/sync_pi.sh       │ no PyCharm, headless     │
-  │ .venv  (uv, 3.14.7)      │ ───── (rsync) ────────▶  │ .venv  (uv, 3.14.7)      │
-  └──────────────────────────┘                          └──────────────────────────┘
-          │        ▲                                             ▲
-          │        └──── SSH interpreter: run / debug / test ────┘
-          └───────────── ssh jean@192.168.178.115 '...' ─────────┘
+         Mac (master)                                        Pi 5 (mirror)
+  ~/PycharmProjects/sandbox                           ~/sandbox
+  ┌──────────────────────────┐  PyCharm auto-upload   ┌──────────────────────────┐
+  │ git repo ─push─▶ GitHub  │  ───── (SFTP) ──────▶  │ plain files, no git      │
+  │ PyCharm, Claude Code     │    tools/sync_pi.sh    │ no PyCharm, headless     │
+  │ .venv  (uv, 3.14.7)      │  ───── (rsync) ─────▶  │ .venv  (uv, 3.14.7)      │
+  └──────────────────────────┘                        └──────────────────────────┘
+          │        ▲                                                ▲
+          │        └───── SSH interpreter: run / debug / test ──────┘
+          └──────────── ssh jean@192.168.178.115 '...' ─────────────┘
 ```
 
 **Master and mirror.**
