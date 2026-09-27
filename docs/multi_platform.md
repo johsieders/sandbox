@@ -283,7 +283,7 @@ NativeInt]`, `@pytest.mark.timeout(10)`, ran for over 38 minutes in a full xdist
 Alone it times out correctly after 10 s on both machines, with or without xdist; so does the whole
 module `test_axioms.py` run by itself on the Pi (4 workers, 11 min, no hang).
 *Diagnosis:* `sudo uvx py-spy dump --pid <worker>` shows where a live Python process is (here:
-nested fraction/polynomial GCDs, pure Python). Cause of the missing timeout: open (§8).
+nested fraction/polynomial GCDs, pure Python). Cause of the missing timeout: open (§9).
 *Mitigation:* the case is marked `stress`.
 
 **6.9 Git operations on the Pi.**
@@ -308,8 +308,7 @@ untouched. Upgrades cannot break Raspberry Pi OS, and several versions coexist.
 
 **SSH on the local network, not Raspberry Pi Connect.** Pi Connect offers screen sharing and a
 browser shell, but no SSH endpoint: no rsync, no PyCharm, no scripted access. It remains the
-fallback when SSH is broken. Access from outside the home network would use an overlay network
-(Tailscale or WireGuard); only the host address in `sync_pi.sh` and PyCharm would change.
+fallback when SSH is broken. Access from outside the home network is discussed in §8.
 
 **No torch acceleration on the Pi.** There is no GPU that torch supports on the Pi: the Hailo-8
 (and Coral, Hailo-10H) run compiled networks for inference, the VideoCore GPU has no torch backend,
@@ -317,7 +316,61 @@ and external GPUs over the single PCIe lane are experimental. torch on the Pi is
 design.
 
 
-## 8. Open Issues
+## 8. Remote Access from Outside the Home Network
+
+The setup assumes that Mac and Pi share the home network (`192.168.178.x`). Away from home there
+are two options.
+
+**Raspberry Pi Connect** (already installed and signed in) gives a desktop or a shell in the
+browser via connect.raspberrypi.com. It needs nothing else but carries no SSH: no rsync, no
+PyCharm, no scripts. Good for occasional checks and emergencies.
+
+**Tailscale** creates a private network ("tailnet") across one's own devices, based on WireGuard.
+Each device gets a stable address (`100.x.y.z`) and a name such as `pi5.<tailnet>.ts.net` that
+work from anywhere, without port forwarding on the router. Tailscale's servers only handle logins
+and distribute public keys; data flows directly between the devices, or — when firewalls prevent
+that — through Tailscale relays, still end-to-end encrypted. Everything in this paper would keep
+working; only the host address in `tools/sync_pi.sh`, `tools/compare_hosts.py` and the PyCharm
+server "pi5" would change. Free for personal use.
+
+*Safety.*
+
+- WireGuard encryption; private keys never leave the devices; Tailscale cannot read the traffic.
+- The coordination server is the trust anchor: since it distributes public keys, it could in
+  principle add a device to the tailnet. *Tailnet Lock* closes this gap (new devices must be
+  signed by an existing one).
+- Login is through an identity provider (Google, Apple, GitHub, Microsoft): whoever controls that
+  account controls the tailnet — use two-factor authentication.
+- By default every device may reach every other one; access rules restrict that.
+- Clients are open source, the coordination server is not; *Headscale* is a self-hosted
+  replacement.
+
+*Interference with other VPNs.* Tailscale coexists with most VPNs, but not easily with one that
+
+- uses the same address range `100.64.0.0/10` (corporate zero-trust clients such as Cloudflare
+  WARP use `100.96.0.0/12`, inside that range; some mobile carriers and hotel networks too),
+- takes over all DNS (Tailscale needs its own resolver for the `.ts.net` names), or
+- routes all traffic through its own tunnel.
+
+Typical symptoms: `.ts.net` names do not resolve, the Pi is unreachable while the other VPN is on,
+or company resources break. Exceptions would have to be configured in the other VPN — for a
+corporate VPN, centrally by IT.
+
+*Further points.*
+
+- Disable key expiry for the headless Pi in the admin console; otherwise its key expires after 180
+  days and it silently drops off the tailnet.
+- *Tailscale SSH* (logins instead of SSH keys) is optional; plain SSH over the tailnet keeps the
+  current setup unchanged.
+- Negligible CPU and memory use, even on the Pi.
+
+**Decision.** At home nothing is needed. Away from home, Pi Connect covers occasional access. On a
+company-managed Mac with a corporate VPN, installing Tailscale is a question for IT first — both
+because of the conflicts above and because of policy. Alternatively, use Tailscale from a private
+device.
+
+
+## 9. Open Issues
 
 - **Test tiers.** A fast tier (< 1 min) that checks everything broadly, and a stress tier
   (< 10 min). The `stress` marker is the first step.
