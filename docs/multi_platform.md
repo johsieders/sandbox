@@ -280,7 +280,8 @@ workers.
 **6.8 A test runs forever although it has a timeout.**
 *Case:* `test_axioms.py::test_int[Complex > Matrix > Fraction > FieldPolynomial > Fraction >
 NativeInt]`, `@pytest.mark.timeout(10)`, ran for over 38 minutes in a full xdist run on the Pi.
-Alone it times out correctly after 10 s on both machines, with or without xdist.
+Alone it times out correctly after 10 s on both machines, with or without xdist; so does the whole
+module `test_axioms.py` run by itself on the Pi (4 workers, 11 min, no hang).
 *Diagnosis:* `sudo uvx py-spy dump --pid <worker>` shows where a live Python process is (here:
 nested fraction/polynomial GCDs, pure Python). Cause of the missing timeout: open (§8).
 *Mitigation:* the case is marked `stress`.
@@ -321,8 +322,12 @@ design.
 - **Test tiers.** A fast tier (< 1 min) that checks everything broadly, and a stress tier
   (< 10 min). The `stress` marker is the first step.
 - **Timeouts in long xdist workers** (§6.8): why pytest-timeout did not fire in the full run.
-  A run of `test_axioms.py` alone on the Pi is meant to tell whether another module leaves the
-  worker in a bad state.
+  `test_axioms.py` alone does not hang, so another module run earlier in the same worker is the
+  prime suspect.
+- **Silent timeouts.** In that module alone, 188 of 585 cases hit their 10 s timeout on the Pi.
+  `check_axioms` catches the timeout and records a "graceful failure", so these cases count as
+  passed, and the module takes 11 minutes. They are stress candidates, and a passed test currently
+  does not mean the axioms were fully checked.
 - **Hailo from the venv.** `python3-hailort` is an apt package for the system Python 3.11; the
   project venv (3.14) cannot import it yet.
 - **Python 3.15** once torch and highspy publish wheels.
