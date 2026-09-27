@@ -314,7 +314,7 @@ NativeInt]`, `@pytest.mark.timeout(10)`, ran for over 38 minutes in a full xdist
 Alone it times out correctly after 10 s on both machines, with or without xdist; so does the whole
 module `test_axioms.py` run by itself on the Pi (4 workers, 11 min, no hang).
 *Diagnosis:* `sudo uvx py-spy dump --pid <worker>` shows where a live Python process is (here:
-nested fraction/polynomial GCDs, pure Python). Cause of the missing timeout: open (§9).
+nested fraction/polynomial GCDs, pure Python). Cause of the missing timeout: open (§10).
 *Mitigation:* the case is marked `stress`.
 
 **6.9 Git operations on the Pi.**
@@ -401,7 +401,43 @@ because of the conflicts above and because of policy. Alternatively, use Tailsca
 device.
 
 
-## 9. Open Issues
+## 9. More Compute for Training
+
+Neither machine is built for training large networks: the Pi's Hailo-8 only runs compiled,
+already trained networks, and the Mac's GPU (MPS) has limits. Codespaces are CPU machines for
+development, not for training. The options, in the order to try them:
+
+**0. Make the most of the Mac.** MPS handles small and medium networks, and Apple silicon's
+unified memory holds fairly large models. Profile one run first; try lower precision, smaller
+batches, fewer epochs. Fine-tuning a pretrained model instead of training from scratch often
+turns a cluster job into a laptop job.
+
+**1. Free or cheap notebook GPUs, for experiments.** Kaggle (free GPU, limited hours per week) and
+Google Colab (free tier, paid tiers with better GPUs). Good for finding out whether a model is worth
+scaling up; awkward for long runs (sessions are cut off) and outside the git + uv workflow.
+
+**2. GPUs by the hour, for real runs.**
+
+- *GPU rental* (RunPod, Lambda, Vast.ai): a Linux machine with a GPU, reached by SSH and billed by
+  the hour. Clone the repo, `uv sync`, train, copy the results out, shut the machine down — the same
+  workflow as a Codespace. The cheapest route to serious GPUs.
+- *Modal*: runs single Python functions on GPUs, billed by the second, no server to manage.
+- *AWS, Google Cloud, Azure*: the widest choice, but more setup (GPU quotas usually have to be
+  requested first) and higher prices.
+
+Save checkpoints regularly (cheap "spot" machines can be stopped at any time), keep the data next to
+the GPU instead of uploading it again and again, and always shut machines down — an idle GPU costs
+as much as a busy one.
+
+**Prerequisite: torch for Linux with a GPU.** `[tool.uv.sources]` (§3.2) gives *every* Linux
+machine the CPU build of torch. On a rented GPU machine that means torch without CUDA — no error,
+just no GPU. Before the first GPU run the rule has to be split: Linux on ARM (the Pi) keeps the CPU
+build, Linux on x86-64 gets the CUDA build. Codespaces (x86-64, no GPU) should stay on CPU, or every
+new Codespace downloads about 3 GB of CUDA libraries; uv can express this with a machine marker or
+with separate `cpu`/`gpu` extras.
+
+
+## 10. Open Issues
 
 - **Test tiers.** A fast tier (< 1 min) that checks everything broadly, and a stress tier
   (< 10 min). The `stress` marker is the first step.
