@@ -242,8 +242,11 @@ After the Pi was switched off, rebooted, moved or reinstalled, or after the Mac 
 4. **Check the venv** (only needed if `uv.lock` changed meanwhile, or after a reinstall):
    `ssh jean@192.168.178.115 'bash ~/sandbox/remote-setup.sh'`. After a reinstall also repeat the
    setup of §3.1 and §3.3 (uv, the `/usr/local/bin/python3.14` link, passwordless sudo).
-5. **PyCharm.** If the SSH interpreter shows as invalid, reopen it once (Settings → Python →
-   Interpreter); PyCharm reconnects and refreshes `~/.pycharm_helpers` if necessary.
+5. **PyCharm.** There must be exactly one deployment server (`pi5`, default, mapped to
+   `/home/jean/sandbox`) and exactly one Pi interpreter (`/home/jean/sandbox/.venv/bin/python`,
+   using `pi5`). If the interpreter shows as invalid, select it once (Settings → Python →
+   Interpreter); PyCharm reconnects and refreshes `~/.pycharm_helpers` if necessary. Never add a
+   new interpreter to "repair" the connection (§6.2).
 6. **Smoke test:** `python tools/compare_hosts.py tests/py4alg/test_polynomials.py --check-sync`.
 
 From outside the home network, `192.168.178.115` is not reachable at all; see §8.
@@ -280,6 +283,17 @@ uv's Pythons have no packages; the libraries are in `~/sandbox/.venv`.
 full upload; with a uv-type interpreter PyCharm even runs `uv init` there.
 *Fix:* remove that interpreter, delete `/tmp/pycharm_project_*`, and point the interpreter at
 `/home/jean/sandbox`.
+*Variant (after a reboot of the Pi):* `cd: /tmp/pycharm_project_<id>/tests/…: No such file or
+directory`. The Pi interpreter had silently become a uv-type interpreter
+(`~/.virtualenvs/sandbox`, no pytest) with its own deployment server
+`jean@192.168.178.115:22 key` mapped to `/tmp/pycharm_project_<id>`, and that server was the
+default for auto-upload. It worked as long as the copy in `/tmp` existed; the reboot emptied `/tmp`.
+*Fix:* do **not** create a new interpreter — the wizard defaults to a `/tmp` sync folder and starts
+copying the whole project, `.venv` included (cancel it via the progress bar). Instead, in
+Settings → Python → Interpreter → Show All, delete every interpreter whose path is not
+`/home/jean/sandbox/.venv/bin/python` and keep the one that is, even if it shows a stale version;
+in Tools → Deployment → Configuration, delete every server except `pi5` and make `pi5` the default.
+Then remove the leftovers on the Pi: `rm -rf /tmp/pycharm_project_* ~/.virtualenvs/sandbox`.
 
 **6.3 Python 3.14 is installed but invisible ("only 3.11 and 3.12").**
 *Cause:* uv installs into `~/.local/bin`, which is only on the `PATH` of interactive login shells.
