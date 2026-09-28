@@ -7,7 +7,7 @@ from sympy import Symbol, Abs, Expr, floor
 
 class SymbolicInt:
 
-    def __init__(self, 
+    def __init__(self,
                  value: str | int | Expr | SymbolicInt):
         if isinstance(value, str):
             self._value = Symbol(value, integer=True)
@@ -32,8 +32,8 @@ class SymbolicInt:
         return SymbolicInt(-self._value)
 
     def __eq__(self, other: Any) -> bool:
-        return (isinstance(other, SymbolicInt) and 
-                (self._value - other._value).rewrite(floor).simplify() == 0) 
+        return (isinstance(other, SymbolicInt) and
+                (self._value - other._value).rewrite(floor).simplify() == 0)
 
     def __lt__(self, other: SymbolicInt) -> bool:
         return self._value < other._value
@@ -56,7 +56,7 @@ class SymbolicInt:
 
     def euclidean_function(self) -> int:
         raise NotImplementedError
-    
+
     def normalize(self) -> SymbolicInt:
         return SymbolicInt(Abs(self._value))
 

@@ -107,6 +107,9 @@ class IntWrapper(int, AlgebraicMixin):
     @classmethod
     def one(cls): return cls(1)
 
+    def descent(self):
+        return [IntWrapper]
+
 
 class FloatWrapper(float, FieldMixin):
     """Float wrapper that inherits from float and adds algebraic structure methods."""
@@ -150,6 +153,9 @@ class FloatWrapper(float, FieldMixin):
 
     @classmethod
     def one(cls): return cls(1.0)
+    
+    def descent(self):
+        return [FloatWrapper]
 
 
 class ComplexWrapper(complex, FieldMixin):
@@ -205,6 +211,9 @@ class ComplexWrapper(complex, FieldMixin):
     @classmethod
     def one(cls):
         return cls(1 + 0j)
+    
+    def descent(self):
+        return [ComplexWrapper]
 
 
 def wrapped_int_samples() -> List[IntWrapper]:

@@ -135,6 +135,5 @@ def gen_tree(sources, depth=3, n=5) -> List[Any]:
         else:
             gs.append(take(n))
             result.append(reversed(gs))
-    
-    return [compose(*t)(1, 10) for t in result]
 
+    return [compose(*t)(1, 10) for t in result]

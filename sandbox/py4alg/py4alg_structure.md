@@ -2,8 +2,8 @@
 
 ## Overview
 
-`py4alg` is a compositional algebra library that builds arbitrary tower types
-(polynomials, fractions, matrices, complex numbers, finite fields, ...) on top of
+`py4alg` is a compositional algebra library that builds arbitrary tower types (polynomials, fractions, matrices, complex
+numbers, finite fields, ...) on top of
 a tiny stack of `@runtime_checkable` protocols. The driving idea is that
 algebraic structure is carried by methods (`__add__`, `one()`, `normalize()`, ...)
 rather than by classes, and that **type constructors are functors**: applying
@@ -13,7 +13,7 @@ protocol produces a new type whose protocol can be inferred from the input.
 Concretely the library lets you write:
 
 ```python
-Fraction[Polynomial[NativeInt]]            # rational functions over Z
+Fraction[Polynomial[NativeInt]]  # rational functions over Z
 Matrix[Polynomial[Complex[Fraction[NativeInt]]]]
 ```
 
@@ -97,12 +97,12 @@ Notes:
 
 ## Wrappers (base types)
 
-| Class           | Wraps      | Protocols satisfied                          | Notes                                                                 |
-|-----------------|------------|----------------------------------------------|-----------------------------------------------------------------------|
-| `NativeInt`     | `int`      | AbelianGroup, Ring, EuclideanRing, Comparable| `zero`/`one` are `@classmethod`. Exact equality.                      |
-| `NativeFloat`   | `float`    | AbelianGroup, Ring, EuclideanRing, Field, Comparable | Tolerance `__eq__` from `params['atol'/'rtol']`.              |
-| `NativeComplex` | `complex`  | AbelianGroup, Ring, EuclideanRing, Field     | Tolerance `__eq__`; no `__lt__` (correctly not Comparable).           |
-| `SymbolicInt`   | `sympy.Symbol`/`Expr` | AbelianGroup, Ring, EuclideanRing (Comparable) | Experimental; `euclidean_function` raises `NotImplementedError`. |
+| Class           | Wraps                 | Protocols satisfied                                  | Notes                                                            |
+|-----------------|-----------------------|------------------------------------------------------|------------------------------------------------------------------|
+| `NativeInt`     | `int`                 | AbelianGroup, Ring, EuclideanRing, Comparable        | `zero`/`one` are `@classmethod`. Exact equality.                 |
+| `NativeFloat`   | `float`               | AbelianGroup, Ring, EuclideanRing, Field, Comparable | Tolerance `__eq__` from `params['atol'/'rtol']`.                 |
+| `NativeComplex` | `complex`             | AbelianGroup, Ring, EuclideanRing, Field             | Tolerance `__eq__`; no `__lt__` (correctly not Comparable).      |
+| `SymbolicInt`   | `sympy.Symbol`/`Expr` | AbelianGroup, Ring, EuclideanRing (Comparable)       | Experimental; `euclidean_function` raises `NotImplementedError`. |
 
 All wrappers expose `descent()` returning `[Cls]`. `NativeFloat.__init__` is
 silent on bad input (no raise on unknown type); the other wrappers raise
@@ -110,18 +110,18 @@ silent on bad input (no raise on unknown type); the other wrappers raise
 
 ## Mappers (type constructors)
 
-| Class             | Type signature                         | Resulting protocol            | Idempotent? |
-|-------------------|----------------------------------------|-------------------------------|-------------|
-| `Polynomial[T]`   | `T: Ring   -> Polynomial[T]`           | Ring                          | Yes (flattens nested polys via Horner-style coefficient combination) |
-| `FieldPolynomial[T]` (`<: Polynomial`) | `T: Field -> FieldPolynomial[T]` | EuclideanRing (not Field; `truediv` not defined) | Yes (via parent) |
-| `Fraction[T]`     | `T: EuclideanRing -> Fraction[T]`      | Field                         | Yes (cross-multiplies on `Fraction(Fraction)`) |
-| `Complex[T]`      | `T: Ring   -> Complex[T]`              | Ring                          | Yes (collapses nested Complex via Gauss identity in `__init__`)      |
-| `FieldComplex[T]` (`<: Complex`) | `T: Field  -> FieldComplex[T]` | Field                         | Yes (via parent)  |
-| `Matrix[T]`       | `T: Ring   -> Matrix[T]` (square only) | Ring                          | No — `Matrix(Matrix, ...)` builds a block matrix (Kronecker-like)    |
-| `Fp`              | parameterless (modulus is data)         | Field + Comparable            | n/a         |
-| `Zm`              | parameterless (modulus is data)         | EuclideanRing + Comparable    | n/a         |
-| `ZmProduct`       | parameterless (moduli are data)         | Ring (claimed)                | n/a         |
-| `ECpoint`         | parameterless (curve is data)           | AbelianGroup                  | n/a         |
+| Class                                  | Type signature                         | Resulting protocol                               | Idempotent?                                                          |
+|----------------------------------------|----------------------------------------|--------------------------------------------------|----------------------------------------------------------------------|
+| `Polynomial[T]`                        | `T: Ring   -> Polynomial[T]`           | Ring                                             | Yes (flattens nested polys via Horner-style coefficient combination) |
+| `FieldPolynomial[T]` (`<: Polynomial`) | `T: Field -> FieldPolynomial[T]`       | EuclideanRing (not Field; `truediv` not defined) | Yes (via parent)                                                     |
+| `Fraction[T]`                          | `T: EuclideanRing -> Fraction[T]`      | Field                                            | Yes (cross-multiplies on `Fraction(Fraction)`)                       |
+| `Complex[T]`                           | `T: Ring   -> Complex[T]`              | Ring                                             | Yes (collapses nested Complex via Gauss identity in `__init__`)      |
+| `FieldComplex[T]` (`<: Complex`)       | `T: Field  -> FieldComplex[T]`         | Field                                            | Yes (via parent)                                                     |
+| `Matrix[T]`                            | `T: Ring   -> Matrix[T]` (square only) | Ring                                             | No — `Matrix(Matrix, ...)` builds a block matrix (Kronecker-like)    |
+| `Fp`                                   | parameterless (modulus is data)        | Field + Comparable                               | n/a                                                                  |
+| `Zm`                                   | parameterless (modulus is data)        | EuclideanRing + Comparable                       | n/a                                                                  |
+| `ZmProduct`                            | parameterless (moduli are data)        | Ring (claimed)                                   | n/a                                                                  |
+| `ECpoint`                              | parameterless (curve is data)          | AbelianGroup                                     | n/a                                                                  |
 
 Both `Polynomial.__init__` and `Complex.__init__` use `type(self)` when building
 the result, so the subclasses `FieldPolynomial` and `FieldComplex` propagate
@@ -134,8 +134,8 @@ no subclass exists, but the inconsistency is worth noting.
 - **`descent()`** is the runtime construction trace, e.g.
   `Fraction(Polynomial(NativeInt(1)), ...).descent() == [Fraction, Polynomial, NativeInt]`.
   It is **only** implemented on the four wrappers and on `Polynomial`,
-  `FieldPolynomial`, `Fraction`, `Complex`, `FieldComplex`, `Matrix`.
-  **`Zm`, `Fp`, `ZmProduct`, and `ECpoint` do not implement `descent()`** — so
+  `FieldPolynomial`, `Fraction`, `Complex`, `FieldComplex`, `Matrix`. **`Zm`, `Fp`, `ZmProduct`, and `ECpoint` do not
+  implement `descent()`** — so
   `descent_str(samples)` (`util/utils.py:64`) will crash on these types and the
   axiom report cannot label their failures. This is an outright gap.
 - **`zero()`/`one()`** are instance methods on every parameterised type so they
@@ -149,8 +149,8 @@ no subclass exists, but the inconsistency is worth noting.
   `FieldPolynomial` makes monic; `Zm/Fp/ZmProduct/FieldComplex/Fraction` use
   the field-style rule. `Polynomial` (the ring-only version) has **no**
   `normalize()` — consistent with its `Ring` protocol, but it makes
-  `gcd` over `Polynomial[NativeInt]` unable to take advantage of normalization
-  (and indeed `test_polynomials.test_gcd_basics` only checks `Polynomial[int]`
+  `gcd` over `Polynomial[NativeInt]` unable to take advantage of normalization (and indeed
+  `test_polynomials.test_gcd_basics` only checks `Polynomial[int]`
   for ring axioms).
 - **`__bool__()`** is required by `AbelianGroup`. `Polynomial.__bool__` returns
   `bool(self._coeffs[-1])` (always trimmed, so equivalent to non-zero); the
@@ -184,13 +184,13 @@ no subclass exists, but the inconsistency is worth noting.
 
 `../../tests/py4alg/check_protocols.py` defines one function per axiom:
 
-| Layer | Functions |
-|-------|-----------|
-| AbelianGroup | `check_additive_identity`, `check_additive_inverse`, `check_commutativity_addition`, `check_associativity_addition`, `check_bulk_add` |
-| Ring          | + `check_multiplicative_identity`, `check_associativity_multiplication`, `check_commutativity_multiplication`, `check_annihilator_properties`, `check_left/right_distributivity`, `check_bulk_mul` |
+| Layer         | Functions                                                                                                                                                                                                            |
+|---------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| AbelianGroup  | `check_additive_identity`, `check_additive_inverse`, `check_commutativity_addition`, `check_associativity_addition`, `check_bulk_add`                                                                                |
+| Ring          | + `check_multiplicative_identity`, `check_associativity_multiplication`, `check_commutativity_multiplication`, `check_annihilator_properties`, `check_left/right_distributivity`, `check_bulk_mul`                   |
 | EuclideanRing | + `check_division` (verifies `a == q*b+r` and `r.euclidean_function() < b.euclidean_function()`), `check_divmod`, `check_gcd_properties`, `check_gcd_commutativity`, `check_gcd_associativity`, `check_gcd_identity` |
-| Field         | + `check_truediv_and_inverse`, `check_field_division_by_zero` |
-| Comparable    | `check_reflexivity`, `check_antisymmetry`, `check_transitivity`, `check_totality`, `check_comparison_consistency` |
+| Field         | + `check_truediv_and_inverse`, `check_field_division_by_zero`                                                                                                                                                        |
+| Comparable    | `check_reflexivity`, `check_antisymmetry`, `check_transitivity`, `check_totality`, `check_comparison_consistency`                                                                                                    |
 
 The entry point is `check_axioms(samples)` which:
 
@@ -207,8 +207,8 @@ Samples are produced in two complementary styles:
 - **Infinite iterators** (`util/gen_samples.py`): `gen_nat_ints`, `gen_fractions`,
   `gen_polynomials`, ... are `gen_make(Cls, min, max)`-wrapped generators that
   retry on `ZeroDivisionError`/`ValueError` and skip zero results. A
-  `SUCCESSORS` adjacency table plus `gen_tree(sources, depth, n)` enumerates
-  *all* compositional paths up to a fixed depth — this is the test-of-the-tower
+  `SUCCESSORS` adjacency table plus `gen_tree(sources, depth, n)` enumerates *all* compositional paths up to a fixed
+  depth — this is the test-of-the-tower
   machinery used by `test_axioms.py`.
 - **Finite list factories** (`util/def_samples.py`): `def_nat_ints(*nn)` etc.
   for deterministic, small, debuggable samples used in
@@ -272,8 +272,8 @@ already exposes it (`NativeFloat`, `NativeComplex`, `Fp`, `Fraction`,
 `FieldComplex`). The contract is implicit.
 
 **Proposed change.** Add `def inverse(self) -> Any: ...` to the `Field`
-protocol. Optionally promote `norm()` similarly — many types implement it
-(`Zm`, `ZmProduct`, `Matrix`, `ECpoint`) but it is never a typed obligation.
+protocol. Optionally promote `norm()` similarly — many types implement it (`Zm`, `ZmProduct`, `Matrix`, `ECpoint`) but
+it is never a typed obligation.
 
 **Benefit.** Closes a documented gap; `isinstance(x, Field)` becomes a true
 guarantee for callers (e.g. linear algebra over a field needs `inverse()`).
@@ -367,8 +367,8 @@ property runner and the docs.
 - `Polynomial[Polynomial[NativeInt]]` is tested via
   `polynomials_polynomials_int` in `test_many.py` but only for the int case;
   the `_descent` of the flattened result is not asserted.
-- `Matrix[Matrix[...]]` block matrix axioms get one quick test
-  (`test_matrices.test_matrix_matrix`) but the block dimensions aren't varied.
+- `Matrix[Matrix[...]]` block matrix axioms get one quick test (`test_matrices.test_matrix_matrix`) but the block
+  dimensions aren't varied.
 - `ZmProduct` claims to be a `Ring`, but `test_zm_product.py` is not even
   imported by the axiom runner — it doesn't use `check_axioms`. Need to
   confirm it actually satisfies the ring axioms via the standard suite.
@@ -378,13 +378,14 @@ property runner and the docs.
 
 **Proposed change.** Add a `test_descent.py` that, for every reachable type in
 `gen_tree(depth=4)`, asserts:
+
 1. `descent()` is a flat `list[type]` of length equal to nesting depth + 1,
 2. all entries are classes,
 3. flattening invariants hold (`Fraction(Fraction(x)).descent() == Fraction(x).descent()`).
-Add `check_axioms` parametrisation to `test_zm_product.py`. Add an explicit
-test that `SymbolicInt` either implements a real `euclidean_function` (using
-sympy degree on the polynomial form) or that it is downgraded to `Ring`
-(no `__floordiv__` / `__mod__`).
+   Add `check_axioms` parametrisation to `test_zm_product.py`. Add an explicit
+   test that `SymbolicInt` either implements a real `euclidean_function` (using
+   sympy degree on the polynomial form) or that it is downgraded to `Ring`
+   (no `__floordiv__` / `__mod__`).
 
 **Benefit.** The compositional promises become testable instead of
 documentation-only, and the symbolic wrapper is forced to either deliver or

@@ -61,5 +61,6 @@ def comparable_works(sample):
     except (TypeError, NotImplementedError):
         return False
 
+
 def descent_str(samples):
     return ' > '.join(cls.__name__ for cls in samples[0].descent())

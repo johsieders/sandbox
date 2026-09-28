@@ -1,15 +1,11 @@
 # tests/py4alg/def_samples.py
 
-import pytest, pytest_benchmark
-
 from typing import List, Sequence, Tuple, Any
 
+from sandbox.py4alg.mapper import Complex, FieldComplex, Fraction, Matrix, Polynomial, FieldPolynomial
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
-
-from sandbox.py4alg.mapper import Complex, FieldComplex, Fraction, Matrix, Polynomial, FieldPolynomial
-
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat
 from sandbox.py4alg.wrapper.w_int import NativeInt
@@ -65,7 +61,3 @@ def to_coeffs(xs: Sequence[Any], cs: Sequence[int]) -> List[Sequence[Any]]:
         if cursor >= len(xs):
             break
     return result
-
-
-
-

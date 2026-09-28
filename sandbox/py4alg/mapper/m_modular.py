@@ -90,6 +90,9 @@ class Zm:
     def __repr__(self) -> str:
         return f"Zm({self._m}, {self._n})"
 
+    def descent(self):
+        return [Zm]
+
 
 class Fp(Zm):
     def __init__(self, *args: int, check=False):
@@ -169,3 +172,6 @@ class Fp(Zm):
 
     def __repr__(self) -> str:
         return f"Fp({self._m}, {self._n})"
+
+    def descent(self):
+        return [Fp]
