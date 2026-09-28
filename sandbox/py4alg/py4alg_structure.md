@@ -19,7 +19,7 @@ Matrix[Polynomial[Complex[Fraction[NativeInt]]]]
 
 and have `isinstance(x, Field)` / `isinstance(x, Ring)` answer correctly at
 runtime. Mathematical axioms (ring/field/Euclidean ring) are checked by a
-property suite (`tests/py4alg/check_protocols.py`) that is itself protocol-aware
+property suite (`../../tests/py4alg/check_protocols.py`) that is itself protocol-aware
 — it picks the relevant axioms from `isinstance(samples[0], Field|EuclideanRing|Ring)`.
 
 ## Directory layout
@@ -62,7 +62,7 @@ sandbox/py4alg/
     |-- def_samples.py          finite list factories (def_nat_ints, def_polynomials, ...) + to_pairs, to_coeffs
 ```
 
-`tests/py4alg/` contains `check_protocols.py` (the axiom suite), `conftest.py`
+`../../tests/py4alg` contains `check_protocols.py` (the axiom suite), `conftest.py`
 (report aggregation across xdist workers), and one `test_*.py` per concept.
 
 ## Protocol hierarchy
@@ -182,7 +182,7 @@ no subclass exists, but the inconsistency is worth noting.
 
 ## Testing approach
 
-`tests/py4alg/check_protocols.py` defines one function per axiom:
+`../../tests/py4alg/check_protocols.py` defines one function per axiom:
 
 | Layer | Functions |
 |-------|-----------|
@@ -224,7 +224,7 @@ Coverage at a glance:
 - `test_axioms.py` is the “tower” test that enumerates compositions through
   `gen_tree`, currently only for the `gen_ints` source (float and complex
   sources are commented out — the known floating-point associativity failures
-  mentioned in `README.md`).
+  mentioned in `../../README.md`).
 - `test_primes.py`, `test_gen_tools.py` — utility coverage.
 
 ## Suggested improvements
@@ -249,7 +249,7 @@ a class of silent failures in the axiom reporter.
 
 ### 2. Consolidate `cockpit.py` (or fix the name everywhere)
 
-**Observation.** `CLAUDE.md` and `README.md` (line 106) both reference
+**Observation.** `../../CLAUDE.md` and `README.md` (line 106) both reference
 `cockpit.py`/`cockpit.params`, but the actual configuration lives in
 `util/utils.py` as a free dict `params` (lines 35-46) imported as
 `from sandbox.py4alg.util.utils import params`. There is no `cockpit` module.
@@ -350,7 +350,7 @@ out_protocol`. The two encodings will drift. The roadmap (project memory:
 flag. Then derive `SUCCESSORS` automatically by enumerating
 `{cls : input_protocol matched by output_protocol}`. Make `p_table.py` the
 authoritative table and drive both the property-test enumerator and the
-documentation table in `README.md` from it.
+documentation table in `../../README.md` from it.
 
 **Benefit.** Single source of truth; new mappers (e.g. `FieldMatrix`,
 `PowerSeries`, `Quaternion`, `Gaussian`) plug in automatically into both the

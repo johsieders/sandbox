@@ -48,6 +48,3 @@ Here is my plam:
 
 7. replace all prefixes "g_" with "gen_", all "d_" with "def_" (functions and files)
 
-25.3.2026 B
-
-8. 
