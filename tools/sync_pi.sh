@@ -10,7 +10,7 @@
 #
 # After pyproject.toml / uv.lock changed, run on the Pi: bash ~/sandbox/remote-setup.sh
 
-PI="jean@192.168.178.115:sandbox/"
+PI="pi5:sandbox/"   # alias in ~/.ssh/config
 PROJECT="$(cd "$(dirname "$0")/.." && pwd)"
 
 rsync -rc --delete --itemize-changes "$@" \

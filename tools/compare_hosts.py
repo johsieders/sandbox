@@ -33,7 +33,7 @@ from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
     
-PI_HOST = "jean@192.168.178.115"
+PI_HOST = "pi5"  # alias in ~/.ssh/config
 PI_ROOT = "/home/jean/sandbox"  # PyCharm deployment mapping (server "pi5")
 PI_PYTHON = "/home/jean/sandbox/.venv/bin/python"
 MAC_PYTHON = str(PROJECT / ".venv/bin/python")

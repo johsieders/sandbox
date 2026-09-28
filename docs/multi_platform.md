@@ -32,7 +32,7 @@ little ceremony as possible.
   └──────────────────────────┘                        └──────────────────────────┘
           │        ▲                                                ▲
           │        └───── SSH interpreter: run / debug / test ──────┘
-          └──────────── ssh jean@192.168.178.115 '...' ─────────────┘
+          └───────────────────── ssh pi5 '...' ─────────────────────┘
 ```
 
 **Master and mirror.**
@@ -101,11 +101,23 @@ packages. `pyproject.toml` and `uv.lock` are always committed together.
 
 ### 3.3 SSH
 
-The Mac reaches the Pi as `jean@192.168.178.115` with key `~/.ssh/id_ed25519`; no password. On
-the Pi, `jean` has passwordless sudo (`/etc/sudoers.d/010_pi-nopasswd`), so administrative
+The Mac reaches the Pi as `pi5`, an alias in `~/.ssh/config`:
+
+```
+Host pi5
+    HostName raspberrypi5.local      # mDNS name, follows a new DHCP address
+    User jean
+    IdentityFile ~/.ssh/id_ed25519   # no password
+    HostKeyAlias 192.168.178.115     # host key stays filed under the original IP
+    ConnectTimeout 5
+```
+
+`tools/sync_pi.sh`, `tools/compare_hosts.py` and `tools/check_pi.py` use `pi5`; if the Pi's
+address changes, none of them needs an edit. PyCharm's SSH configuration (§5) still uses the IP
+address, so the FRITZ!Box keeps a fixed address for the Pi. On the Pi, `jean` has passwordless sudo (`/etc/sudoers.d/010_pi-nopasswd`), so administrative
 commands can also be run remotely (`ssh … 'sudo -n …'`).
 
-Non-interactive SSH commands (`ssh pi 'cmd'`, PyCharm, scripts) get a minimal `PATH`
+Non-interactive SSH commands (`ssh pi5 'cmd'`, PyCharm, scripts) get a minimal `PATH`
 (`/usr/local/bin:/usr/bin:/bin`) — `~/.local/bin` is *not* on it. Scripts therefore use full
 paths (`~/.local/bin/uv`, `~/sandbox/.venv/bin/python`).
 
@@ -131,6 +143,7 @@ code runs; the code itself is the same.
 |---|---|---|
 | `tools/sync_pi.sh` | Mac | `rsync -rc --delete` of the project to the mirror, same excludes as "pi5". `-n` = dry run. |
 | `remote-setup.sh` | Pi | `uv sync --locked`: build or update `.venv` from `uv.lock`. |
+| `tools/check_pi.py` | Mac | Read-only health check of SSH, mirror, Pi venv, PyCharm leftovers and PyCharm's server/interpreter; prints the fix for each failure (§4.7). |
 | `tools/compare_hosts.py` | Mac | Run the same pytest target on both machines, compare per-test times; `--check-sync` reports mirror drift. |
 
 `sync_pi.sh` compares by checksum and deletes files that no longer exist on the Mac, so it
@@ -167,7 +180,7 @@ first run `tools/sync_pi.sh -n`.
   configuration. Breakpoints work; the process runs on the Pi.
 - **Pi, from the Mac terminal** (no PyCharm needed):
   ```bash
-  ssh jean@192.168.178.115 'cd ~/sandbox && .venv/bin/python -m pytest tests/py4alg -n auto -q'
+  ssh pi5 'cd ~/sandbox && .venv/bin/python -m pytest tests/py4alg -n auto -q'
   ```
 - **Pi, on the Pi** (standalone): `cd ~/sandbox && source .venv/bin/activate && pytest …`
 
@@ -199,7 +212,7 @@ Each command updates `pyproject.toml`, `uv.lock` and the Mac `.venv`. Then:
 
 ```bash
 tools/sync_pi.sh                                          # ship pyproject.toml + uv.lock
-ssh jean@192.168.178.115 'bash ~/sandbox/remote-setup.sh' # Pi .venv := uv.lock
+ssh pi5 'bash ~/sandbox/remote-setup.sh'                 # Pi .venv := uv.lock
 git add pyproject.toml uv.lock && git commit              # always together
 ```
 
@@ -219,37 +232,43 @@ guard against a half-finished change on the Mac.
 
 ### 4.7 (Re)connect the Pi
 
-After the Pi was switched off, rebooted, moved or reinstalled, or after the Mac was away from home.
+After the Pi was switched off, rebooted, moved or reinstalled, or after the Mac was away from home:
 
-1. **Reachable?**
-   ```bash
-   ssh jean@192.168.178.115 'hostname; uptime'
-   ```
-   - *Timeout / no route:* the Pi is off, still booting (allow a minute), or on a different
-     address. Look it up in the router's device list (FRITZ!Box: Home Network → Network), then
-     give it a fixed address there ("always assign the same IPv4 address") so it doesn't change
-     again.
+```bash
+python tools/check_pi.py
+```
+
+checks everything below in about a second and prints `OK` or `FAIL` per item, with the fix. It
+changes nothing. Fix what fails, run it again, done. What it checks, and what to know beyond it:
+
+1. **SSH to `pi5`** without a password.
+   - *No answer / cannot resolve `raspberrypi5.local`:* the Pi is off or still booting (allow a
+     minute).
    - *`REMOTE HOST IDENTIFICATION HAS CHANGED`:* expected after a reinstall of the Pi (new host
      key), otherwise a reason to stop and look. Remove the old key with
-     `ssh-keygen -R 192.168.178.115` and connect again.
+     `ssh-keygen -R 192.168.178.115` (the `HostKeyAlias`, §3.3) and connect again.
    - *Asks for a password:* the Mac's key is not in `~/.ssh/authorized_keys` on the Pi (e.g.
-     after a reinstall): `ssh-copy-id -i ~/.ssh/id_ed25519 jean@192.168.178.115`.
-2. **New address?** Change it in all three places: `PI` in `tools/sync_pi.sh`, `PI_HOST` in
-   `tools/compare_hosts.py`, and the host of the SSH configuration used by deployment "pi5"
-   (Settings → Tools → SSH Configurations, §5). The SSH interpreter follows the deployment.
-3. **Catch up the mirror.** Files saved in PyCharm while the Pi was unreachable were *not*
-   uploaded, and PyCharm does not retry. Run `tools/sync_pi.sh -n`, then `tools/sync_pi.sh`.
-4. **Check the venv** (only needed if `uv.lock` changed meanwhile, or after a reinstall):
-   `ssh jean@192.168.178.115 'bash ~/sandbox/remote-setup.sh'`. After a reinstall also repeat the
-   setup of §3.1 and §3.3 (uv, the `/usr/local/bin/python3.14` link, passwordless sudo).
-5. **PyCharm.** There must be exactly one deployment server (`pi5`, default, mapped to
-   `/home/jean/sandbox`) and exactly one Pi interpreter (`/home/jean/sandbox/.venv/bin/python`,
-   using `pi5`). If the interpreter shows as invalid, select it once (Settings → Python →
-   Interpreter); PyCharm reconnects and refreshes `~/.pycharm_helpers` if necessary. Never add a
-   new interpreter to "repair" the connection (§6.2).
-6. **Smoke test:** `python tools/compare_hosts.py tests/py4alg/test_polynomials.py --check-sync`.
+     after a reinstall): `ssh-copy-id -i ~/.ssh/id_ed25519 pi5`.
+   - *New address:* the scripts follow the mDNS name automatically; only PyCharm's SSH
+     configuration (Settings → Tools → SSH Configurations) needs the new address. Better: a fixed
+     address in the FRITZ!Box (Home Network → Network → "always assign the same IPv4 address").
+2. **Pi venv**: Python version as in `.python-version`, pytest importable, packages exactly as in
+   `uv.lock` (`uv sync --locked --check`). Fix: `ssh pi5 'bash ~/sandbox/remote-setup.sh'`. After
+   a reinstall also repeat the setup of §3.1 and §3.3 (uv, passwordless sudo).
+3. **`/usr/local/bin/python3.14` link** (§6.3).
+4. **No PyCharm leftovers** on the Pi: `/tmp/pycharm_project_*`, `~/.virtualenvs` (§6.2).
+5. **Mirror in sync.** Files saved in PyCharm while the Pi was unreachable were *not* uploaded,
+   and PyCharm does not retry. Fix: `tools/sync_pi.sh`.
+6. **PyCharm**: exactly one deployment server (`pi5`, default, mapped to `/home/jean/sandbox`)
+   and exactly one Pi interpreter (`/home/jean/sandbox/.venv/bin/python`, using `pi5`). If the
+   interpreter shows as invalid, select it once (Settings → Python → Interpreter); PyCharm
+   reconnects and refreshes `~/.pycharm_helpers` if necessary. Never add a new interpreter to
+   "repair" the connection (§6.2). The script reads PyCharm's files; changes made in the settings
+   dialog show up once it is closed with OK.
 
-From outside the home network, `192.168.178.115` is not reachable at all; see §8.
+Smoke test afterwards: `python tools/compare_hosts.py tests/py4alg/test_polynomials.py --check-sync`.
+
+From outside the home network, `pi5` is not reachable at all; see §8.
 
 
 ## 5. PyCharm: Where Things Live
@@ -297,7 +316,7 @@ Then remove the leftovers on the Pi: `rm -rf /tmp/pycharm_project_* ~/.virtualen
 
 **6.3 Python 3.14 is installed but invisible ("only 3.11 and 3.12").**
 *Cause:* uv installs into `~/.local/bin`, which is only on the `PATH` of interactive login shells.
-PyCharm and `ssh pi 'cmd'` don't see it.
+PyCharm and `ssh pi5 'cmd'` don't see it.
 *Fix:* `sudo ln -s /home/jean/.local/bin/python3.14 /usr/local/bin/python3.14`, or use full paths.
 
 **6.4 The Pi runs stale code.**
@@ -317,7 +336,7 @@ Pi.
 mode 0440. A deleted or broken file can only be repaired with the password.
 
 **6.7 Killing remote processes kills the SSH session.**
-*Cause:* `ssh pi 'pkill -f pattern'` also matches the remote shell whose command line contains the
+*Cause:* `ssh pi5 'pkill -f pattern'` also matches the remote shell whose command line contains the
 pattern; and pytest-xdist respawns killed workers.
 *Fix:* list with `ps -eo pid,args | grep "[p]ytest"`, then `kill <pid>` — controller first, then
 workers.
