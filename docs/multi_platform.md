@@ -107,14 +107,26 @@ The Mac reaches the Pi as `pi5`, an alias in `~/.ssh/config`:
 Host pi5
     HostName raspberrypi5.local      # mDNS name, follows a new DHCP address
     User jean
-    IdentityFile ~/.ssh/id_ed25519   # no password
     HostKeyAlias 192.168.178.115     # host key stays filed under the original IP
     ConnectTimeout 5
+
+Host pi5 github.com                  # key from the 1Password SSH agent
+    IdentityAgent "~/Library/Group Containers/2BUA8C4S2C.com.1password/t/agent.sock"
+    IdentityFile ~/.ssh/id_ed25519_1p.pub
+    IdentitiesOnly yes
 ```
 
+The private key exists only in 1Password (personal vault "Private", item "SSH key: Mac → pi5,
+GitHub"); it was generated there and never touched the disk. `~/.ssh/id_ed25519_1p.pub` is the
+public key; it only tells ssh which of the agent's keys to offer. The same key opens the Pi and
+GitHub. 1Password asks once per app (Terminal, PyCharm) for approval and remembers it until it
+locks; while 1Password is locked, every SSH connection — auto-upload, `sync_pi.sh`, `git push` —
+waits for Touch ID. The previous key (a file without passphrase) was revoked on the Pi and GitHub
+and deleted in September 2026.
+
 `tools/sync_pi.sh`, `tools/compare_hosts.py` and `tools/check_pi.py` use `pi5`; if the Pi's
-address changes, none of them needs an edit. PyCharm's SSH configuration (§5) still uses the IP
-address, so the FRITZ!Box keeps a fixed address for the Pi. On the Pi, `jean` has passwordless sudo (`/etc/sudoers.d/010_pi-nopasswd`), so administrative
+address changes, none of them needs an edit. PyCharm's SSH configuration (§5) uses `pi5` as
+well, with authentication "OpenSSH config and authentication agent". On the Pi, `jean` has passwordless sudo (`/etc/sudoers.d/010_pi-nopasswd`), so administrative
 commands can also be run remotely (`ssh … 'sudo -n …'`).
 
 Non-interactive SSH commands (`ssh pi5 'cmd'`, PyCharm, scripts) get a minimal `PATH`
@@ -248,10 +260,12 @@ changes nothing. Fix what fails, run it again, done. What it checks, and what to
      key), otherwise a reason to stop and look. Remove the old key with
      `ssh-keygen -R 192.168.178.115` (the `HostKeyAlias`, §3.3) and connect again.
    - *Asks for a password:* the Mac's key is not in `~/.ssh/authorized_keys` on the Pi (e.g.
-     after a reinstall): `ssh-copy-id -i ~/.ssh/id_ed25519 pi5`.
-   - *New address:* the scripts follow the mDNS name automatically; only PyCharm's SSH
-     configuration (Settings → Tools → SSH Configurations) needs the new address. Better: a fixed
-     address in the FRITZ!Box (Home Network → Network → "always assign the same IPv4 address").
+     after a reinstall): `ssh-copy-id -i ~/.ssh/id_ed25519_1p.pub pi5` (asks for the Pi password once).
+   - *Hangs, then fails:* 1Password is locked or its SSH agent is off (1Password → Settings →
+     Developer → "Use the SSH agent"). Unlock and approve.
+   - *New address:* the scripts and PyCharm follow the mDNS name `raspberrypi5.local`
+     automatically. A fixed address in the FRITZ!Box (Home Network → Network → "always assign the
+     same IPv4 address") avoids surprises anyway.
 2. **Pi venv**: Python version as in `.python-version`, pytest importable, packages exactly as in
    `uv.lock` (`uv sync --locked --check`). Fix: `ssh pi5 'bash ~/sandbox/remote-setup.sh'`. After
    a reinstall also repeat the setup of §3.1 and §3.3 (uv, passwordless sudo).
