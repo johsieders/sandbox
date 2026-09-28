@@ -205,6 +205,17 @@ The full suite takes well over 5 minutes even with `-n auto` on the Mac, much lo
 During development, run targeted modules; `tests/py4alg` takes about 10 s on the Mac. The `stress`
 marker is registered for slow cases (deselect with `-m "not stress"`) but currently unused.
 
+Output and reports:
+
+- Print output of passed tests: `-rP` in the summary, or `-s` live (not with `-n auto`).
+- `tests/py4alg` writes its exception report (graceful failures of the axiom checks) to
+  `reports/py4alg_exceptions_<host>.txt` on each machine, overwritten per run. `reports/` is
+  gitignored and excluded from `sync_pi.sh`, so the Pi's report survives a sync.
+- Benchmarks are disabled by default (`addopts = "--benchmark-disable"`): benchmarked tests run once
+  as plain tests. Measure with `--benchmark-enable --benchmark-only` (without `-n auto`);
+  `--benchmark-autosave` stores each run in `.benchmarks/<platform>/`, `--benchmark-compare`
+  compares against the last one.
+
 ### 4.4 Compare results and execution times
 
 ```bash
@@ -214,6 +225,11 @@ python tools/compare_hosts.py tests/py4alg --check-sync
 runs the target on both machines one after the other, reads pytest's JUnit XML reports and lists
 the tests by Pi time together with the Pi/Mac ratio. Orientation: collecting the 31,222 tests takes
 5 s on the Mac and 11.5 s on the Pi; `test_polynomials.py` runs in 2.2 s vs. 3.4 s.
+
+Results: after running `tests/py4alg` on both machines, compare the exception reports, e.g.
+`diff reports/py4alg_exceptions_<mac>.txt <(ssh pi5 cat sandbox/reports/py4alg_exceptions_raspberrypi5.txt)`
+(the first three lines — time, host, command — differ by design). In September 2026 both machines
+reported the same 30 findings.
 
 ### 4.5 Add, remove or upgrade a library
 

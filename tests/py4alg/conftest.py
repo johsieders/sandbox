@@ -11,6 +11,9 @@
 # work because pytest_terminal_summary falls back to the module-level data.
 
 import json
+import platform
+import sys
+from datetime import datetime
 
 from tests.py4alg.check_protocols import exception_report, black_box
 
@@ -79,3 +82,24 @@ def pytest_terminal_summary(terminalreporter, config):
         terminalreporter.write_line(f"Last {len(bb)} samples checked:")
         for entry in bb:
             terminalreporter.write_line(f"  {entry}")
+
+    if bb:  # check_axioms ran: keep the exception report, one file per machine
+        path = write_exception_report(config, er)
+        terminalreporter.write_line(f"Exception report written to {path.relative_to(config.rootpath)}")
+
+
+def write_exception_report(config, er):
+    """Write the exception report to reports/py4alg_exceptions_<host>.txt (overwritten each run).
+
+    The host in the name keeps the Mac's and the Pi's reports apart; reports/ is gitignored and
+    excluded from the Pi mirror sync.
+    """
+    host = platform.node().split('.')[0]
+    path = config.rootpath / "reports" / f"py4alg_exceptions_{host}.txt"
+    path.parent.mkdir(exist_ok=True)
+    lines = [f"{datetime.now():%Y-%m-%d %H:%M:%S}  {host}  Python {platform.python_version()}",
+             f"pytest {' '.join(sys.argv[1:])}",
+             f"{len(er)} graceful failure(s)"]
+    lines += [f"  {check} [{descent}]: {etype}: {msg}" for check, descent, etype, msg in er]
+    path.write_text("\n".join(lines) + "\n")
+    return path

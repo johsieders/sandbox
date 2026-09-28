@@ -40,9 +40,3 @@ def successors(given: int):
             if r <= s:
                 result.append(type)
     return set(result)
-
-
-def test_pt():
-    succ = successors(Mtype.E)
-    print()
-    print(succ)

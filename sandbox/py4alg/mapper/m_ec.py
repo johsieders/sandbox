@@ -233,3 +233,6 @@ class ECpoint:
 
     def __repr__(self) -> str:
         return f"ECPoint({self.a}, {self.b}, {self.p}, {self.x}, {self.y})"
+
+    def descent(self):
+        return [ECpoint]

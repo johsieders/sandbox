@@ -1,5 +1,5 @@
 # tests/py4alg/test_axioms_bench.py
-# Benchmark version — use with: pytest tests/py4alg/test_axioms_bench.py --benchmark-only --benchmark-sort=mean
+# Benchmark version — use with: pytest tests/py4alg/test_axioms_bench.py --benchmark-enable --benchmark-only --benchmark-sort=mean
 
 import pytest
 

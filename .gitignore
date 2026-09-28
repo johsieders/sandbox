@@ -25,3 +25,6 @@ __pycache__/
 *.tex
 archive/
 /sandbox/py4alg/util/scratch.py
+
+# Local test reports (per machine)
+reports/

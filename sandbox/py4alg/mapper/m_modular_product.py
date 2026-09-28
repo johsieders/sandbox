@@ -140,3 +140,6 @@ class ZmProduct:
 
     def __repr__(self) -> str:
         return f"ZmProduct({list(self._moduli)}, {list(self._values)})"
+
+    def descent(self):
+        return [ZmProduct]

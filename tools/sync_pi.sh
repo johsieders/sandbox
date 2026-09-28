@@ -16,5 +16,5 @@ PROJECT="$(cd "$(dirname "$0")/.." && pwd)"
 rsync -rc --delete --itemize-changes "$@" \
     --exclude=.venv --exclude=.git --exclude=.idea --exclude=__pycache__ \
     --exclude=.pytest_cache --exclude=.DS_Store --exclude=.benchmarks \
-    --exclude='*.egg-info' --exclude=.claude \
+    --exclude='*.egg-info' --exclude=.claude --exclude=reports \
     "$PROJECT/" "$PI"

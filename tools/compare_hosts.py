@@ -39,7 +39,7 @@ PI_PYTHON = "/home/jean/sandbox/.venv/bin/python"
 MAC_PYTHON = str(PROJECT / ".venv/bin/python")
 
 SYNC_EXCLUDES = [".venv", ".git", ".idea", "__pycache__", ".pytest_cache",
-                 ".DS_Store", ".benchmarks", "*.egg-info", ".claude"]
+                 ".DS_Store", ".benchmarks", "*.egg-info", ".claude", "reports"]
 
 
 def pytest_command(python: str, root: str, pytest_args: list[str]) -> str:
