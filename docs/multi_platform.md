@@ -135,8 +135,12 @@ paths (`~/.local/bin/uv`, `~/sandbox/.venv/bin/python`).
 
 ### 3.4 PyCharm on the Mac
 
-PyCharm runs only on the Mac. Two features connect it to the Pi:
+PyCharm runs only on the Mac. It has exactly two interpreters for the project, one per machine,
+and a deployment server that connects it to the Pi:
 
+- **uv interpreter "Python 3.14.7 uv"**: the Mac `.venv`. Because it is a uv-type interpreter,
+  PyCharm's package window (Python Packages) runs uv, so installing a package there updates
+  `pyproject.toml` and `uv.lock` exactly like `uv add` in the terminal.
 - **Deployment server "pi5"** (SFTP): maps the project root to `/home/jean/sandbox`, with
   *automatic upload: always*. Every file saved in PyCharm is uploaded immediately. Excluded:
   `.venv`, `.git`, `.idea`, `sandbox.egg-info`.
@@ -146,8 +150,9 @@ PyCharm runs only on the Mac. Two features connect it to the Pi:
   `~/.pycharm_helpers` (~75 MB) on the Pi; that directory is needed and refreshed on PyCharm
   upgrades.
 
-Switching the project interpreter between the Mac `.venv` and "Pi5 Python 3.14.7" decides where
-code runs; the code itself is the same.
+Switching the project interpreter between "Python 3.14.7 uv" and "Pi5 Python 3.14.7" decides
+where code runs; the code itself is the same. Why the two interpreters are of different types is
+explained in §7.
 
 ### 3.5 Scripts
 
@@ -293,7 +298,7 @@ From outside the home network, `pi5` is not reachable at all; see §8.
 | Auto-upload on/off, delete behaviour | Tools → Deployment → Automatic Upload; Tools → Deployment → Options |
 | Manual upload, compare with the Pi | Tools → Deployment → Upload to pi5 / Sync with Deployed to pi5; Browse Remote Host |
 | SSH connections | Settings → Tools → SSH Configurations |
-| Project interpreter (Mac `.venv` or "Pi5 Python 3.14.7") | Settings → Python → Interpreter; status bar, lower right |
+| Project interpreter ("Python 3.14.7 uv" or "Pi5 Python 3.14.7") | Settings → Python → Interpreter; status bar, lower right |
 | All interpreters (add, rename, remove) | Settings → Python → Interpreter → Show All |
 | Sources, excluded folders | Settings → Project Structure |
 
@@ -368,6 +373,16 @@ nested fraction/polynomial GCDs, pure Python). Cause of the missing timeout: ope
 *Don't.* The mirror has no `.git`. Pulling there would create a second source of truth that
 `sync_pi.sh --delete` then silently overwrites.
 
+**6.10 Two Mac interpreters for the same venv.**
+*Symptom:* PyCharm lists a "Python" (virtualenv-type) and a "uv" interpreter; both work.
+*Cause:* both point to `~/PycharmProjects/sandbox/.venv/bin/python` — left over from before the
+uv migration. Running code and tests is identical; only package management differs. The
+virtualenv type installs with pip: the venv has no pip since the migration (`uv sync` removed
+it), and a package installed that way is missing from `uv.lock`, so the next `uv sync` removes
+it again and the Pi never gets it.
+*Fix:* Settings → Python → Interpreter → Show All: delete the virtualenv-type entry (this removes
+only PyCharm's entry, not the venv) and keep the uv one.
+
 
 ## 7. Design Decisions
 
@@ -387,6 +402,19 @@ untouched. Upgrades cannot break Raspberry Pi OS, and several versions coexist.
 **SSH on the local network, not Raspberry Pi Connect.** Pi Connect offers screen sharing and a
 browser shell, but no SSH endpoint: no rsync, no PyCharm, no scripted access. It remains the
 fallback when SSH is broken. Access from outside the home network is discussed in §8.
+
+**uv interpreter on the Mac, plain SSH interpreter on the Pi.** The Pi's `.venv` is built by uv
+too (`remote-setup.sh` = `uv sync --locked`), but PyCharm treats it as a plain remote interpreter,
+on purpose:
+
+- *Packages are managed on the Mac only.* A uv-type Pi interpreter would let PyCharm's package
+  window run uv on the Pi and change `pyproject.toml` and `uv.lock` in the mirror — edits that
+  never reach git and that the next `sync_pi.sh` overwrites. The Pi interpreter is an execution
+  target, nothing more; its packages follow `uv.lock` via `remote-setup.sh`.
+- *PyCharm's uv wizard for remote targets does not adopt an existing environment.* It creates its
+  own environment (in `~/.virtualenvs`) and a new sync folder in `/tmp/pycharm_project_…`, and may
+  run `uv init` there (§6.2). That is exactly the second copy of the project the mirror design
+  avoids.
 
 **No torch acceleration on the Pi.** There is no GPU that torch supports on the Pi: the Hailo-8
 (and Coral, Hailo-10H) run compiled networks for inference, the VideoCore GPU has no torch backend,
