@@ -16,6 +16,7 @@ from operator import mul
 
 import pytest
 
+from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
@@ -454,6 +455,8 @@ def check_axioms(samples):
             check_euclidean_rings(samples)
         elif isinstance(samples[0], Ring):
             check_rings(samples)
+        elif isinstance(samples[0], AbelianGroup):
+            check_abelian_group(samples)
 
         if comparable_works(samples[0]):
             check_comparables(samples)
