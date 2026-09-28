@@ -6,8 +6,8 @@ from matplotlib.colors import LinearSegmentedColormap
 
 c = 299792458.  # m/s
 g = 9.81  # m/s^2
-planck_constant = 6.62607015e-34    # kg * m^2 /s
-nu_caesium = 9192631770           # 1/s
+planck_constant = 6.62607015e-34  # kg * m^2 /s
+nu_caesium = 9192631770  # 1/s
 year_seconds = 365.2425 * 24 * 3600
 light_year_metres = year_seconds * c
 
@@ -195,24 +195,24 @@ def plot_hyperbolic_motion_3d(lb_tau: float, ub_tau: float,
 def kilogram():
     aa = 6.09110229711386655
     bb = 8.9875517873681764e40
-    
+
     kg1 = bb / aa
-    
-    M_CS = planck_constant * nu_caesium / c ** 2 
+
+    M_CS = planck_constant * nu_caesium / c ** 2
     # kg = 1.4755214e40 * planck_constant * nu_caesium / c ** 2 
-    
-    kg = 1/M_CS
+
+    kg = 1 / M_CS
     return M_CS, kg
 
+
 if __name__ == '__main__':
-    
     print(kilogram())
 
     tau = 10 * year_seconds
     v = g * tau
     print(v)
-    
-    t, x = hyperbolic_motion(tau, g/10)
+
+    t, x = hyperbolic_motion(tau, g / 10)
     print(t / year_seconds, x / light_year_metres)
 
     # plot_hyperbolic_motion(1, 20)

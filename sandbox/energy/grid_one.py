@@ -1,4 +1,5 @@
 import pypsa
+
 # import pandas as pd
 
 # 1. Setup network
@@ -8,7 +9,7 @@ n.add("Bus", "Main Grid")
 
 # 2. Add Carriers (defining CO2 intensity in t/MWh)
 n.add("Carrier", "wind", co2_emissions=0.0)
-n.add("Carrier", "gas", co2_emissions=0.19) # Approximate t/MWh for CCGT
+n.add("Carrier", "gas", co2_emissions=0.19)  # Approximate t/MWh for CCGT
 
 # 3. Add Load
 n.add("Load", "Town", bus="Main Grid", p_set=50)
@@ -20,7 +21,7 @@ n.add("Generator", "Wind Park", bus="Main Grid", carrier="wind",
 
 # 5. Add Fossil Backup (The "Insurance")
 n.add("Generator", "Gas Turbine", bus="Main Grid", carrier="gas",
-      p_nom=100, marginal_cost=100) # High operational cost
+      p_nom=100, marginal_cost=100)  # High operational cost
 
 # 6. Add Battery Storage
 n.add("StorageUnit", "Battery", bus="Main Grid",
@@ -53,4 +54,4 @@ print(n.buses_t.marginal_price)
 
 # Did we hit the CO2 wall?
 print()
-print(n.global_constraints.loc["co2_limit", "mu"]) # Shadow price of CO2
+print(n.global_constraints.loc["co2_limit", "mu"])  # Shadow price of CO2

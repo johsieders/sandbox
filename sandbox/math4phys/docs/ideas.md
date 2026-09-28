@@ -26,9 +26,9 @@ A dimension-aware symbolic calculus engine with:
 1. **Test Suite** (`tests/symbolics/test_vector_calculus.py`)
     - 23 tests, all passing in ~0.2 seconds
     - Verifies all fundamental identities:
-        - ∇×(∇f) = 0
-        - ∇·(∇×F) = 0
-        - ∇²f = ∇·(∇f)
+        - ∇× (∇f) = 0
+        - ∇· (∇×F) = 0
+        - ∇²f = ∇· (∇f)
         - Product rules for divergence and curl
 
 2. **Maxwell Equations** (`maxwell_example.py`)
@@ -65,14 +65,14 @@ A dimension-aware symbolic calculus engine with:
 
 | Requirement                                    | Status | Implementation                                   |
 |------------------------------------------------|--------|--------------------------------------------------|
-| Symbolic vectors/matrices with dimension       | ✓      | VectorField class with input_dim, output_dim     |
-| Vector operations (add, multiply, scalar mult) | ✓      | Overloaded operators: +, *, dot(), cross()       |
-| Standard element names (a_ij)                  | ✓      | Auto-generated: F1, F2, F3 or custom names       |
-| Symbolic functions with signatures             | ✓      | ScalarField, VectorField with dimension tracking |
-| diff-1 operator                                | ✓      | ScalarField.diff(), gradient()                   |
-| Partial diff operator (∂ᵢFⱼ)                   | ✓      | VectorField.jacobian()                           |
-| Jacobian matrix JF(x)                          | ✓      | VectorField.jacobian()                           |
-| Integration                                    | ⚬      | Not yet (future work)                            |
+| Symbolic vectors/matrices with dimension       | ✓     | VectorField class with input_dim, output_dim     |
+| Vector operations (add, multiply, scalar mult) | ✓     | Overloaded operators: +, *, dot(), cross()       |
+| Standard element names (a_ij)                  | ✓     | Auto-generated: F1, F2, F3 or custom names       |
+| Symbolic functions with signatures             | ✓     | ScalarField, VectorField with dimension tracking |
+| diff-1 operator                                | ✓     | ScalarField.diff(), gradient()                   |
+| Partial diff operator (∂ᵢFⱼ)                   | ✓     | VectorField.jacobian()                           |
+| Jacobian matrix JF(x)                          | ✓     | VectorField.jacobian()                           |
+| Integration                                    | ⚬     | Not yet (future work)                            |
 
 ## Next Steps: Future Applications
 
@@ -176,7 +176,7 @@ Ready to derive Maxwell, Navier-Stokes, Einstein equations, and more!
 
 I am still thinking and weighing options.
 
-The basic operator is the partial derivative, diff(f, x).
+The basic operator is the partial derivative, diff (f, x).
 My preferred notation is $\partial_x$ if the variables have names, or  $\partial_i$, if they are indexed.
 
 diff accepts a function R^n -> R^1 and a variable by name or index.

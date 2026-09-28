@@ -42,9 +42,9 @@ print(f_12 - f_21)  # Derivative(...) - Derivative(...) ✗
 
 This breaks fundamental vector calculus identities:
 
-1. **div(curl(F)) = 0** - Fails because mixed partials don't cancel
-2. **curl(grad(f)) = 0** - Fails for the same reason
-3. **curl(curl(F)) = grad(div(F)) - lap(F)** - Fails
+1. **div (curl (F)) = 0** - Fails because mixed partials don't cancel
+2. **curl (grad (f)) = 0** - Fails for the same reason
+3. **curl (curl (F)) = grad (div (F)) - lap (F)** - Fails
 
 ## Recommendations
 

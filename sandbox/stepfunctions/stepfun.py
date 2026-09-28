@@ -89,7 +89,7 @@
 import bisect
 from abc import ABC, abstractmethod
 from typing import (
-    Iterable, Tuple, Any, Union, Callable, TypeVar
+    Iterable, Tuple, Any, Union, TypeVar
 )
 
 Timestamp = Union[int, float, None, str]
@@ -305,8 +305,6 @@ class AbstractStepfun(ABC):
 # Step function for numeric values only, with full comparison support
 # (==, !=, <, <=, >, >=) as well as all arithmetic ops.
 # Values must be int or float (bools are NOT allowed).
-
-from typing import Any, Callable, Sequence
 
 
 class NumericStepfun(AbstractStepfun):

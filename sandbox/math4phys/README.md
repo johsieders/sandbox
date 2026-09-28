@@ -297,7 +297,7 @@ for i in range(len(x)):
 - Returns Poisson bracket {A, B}
 - `A, B`: Scalar functions (Expr or 1×1 Matrix elements)
 - `x, p`: Disjoint coordinate lists (position, momentum)
-- Formula: ∑(∂A/∂x_i ∂B/∂p_i - ∂A/∂p_i ∂B/∂x_i)
+- Formula: ∑ (∂A/∂x_i ∂B/∂p_i - ∂A/∂p_i ∂B/∂x_i)
 
 ### Utilities
 

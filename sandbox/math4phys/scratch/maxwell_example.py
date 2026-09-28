@@ -14,12 +14,11 @@ Maxwell's Equations in vacuum:
     ∇×B = μ₀J + μ₀ε₀∂E/∂t  (Ampère-Maxwell law)
 """
 
-from sympy import symbols, Function, simplify, diff
-
 from math4phys.archive.vector_calculus_1 import (
     make_coords, ScalarField, VectorField, make_vector_field,
     gradient, divergence, curl, laplacian
 )
+from sympy import symbols, Function, simplify, diff
 
 
 def create_em_fields():
