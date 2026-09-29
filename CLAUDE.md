@@ -62,7 +62,7 @@ Python 3.14.7 on Mac and Pi, managed by uv and pinned in `.python-version`. Depe
 - Install / update the venv: `uv sync` (creates `.venv`, installs exact locked versions, editable `sandbox`)
 - Add a dependency: `uv add <pkg>` (test tool: `uv add --dev <pkg>`); upgrade: `uv lock --upgrade && uv sync`
 - On the Pi: after syncing the mirror, `bash ~/sandbox/remote-setup.sh` (runs `uv sync --locked`)
-- torch: regular PyPI build on the Mac (MPS), CPU-only build on Linux/Pi via `[tool.uv.sources]`
+- torch via `[tool.uv.sources]`: PyPI build on the Mac (MPS), CPU-only build on Linux/Pi, CUDA 13.0 (`cu130`) on Windows
 
 Mac/Pi 5 setup (Pi `~/sandbox` is a git-free mirror, never edit/pull there; run `tools/sync_pi.sh`
 after edits made outside PyCharm; `python tools/check_pi.py` checks the whole setup, e.g. after a reconnect;

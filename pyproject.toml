@@ -39,12 +39,23 @@ markers = [
     "stress: slow or fragile cases; deselect with -m 'not stress'",
 ]
 
-# CPU-only torch on the Pi (Linux): the default PyPI build for linux-aarch64
-# pulls in ~3.3 GB of CUDA libraries. The Mac keeps the regular PyPI build (MPS).
+# torch per platform:
+# - macOS: regular PyPI build (GPU via MPS)
+# - Linux (Pi): CPU-only build; the default PyPI build for linux-aarch64 pulls in ~3.3 GB of
+#   CUDA libraries no Pi can use
+# - Windows: CUDA 13.0 build for an NVIDIA GPU (the PyPI build for Windows is CPU-only)
 [tool.uv.sources]
-torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+torch = [
+    { index = "pytorch-cpu", marker = "sys_platform == 'linux'" },
+    { index = "pytorch-cu130", marker = "sys_platform == 'win32'" },
+]
 
 [[tool.uv.index]]
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
 explicit = true

@@ -91,12 +91,15 @@ Everything else — Python version, library versions, test collection (31,222 te
   `tests.py4alg…`). `uv sync` installs the project in editable mode, so `import sandbox…` works
   from any directory.
 - `[tool.pytest.ini_options]`: `testpaths = ["tests"]` and the `stress` marker.
-- `[tool.uv.sources]` + `[[tool.uv.index]]`: on Linux, torch comes from the PyTorch CPU index.
-  The default PyPI torch for linux-aarch64 is a CUDA build that drags in ~3.3 GB of NVIDIA
-  libraries no Pi can use.
+- `[tool.uv.sources]` + `[[tool.uv.index]]`: torch per platform. On Linux it comes from the
+  PyTorch CPU index — the default PyPI torch for linux-aarch64 is a CUDA build that drags in
+  ~3.3 GB of NVIDIA libraries no Pi can use. On Windows it comes from the CUDA 13.0 index
+  (`cu130`) for an NVIDIA GPU; the PyPI build for Windows would be CPU-only. macOS keeps the PyPI
+  build (MPS). The former helper scripts `cuda.bat`, `cuda.sh` and `mps.sh` (pip installs) are
+  gone; `uv sync` on each machine picks the right build.
 
-`uv.lock` is *universal*: one file resolves for macOS and Linux at the same time (both torch
-variants are in it). `uv sync` makes a venv match the lock exactly, adding, upgrading and removing
+`uv.lock` is *universal*: one file resolves for macOS, Linux and Windows at the same time (all three
+torch variants are in it). `uv sync` makes a venv match the lock exactly, adding, upgrading and removing
 packages. `pyproject.toml` and `uv.lock` are always committed together.
 
 ### 3.3 SSH
@@ -211,6 +214,13 @@ Output and reports:
 - `tests/py4alg` writes its exception report (graceful failures of the axiom checks) to
   `reports/py4alg_exceptions_<host>.txt` on each machine, overwritten per run. `reports/` is
   gitignored and excluded from `sync_pi.sh`, so the Pi's report survives a sync.
+- What the report covers: `check_axioms` (`tests/py4alg/check_protocols.py`) picks the checks by
+  protocol — field, Euclidean ring, ring, or abelian group (the last since September 2026; before,
+  group-only types such as `ECpoint` ran no checks at all) — plus the order axioms if the elements
+  are comparable. A violated axiom or a numerical problem (division by zero, overflow, domain error,
+  an int too long to print, recursion) is reported per case and the loop continues; any other
+  exception is reported under the check's name and the next check runs; a timeout is reported as
+  `timeout`. The test itself passes: the report, not the test status, tells whether the axioms hold.
 - Benchmarks are disabled by default (`addopts = "--benchmark-disable"`): benchmarked tests run once
   as plain tests. Measure with `--benchmark-enable --benchmark-only` (without `-n auto`);
   `--benchmark-autosave` stores each run in `.benchmarks/<platform>/`, `--benchmark-compare`
@@ -521,7 +531,8 @@ Save checkpoints regularly (cheap "spot" machines can be stopped at any time), k
 the GPU instead of uploading it again and again, and always shut machines down — an idle GPU costs
 as much as a busy one.
 
-**Prerequisite: torch for Linux with a GPU.** `[tool.uv.sources]` (§3.2) gives *every* Linux
+**Prerequisite: torch for Linux with a GPU.** Windows already gets the CUDA build (§3.2), but
+`[tool.uv.sources]` gives *every* Linux
 machine the CPU build of torch. On a rented GPU machine that means torch without CUDA — no error,
 just no GPU. Before the first GPU run the rule has to be split: Linux on ARM (the Pi) keeps the CPU
 build, Linux on x86-64 gets the CUDA build. Codespaces (x86-64, no GPU) should stay on CPU, or every
