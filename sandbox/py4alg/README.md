@@ -44,11 +44,11 @@ These parameterless classes provide the foundation of the algebraic hierarchy:
 | `Zm`            | `EuclideanRing`, `Comparable` | Integers mod m (any modulus)          |
 | `ZmProduct`     | `Ring`                        | Direct product of Zm rings (1)        |
 | `ECpoint`       | `AbelianGroup`                | Elliptic curve points over Fp         |
-| `SymbolicInt`   | `EuclideanRing`, `Comparable` | Symbolic integers over sympy (2)      |
+| `SymbolicInt`   | `Ring`, `Comparable`          | Symbolic integers over sympy (2)      |
 
-(1) Intended as `Ring`; it currently also passes `isinstance(x, EuclideanRing)` although it has zero
-divisors (see `implementation.md`, plan step 7).
-(2) Experimental; `euclidean_function` raises `NotImplementedError` (plan step 8).
+(1) Zero divisors, e.g. (1, 0) · (0, 1) = (0, 0), so not a Euclidean ring; `//` divides by units only.
+(2) Experimental; `//`, `%` and `divmod` exist (sympy's `floor` and `Mod`), but there is no Euclidean function on
+symbolic expressions.
 
 Each base type implements specific **protocols** that define their algebraic behavior through method signatures.
 
@@ -100,11 +100,8 @@ AbelianGroup          __bool__, zero()
     ↓
 EuclideanRing         __floordiv__, __mod__, __divmod__, euclidean_function(), normalize()
     ↓
-  Field               __truediv__
+  Field               __truediv__, inverse()
 ```
-
-Every field also implements `inverse()`, and the axiom tests use it, but it is not yet part of the `Field` protocol
-(`implementation.md`, plan step 6).
 
 **Comparable** forms an orthogonal hierarchy for ordered structures.
 

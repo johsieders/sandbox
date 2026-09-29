@@ -96,6 +96,11 @@ class ZmProduct:
         return isinstance(other, ZmProduct) and self._moduli == other._moduli and self._values == other._values
 
     def __floordiv__(self, other: ZmProduct) -> ZmProduct:
+        """Division by a unit (componentwise inverse); ZeroDivisionError for zero divisors.
+
+        ZmProduct has zero divisors, e.g. (1, 0) * (0, 1) == (0, 0), so it is a Ring, not a
+        EuclideanRing: there is no %, divmod, euclidean_function or normalize.
+        """
         self._assert_compatible(other)
         new_values = []
         for a, b, m in zip(self._values, other._values, self._moduli):
@@ -108,26 +113,12 @@ class ZmProduct:
                 raise ZeroDivisionError(f"Division by {b} in Z/{m}Z is undefined (no inverse exists)")
         return ZmProduct(self._moduli, new_values)
 
-    def __mod__(self, other: ZmProduct) -> ZmProduct:
-        return self.zero()
-
-    def __divmod__(self, other: ZmProduct) -> tuple[ZmProduct, ZmProduct]:
-        return (self // other, self.zero())
-
     def norm(self) -> float:
         """Norm as sum of component absolute values"""
         return sum(abs(v) for v in self._values)
 
     def __bool__(self) -> bool:
         return any(v != 0 for v in self._values)
-
-    def euclidean_function(self) -> int:
-        if not self:
-            raise ValueError("euclidean_function is undefined on zero")
-        return sum(abs(v) for v in self._values)
-
-    def normalize(self) -> ZmProduct:
-        return self.one() if self else self.zero()
 
     def zero(self) -> ZmProduct:
         return ZmProduct(self._moduli, [0] * len(self._moduli))

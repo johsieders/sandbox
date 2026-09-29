@@ -6,6 +6,11 @@ from sympy import Symbol, Abs, Expr, floor
 
 
 class SymbolicInt:
+    """Symbolic integers over sympy: a Ring (and Comparable), not a EuclideanRing.
+
+    //, % and divmod exist (sympy's floor and Mod), but there is no euclidean_function on
+    symbolic expressions, hence no euclidean_function and no normalize.
+    """
 
     def __init__(self,
                  value: str | int | Expr | SymbolicInt):
@@ -53,12 +58,6 @@ class SymbolicInt:
 
     def __bool__(self):
         return bool(self._value)
-
-    def euclidean_function(self) -> int:
-        raise NotImplementedError
-
-    def normalize(self) -> SymbolicInt:
-        return SymbolicInt(Abs(self._value))
 
     @classmethod
     def zero(cls) -> SymbolicInt:

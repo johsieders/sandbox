@@ -7,8 +7,7 @@ from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
-from sandbox.py4alg.util.primes import gcd
-from tests.py4alg.check_protocols import check_rings, check_euclidean_rings
+from tests.py4alg.check_protocols import check_axioms, check_rings
 from tests.py4alg.test_fp import fp_samples
 from tests.py4alg.test_zm import zm_ring_samples, zm_prime_samples
 
@@ -22,9 +21,10 @@ def test_zmproduct_isinstance():
     assert isinstance(z, ZmProduct)
     assert isinstance(z, AbelianGroup)
     assert isinstance(z, Ring)
-    assert isinstance(z, EuclideanRing)
-    # Negative assertions
-    assert not isinstance(z, Field)  # Product rings have zero divisors: (1,0) * (0,1) = (0,0)
+    # Negative assertions: product rings have zero divisors, (1,0) * (0,1) = (0,0),
+    # so ZmProduct is neither a Euclidean ring nor a field
+    assert not isinstance(z, EuclideanRing)
+    assert not isinstance(z, Field)
 
 
 def test_zmproduct_construction():
@@ -163,19 +163,6 @@ def test_zmproduct_bool_and_norm():
     assert nonzero3.norm() == 5
 
 
-def test_zmproduct_gcd():
-    """Test GCD operation"""
-    moduli = [5, 7]  # Coprime moduli
-
-    a = ZmProduct(moduli, [4, 6])
-    b = ZmProduct(moduli, [2, 4])
-
-    g = gcd(a, b).normalize()
-    # gcd(4, 2) = 2 in Z/5Z
-    # gcd(6, 4) = 2 in Z/7Z
-    assert g.values == (1, 1)
-
-
 def zmproduct_samples():
     """Generate samples for property-based testing"""
     # Test with various coprime moduli combinations
@@ -204,16 +191,10 @@ def test_zmproduct_rings(samples):
     check_rings(samples)
 
 
-def test_zmproduct_modulo():
-    """Test modulo operation"""
-    moduli = [3, 5]
-
-    a = ZmProduct(moduli, [2, 3])
-    b = ZmProduct(moduli, [1, 2])
-
-    # In rings, modulo returns zero (not a meaningful operation)
-    r = a % b
-    assert r.values == (0, 0)
+@pytest.mark.parametrize("samples", zmproduct_samples())
+def test_zmproduct_axioms(samples):
+    """check_axioms picks the Ring checks for ZmProduct (and reports any violation)"""
+    check_axioms(samples)
 
 
 # ----- Adapter Tests: ZmProduct with single modulus should behave like Zm/Fp -----
@@ -230,12 +211,12 @@ def test_zmproduct_single_modulus_matches_zm_rings(samples):
 
 
 @pytest.mark.parametrize("samples", zm_prime_samples(factory=zm_to_zmproduct_factory))
-def test_zmproduct_single_modulus_matches_zm_euclidean_rings(samples):
-    """ZmProduct with single prime modulus should pass Zm Euclidean ring tests"""
-    check_euclidean_rings(samples)
+def test_zmproduct_single_prime_modulus_matches_zm_rings(samples):
+    """ZmProduct with single prime modulus should pass the ring tests on Zm samples"""
+    check_rings(samples)
 
 
 @pytest.mark.parametrize("samples", fp_samples(factory=zm_to_zmproduct_factory))
-def test_zmproduct_single_prime_matches_fp_euclidean_rings(samples):
-    """ZmProduct with single prime should pass all Fp Euclidean ring tests"""
-    check_euclidean_rings(samples)
+def test_zmproduct_single_prime_matches_fp_rings(samples):
+    """ZmProduct with single prime should pass the ring tests on Fp samples"""
+    check_rings(samples)

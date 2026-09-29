@@ -25,8 +25,8 @@ def test_isinstance():
     assert isinstance(n, Comparable)
     assert isinstance(n, AbelianGroup)
     assert isinstance(n, Ring)
-    assert isinstance(n, EuclideanRing)
     # Negative assertions
+    assert not isinstance(n, EuclideanRing)  # no euclidean_function on symbolic expressions
     assert not isinstance(n, Field)  # Integers don't have multiplicative inverses
     assert not isinstance(n, NativeFloat)
     assert not isinstance(n, NativeComplex)

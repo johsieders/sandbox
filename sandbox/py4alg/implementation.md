@@ -36,7 +36,7 @@ sandbox/py4alg/
 |   |-- p_abelian_group.py      AbelianGroup: + - neg, ==, __bool__, zero()
 |   |-- p_ring.py               Ring(AbelianGroup): __mul__, one()
 |   |-- p_euclidean_ring.py     EuclideanRing(Ring): __floordiv__, __mod__, __divmod__, euclidean_function(), normalize()
-|   |-- p_field.py              Field(EuclideanRing): __truediv__
+|   |-- p_field.py              Field(EuclideanRing): __truediv__, inverse()
 |   |-- p_comparable.py         Comparable: __lt__ (orthogonal)
 |   |-- p_table.py              experimental Mtype/protocol-transition table (unused outside this file)
 |-- wrapper/
@@ -44,7 +44,7 @@ sandbox/py4alg/
 |   |-- w_int.py                NativeInt over int                 -> EuclideanRing + Comparable
 |   |-- w_float.py              NativeFloat over float (tol eq)    -> Field + Comparable
 |   |-- w_complex.py            NativeComplex over complex (tol eq) -> Field (no __lt__)
-|   |-- s_int.py                SymbolicInt over sympy.Symbol      -> Ring/EuclideanRing (euclidean_function raises NotImplementedError)
+|   |-- s_int.py                SymbolicInt over sympy.Symbol      -> Ring + Comparable (no euclidean_function)
 |-- mapper/
 |   |-- __init__.py             re-exports Fp, Zm, ZmProduct, Polynomial, FieldPolynomial,
 |   |                             Fraction, Complex, FieldComplex, Matrix, ECpoint
@@ -75,7 +75,7 @@ sandbox/py4alg/
               |
         EuclideanRing       (__floordiv__, __mod__, __divmod__,
               |              euclidean_function, normalize)
-            Field           (__truediv__)
+            Field           (__truediv__, inverse)
 
 
         Comparable          (__lt__)      -- orthogonal, lifted at runtime
@@ -92,9 +92,11 @@ Notes:
 - `Field` is declared as a subclass of `EuclideanRing` (not `Ring`), so every
   field automatically supplies `__floordiv__ = __truediv__`, `__mod__ = 0`,
   `euclidean_function = 1`. All field implementations honour this convention.
-- `inverse()` is **not** part of the `Field` protocol but is required by the
-  field property tests (`check_truediv_and_inverse`). Every concrete field
-  provides it, but the contract is implicit.
+- `inverse()` is part of the `Field` protocol (since 29.09.2026); the field property tests
+  (`check_truediv_and_inverse`) rely on it.
+- The test wrappers `IntWrapper`, `FloatWrapper`, `ComplexWrapper` (`tests/py4alg/test_builtins.py`)
+  have no `euclidean_function()`, so they only pass as `Ring` and `check_axioms` checks only the
+  ring axioms on them.
 
 ## Wrappers (base types)
 
@@ -103,7 +105,7 @@ Notes:
 | `NativeInt`     | `int`                 | AbelianGroup, Ring, EuclideanRing, Comparable        | `zero`/`one` are `@classmethod`. Exact equality.                 |
 | `NativeFloat`   | `float`               | AbelianGroup, Ring, EuclideanRing, Field, Comparable | Tolerance `__eq__` from `params['atol'/'rtol']`.                 |
 | `NativeComplex` | `complex`             | AbelianGroup, Ring, EuclideanRing, Field             | Tolerance `__eq__`; no `__lt__` (correctly not Comparable).      |
-| `SymbolicInt`   | `sympy.Symbol`/`Expr` | AbelianGroup, Ring, EuclideanRing (Comparable)       | Experimental; `euclidean_function` raises `NotImplementedError`. |
+| `SymbolicInt`   | `sympy.Symbol`/`Expr` | AbelianGroup, Ring (Comparable)                      | Experimental; no `euclidean_function` (Ring since 29.09.2026). |
 
 All wrappers expose `descent()` returning `[Cls]` and raise `TypeError` on foreign input
 (`NativeFloat(1)` is rejected like `NativeInt(1.0)`; since 29.09.2026).
@@ -120,7 +122,7 @@ All wrappers expose `descent()` returning `[Cls]` and raise `TypeError` on forei
 | `Matrix[T]`                            | `T: Ring   -> Matrix[T]` (square only) | Ring                                             | No — `Matrix(Matrix, ...)` builds a block matrix (Kronecker-like)    |
 | `Fp`                                   | parameterless (modulus is data)        | Field + Comparable                               | n/a                                                                  |
 | `Zm`                                   | parameterless (modulus is data)        | EuclideanRing + Comparable                       | n/a                                                                  |
-| `ZmProduct`                            | parameterless (moduli are data)        | Ring (claimed)                                   | n/a                                                                  |
+| `ZmProduct`                            | parameterless (moduli are data)        | Ring (zero divisors; `//` by units only)          | n/a                                                                  |
 | `ECpoint`                              | parameterless (curve is data)          | AbelianGroup                                     | n/a                                                                  |
 
 Both `Polynomial.__init__` and `Complex.__init__` use `type(self)` when building
@@ -140,11 +142,11 @@ no subclass exists, but the inconsistency is worth noting.
   preserve type parameters (modulus for `Zm`/`Fp`, curve for `ECpoint`, etc.),
   but they are `@classmethod` on `NativeInt`, `NativeFloat`, `NativeComplex`,
   `SymbolicInt`. The protocol does not enforce one or the other.
-- **`euclidean_function()`** raises `ValueError` on zero everywhere except in
-  `SymbolicInt` (which raises `NotImplementedError`).
+- **`euclidean_function()`** raises `ValueError` on zero everywhere. `ZmProduct` and
+  `SymbolicInt` have none: they are rings, not Euclidean rings (since 29.09.2026).
 - **`normalize()`** is the canonical-associate function. Fields and units
   collapse to `one() if self else zero()`; `NativeInt` returns `abs`;
-  `FieldPolynomial` makes monic; `Zm/Fp/ZmProduct/FieldComplex/Fraction` use
+  `FieldPolynomial` makes monic; `Zm/Fp/FieldComplex/Fraction` use
   the field-style rule. `Polynomial` (the ring-only version) has **no**
   `normalize()` — consistent with its `Ring` protocol, but it makes
   `gcd` over `Polynomial[NativeInt]` unable to take advantage of normalization (and indeed
@@ -230,25 +232,27 @@ Coverage at a glance:
 
 ## Plan
 
-Phases 1 and 2 are done (29.09.2026; details in `roadmap.md`): strict `NativeFloat`, docs
-corrected, and a single `gcd` in `util/primes.py`. The earlier suggestions S1, S2, S4 and S9 are
+Phases 1 to 3 are done (29.09.2026; phases 1-2 in `roadmap.md`): strict `NativeFloat`, docs
+corrected, a single `gcd` in `util/primes.py`, `inverse()` in the `Field` protocol, and
+`ZmProduct` and `SymbolicInt` downgraded to `Ring`. The earlier suggestions S1, S2, S4 and S9 are
 done or resolved; the second half of S6 (block-matrix `descent()`) was not an issue. Everything
 still open is below; step numbers continue those of `roadmap.md`.
 
-### Phase 3: protocols that tell the truth
+### Phase 3: protocols that tell the truth — done 29.09.2026
 
-6. **`inverse()` into the `Field` protocol** (S3). `check_truediv_and_inverse` calls
-   `a.inverse()` on every field sample, and every field (`NativeFloat`, `NativeComplex`, `Fp`,
-   `Fraction`, `FieldComplex`, the test wrappers) already has it, but `Field` declares only
-   `__truediv__`. Check afterwards that all fields still pass `isinstance(x, Field)`.
-7. **`ZmProduct` is no Euclidean ring.** It has `//`, `%`, `normalize()` and
-   `euclidean_function()`, so it passes `isinstance(x, EuclideanRing)`, but Z₃×Z₅ has zero
-   divisors, and `check_division`/`check_divmod` fail with `ZeroDivisionError`. Downgrade to
-   `Ring` (drop `//`, `%`, `divmod`, `euclidean_function`, `normalize`) and give
-   `test_zm_product.py` a `check_axioms` test (S8). *Decision needed.*
-8. **`SymbolicInt`**: `euclidean_function` raises `NotImplementedError` (6 findings in the report,
-   plus one timeout). Either a real, degree-based `euclidean_function` (cf. phase 7) or a
-   downgrade to `Ring`. *Decision needed.*
+6. **`inverse()` is in the `Field` protocol.** `NativeFloat`, `NativeComplex`, `Fp`, `Fraction` and
+   `FieldComplex` still pass `isinstance(x, Field)`.
+7. **`ZmProduct` is a `Ring`.** `%` (which returned zero), `divmod`, `euclidean_function` and
+   `normalize` are gone; `//` stays as division by units (`ZeroDivisionError` for zero divisors).
+   `test_zm_product.py` asserts `not isinstance(z, EuclideanRing)`, checks ring axioms in its
+   adapter tests and has a `check_axioms` test; the gcd and `%` tests are removed.
+8. **`SymbolicInt` is a `Ring`** (and `Comparable`): `euclidean_function` (which only raised
+   `NotImplementedError`) and `normalize` are gone; `//`, `%` and `divmod` stay (sympy's `floor`
+   and `Mod`).
+
+Result: the py4alg report went from 19 to 12 findings (the 6 `NotImplementedError`s and the
+timeout of `SymbolicInt` are gone); 259 tests pass on the Mac and the Pi, with identical reports.
+The remaining 12 are the known float towers `Fraction > FieldPolynomial > NativeFloat/NativeComplex`.
 
 ### Phase 4: missing tests (S8)
 
@@ -281,7 +285,9 @@ still open is below; step numbers continue those of `roadmap.md`.
     `sympy.Symbol(name)`, and `gen_sym_*` generators in the table of phase 6. Property tests over
     exact symbolic values give reproducible failures without the floating-point excuse.
 
-### Decisions needed
+### Noticed on the way
 
-- `ZmProduct`: downgrade to `Ring` (step 7)?
-- `SymbolicInt`: real `euclidean_function`, or downgrade to `Ring` (step 8)?
+- The test wrappers in `test_builtins.py` lack `euclidean_function()`, so their Euclidean and
+  field axioms (division, gcd, inverse) are never checked. Adding it (`abs` for `IntWrapper`,
+  `1` for the float and complex wrappers, `ValueError` on zero) would let `check_axioms` run the
+  full checks on them.
