@@ -228,11 +228,12 @@ Coverage at a glance:
   sources are commented out — the known floating-point associativity failures
   under "Known Limitations" in `README.md`). `test_zm_product.py` does not call
   `check_axioms` yet (plan, step 7); `test_table.py` prints the `p_table.py` successors.
+- `test_descent.py` — `descent()` of every tower type, flattening, block matrices.
 - `test_primes.py`, `test_gen_tools.py` — utility coverage.
 
 ## Plan
 
-Phases 1 to 3 are done (29.09.2026; phases 1-2 in `roadmap.md`): strict `NativeFloat`, docs
+Phases 1 to 4 are done (29.09.2026; phases 1-2 in `roadmap.md`): strict `NativeFloat`, docs
 corrected, a single `gcd` in `util/primes.py`, `inverse()` in the `Field` protocol, and
 `ZmProduct` and `SymbolicInt` downgraded to `Ring`. The earlier suggestions S1, S2, S4 and S9 are
 done or resolved; the second half of S6 (block-matrix `descent()`) was not an issue. Everything
@@ -254,13 +255,22 @@ Result: the py4alg report went from 19 to 12 findings (the 6 `NotImplementedErro
 timeout of `SymbolicInt` are gone); 259 tests pass on the Mac and the Pi, with identical reports.
 The remaining 12 are the known float towers `Fraction > FieldPolynomial > NativeFloat/NativeComplex`.
 
-### Phase 4: missing tests (S8)
+### Phase 4: missing tests (S8) — done 29.09.2026
 
-9. **`test_descent.py`**: `descent()` is a flat list of classes of the right length for every type
-   of `gen_tree(depth=4)`; flattening invariants of `Polynomial`, `Complex`, `Fraction`
-   (`Fraction(Fraction(x)).descent() == Fraction(x).descent()`); block-matrix semantics.
-10. **Explicit tests** for `Complex(Complex)` flattening and for block matrices with varied block
-    sizes (`test_matrices.test_matrix_matrix` uses one size).
+9. **`tests/py4alg/test_descent.py`**, for every tower of `gen_tree(depth=4)` over ints, floats and
+   complex (255 sample lists, 147 distinct types): `descent()` is a nonempty list of classes,
+   starts with `type(x)`, ends with a base type, is the same for all samples, never has a
+   constructor directly on its own family (flattening), and equals `[type(x)] + descent()` of the
+   components (coefficient, real part, numerator, matrix entry) all the way down.
+10. **Explicit tests**: `Polynomial(p0, p1, ...) == p0 + p1·x + ...`, `Complex(a, b) == a + i·b`,
+    `Fraction(a, b) == a / b`, likewise for `FieldPolynomial` and `FieldComplex`; no flattening
+    across families; block matrices with 1-3 × 1-3 blocks of size 1-3 (entries in place,
+    descent `[Matrix, T]`), block multiplication equals the flattened product, nested block
+    matrices stay flat.
+
+Result: 532 new tests, all pass (1.6 s); a deliberately planted error (block matrix with an extra
+`Matrix` in its descent) made 48 of them fail. py4alg: 791 tests, report unchanged at 12 findings,
+Mac and Pi identical.
 
 ### Phase 5: `Matrix` consistent, `FieldMatrix` (S6, S5)
 

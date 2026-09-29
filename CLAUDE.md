@@ -129,5 +129,5 @@ Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest
 - Step functions use binary search for O(log n) evaluation
 - Efficient N-ary operations via single-pass breakpoint merging
 - Normalized canonical forms eliminate redundant breakpoints
-- The full suite has ~30,700 tests (~30,000 of them parametrized step function tests); with `pytest -n auto` it takes
+- The full suite has ~31,200 tests (~30,000 of them parametrized step function tests); with `pytest -n auto` it takes
   about 1 minute on the Mac (MacBook Air M4) and about 3 minutes on the Pi; `tests/py4alg` alone ≈ 10 s on the Mac
