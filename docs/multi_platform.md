@@ -1,7 +1,9 @@
-# Multi-Platform Development: Mac and Raspberry Pi 5
+# Multi-Platform Development: Mac, Raspberry Pi 5 and Windows
 
 How the `sandbox` project is developed on a Mac and run, tested and compared on a headless
-Raspberry Pi 5 — with one code base, one git repository and (almost) one environment.
+Raspberry Pi 5 — with one code base, one git repository and (almost) one environment. A Windows
+machine with an NVIDIA GPU works on its own clone of the same repository with the same uv
+environment (§10); it is independent of the Mac/Pi pair.
 
 State: September 2026 (Python 3.14.7, uv 0.12.19, PyCharm 2026.2).
 
@@ -37,8 +39,9 @@ little ceremony as possible.
 
 **Master and mirror.**
 
-- The Mac copy is the only source of truth and the only git repository. Commits and pushes happen
-  there.
+- The Mac copy is the source of truth for the Pi and the only git repository of the Mac/Pi pair.
+  Commits and pushes happen there. (The Windows machine has its own clone of the GitHub repository
+  and never touches the Pi, §10.)
 - `~/sandbox` on the Pi is a *mirror*: a file-by-file copy of the Mac project minus local state
   (`.venv`, `.git`, `.idea`, caches). It is never edited, never pulled, never pushed. It has no
   `.git`, on purpose, so nobody is tempted.
@@ -54,12 +57,12 @@ from scripts, or from the terminal.
 venvs are built from the same `uv.lock`, so every package has the same version on both. Differences
 are deliberate and declared in `pyproject.toml`:
 
-| | Mac | Pi 5 |
-|---|---|---|
-| CPU / OS | Apple silicon, macOS | Cortex-A76 (4 cores), Raspberry Pi OS (Debian, aarch64) |
-| torch | PyPI build, GPU via MPS | CPU-only build (`torch+cpu`) |
-| Accelerator | Apple GPU (MPS) | Hailo-8 (compiled networks, no torch) |
-| Seed packages | — | `pip` kept in `.venv` (created with `--seed`) |
+| | Mac | Pi 5 | Windows (own clone, §10) |
+|---|---|---|---|
+| CPU / OS | Apple silicon, macOS | Cortex-A76 (4 cores), Raspberry Pi OS (Debian, aarch64) | Intel x86-64, Windows |
+| torch | PyPI build, GPU via MPS | CPU-only build (`torch+cpu`) | CUDA 13.0 build (`torch+cu130`) |
+| Accelerator | Apple GPU (MPS) | Hailo-8 (compiled networks, no torch) | NVIDIA GPU (CUDA) |
+| Seed packages | — | `pip` kept in `.venv` (created with `--seed`) | — |
 
 Everything else — Python version, library versions, test collection (31,222 tests) — is identical.
 
@@ -392,7 +395,7 @@ NativeInt]`, `@pytest.mark.timeout(10)`, ran for over 38 minutes in a full xdist
 Alone it times out correctly after 10 s on both machines, with or without xdist; so does the whole
 module `test_axioms.py` run by itself on the Pi (4 workers, 11 min, no hang).
 *Diagnosis:* `sudo uvx py-spy dump --pid <worker>` shows where a live Python process is (here:
-nested fraction/polynomial GCDs, pure Python). Cause of the missing timeout: open (§10).
+nested fraction/polynomial GCDs, pure Python). Cause of the missing timeout: open (§11).
 *Resolution:* `test_axioms.py` now builds type towers of depth 4 instead of 6 (57 instead of 585
 cases); the case no longer exists, and `tests/py4alg` runs in about 10 s on the Mac.
 
@@ -415,7 +418,9 @@ only PyCharm's entry, not the venv) and keep the uv one.
 
 **Mirror instead of a second clone.** Earlier, the Pi had its own git clone (`git pull` per
 session). Two repositories drift, need their own git access on the Pi, and invite quick fixes on the wrong
-machine. A mirror has exactly one direction of flow and nothing to merge.
+machine. A mirror has exactly one direction of flow and nothing to merge. The Windows machine is a
+different case: a full development machine with its own editor and its own work, so it gets a clone
+(§10) — but it never feeds the Pi.
 
 **uv and a lock file instead of `requirements.txt`.** `requirements.txt` was unpinned: each machine
 installed whatever was newest on the day of installation. `uv.lock` gives both machines the same
@@ -540,7 +545,64 @@ new Codespace downloads about 3 GB of CUDA libraries; uv can express this with a
 with separate `cpu`/`gpu` extras.
 
 
-## 10. Open Issues
+## 10. Windows Machine (Own Clone)
+
+**Role.** A Windows PC (Intel x86-64, NVIDIA GPU) works on its own git clone of
+`github.com/johsieders/sandbox`, like any collaborator's machine: pull, work, commit, push. It runs
+the same uv environment as the Mac — same Python, same `uv.lock`, same package versions — except
+that torch is the CUDA build. There is no mirroring and no Pi access: `tools/sync_pi.sh`,
+`tools/check_pi.py`, `tools/compare_hosts.py` and `remote-setup.sh` are Mac/Pi tools and are not
+used on Windows.
+
+**Setup** (PowerShell):
+
+1. Install git (Git for Windows) and uv:
+   `winget install astral-sh.uv`, or `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`.
+2. NVIDIA driver: `nvidia-smi` must show "CUDA Version: 13.0" or higher; otherwise update the
+   driver. A CUDA toolkit is *not* needed — the torch wheel brings its own CUDA runtime.
+3. Clone: `git clone git@github.com:johsieders/sandbox.git` (with an SSH key of this machine
+   registered on GitHub — e.g. generated in 1Password, whose SSH agent also runs on Windows) or via
+   HTTPS.
+4. `cd sandbox; uv sync` — uv downloads Python 3.14.7 (`.python-version`), creates `.venv` and
+   installs exactly `uv.lock`, torch from the `cu130` index (`[tool.uv.sources]`, §3.2). Every
+   locked package has a ready-made Windows wheel for Python 3.14 (checked September 2026); nothing
+   is compiled.
+5. Check:
+   ```
+   uv run python -c "import torch; print(torch.__version__, torch.cuda.is_available())"
+   # 2.14.0+cu130 True
+   uv run pytest tests/py4alg -n auto
+   ```
+6. PyCharm: open the folder and choose the existing uv environment `.venv\Scripts\python.exe`
+   (uv type, so the package window runs uv, §3.4). In a terminal, `.venv\Scripts\Activate.ps1`
+   activates the venv; `uv run …` works without activation.
+
+**Working with two clones.**
+
+- Pull before starting, push when done — on both machines. `uv run` and `uv sync` update the venv
+  automatically when a pull changed `pyproject.toml` or `uv.lock`.
+- A dependency added on Windows (`uv add …`) changes `pyproject.toml` and the universal `uv.lock`
+  for all platforms. On the Mac: `git pull`, `uv sync`, then `tools/sync_pi.sh` and
+  `remote-setup.sh` on the Pi — `git pull` on the Mac is a change outside PyCharm, so auto-upload
+  misses it (§6.4).
+- Line endings: Git for Windows converts to CRLF on checkout by default. Shell scripts
+  (`remote-setup.sh`, `tools/sync_pi.sh`) must stay LF, or they break on the Mac and the Pi.
+  `.gitattributes` (`* text=auto`, `*.sh text eol=lf`) makes this independent of each machine's
+  git settings: the repository stores LF, and shell scripts are checked out with LF everywhere.
+
+**Differences to Mac and Pi.**
+
+- *Timeouts.* pytest-timeout interrupts a test with `SIGALRM` on macOS and Linux; Windows has no
+  such signal, so it uses a timer thread that dumps the stacks and ends the whole process
+  (`os._exit(1)`). `check_axioms` therefore cannot report a Windows timeout as a graceful
+  `timeout`: without xdist the test session ends, with `-n auto` the worker dies, the test is
+  reported as failed and xdist starts a new worker.
+- *Reports.* The exception report is written to `reports\py4alg_exceptions_<host>.txt` as on the
+  other machines; `reports/` is gitignored.
+- *Scripts.* The Mac/Pi scripts are bash; they are neither needed nor run on Windows.
+
+
+## 11. Open Issues
 
 - **Test tiers.** A fast tier (< 1 min) that checks everything broadly, and a stress tier
   (< 10 min). The `stress` marker is registered for this but not used yet.

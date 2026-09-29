@@ -1,0 +1,4 @@
+# Line endings: normalize text to LF in the repository; each machine checks out its native
+# endings, except shell scripts, which must stay LF to run on the Mac and the Pi.
+* text=auto
+*.sh text eol=lf
