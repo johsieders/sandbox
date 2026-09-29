@@ -38,7 +38,6 @@ sandbox/py4alg/
 |   |-- p_euclidean_ring.py     EuclideanRing(Ring): __floordiv__, __mod__, __divmod__, euclidean_function(), normalize()
 |   |-- p_field.py              Field(EuclideanRing): __truediv__, inverse()
 |   |-- p_comparable.py         Comparable: __lt__ (orthogonal)
-|   |-- p_table.py              experimental Mtype/protocol-transition table (unused outside this file)
 |-- wrapper/
 |   |-- __init__.py             (empty; nothing re-exported)
 |   |-- w_int.py                NativeInt over int                 -> EuclideanRing + Comparable
@@ -59,7 +58,7 @@ sandbox/py4alg/
     |-- __init__.py             (empty)
     |-- utils.py                compose(), take(), params dict, set_test_seed(), comparable_works(), descent_str()
     |-- primes.py               is_prime, gcd (generic), gcd_extended, mod_inverse, chinese_remainder, factorize, phi, ord, find_generator, lcm
-    |-- gen_samples.py          infinite-iterator factories (gen_ints, gen_polynomials, ...) + SUCCESSORS table + gen_tree
+    |-- gen_samples.py          infinite-iterator factories (gen_ints, gen_polynomials, ...) + CONSTRUCTORS, SOURCES, accepts(), gen_tree
     |-- def_samples.py          finite list factories (def_nat_ints, def_polynomials, ...) + to_pairs, to_coeffs
 ```
 
@@ -214,10 +213,15 @@ Samples are produced in two complementary styles:
 
 - **Infinite iterators** (`util/gen_samples.py`): `gen_nat_ints`, `gen_fractions`,
   `gen_polynomials`, ... are `gen_make(Cls, min, max)`-wrapped generators that
-  retry on `ZeroDivisionError`/`ValueError` and skip zero results. A
-  `SUCCESSORS` adjacency table plus `gen_tree(sources, depth, n)` enumerates *all* compositional paths up to a fixed
-  depth — this is the test-of-the-tower
-  machinery used by `test_axioms.py`.
+  retry on `ZeroDivisionError`/`ValueError` and skip zero results.
+  `gen_tree(sources, depth, n)` enumerates *all* compositional paths up to a fixed depth — the
+  test-of-the-tower machinery of `test_axioms.py` and `test_descent.py`. A path starts with a
+  source and its wrapper (`SOURCES`: `gen_ints → gen_nat_ints`, ...), then constructors from
+  `CONSTRUCTORS`. Which constructor may follow is not tabulated but derived (since 29.09.2026):
+  `accepts(cls, x)` is true if `x` satisfies the bound of `cls`'s type parameter
+  (`Fraction[T: EuclideanRing]`), read at runtime from `cls.__type_params__`, or if `x` belongs to
+  `cls` itself (flattening, block matrices). A new constructor only needs an entry in
+  `CONSTRUCTORS`.
 - **Finite list factories** (`util/def_samples.py`): `def_nat_ints(*nn)` etc.
   for deterministic, small, debuggable samples used in
   `test_polynomials.test_gcd_basics`, `test_poly_gcd`, etc.
@@ -233,13 +237,13 @@ Coverage at a glance:
   `gen_tree` up to depth 4, currently only for the `gen_ints` source (float and complex
   sources are commented out — the known floating-point associativity failures
   under "Known Limitations" in `README.md`). `test_zm_product.py` does not call
-  `check_axioms` yet (plan, step 7); `test_table.py` prints the `p_table.py` successors.
+  `check_axioms` yet (plan, step 7).
 - `test_descent.py` — `descent()` of every tower type, flattening, block matrices.
 - `test_primes.py`, `test_gen_tools.py` — utility coverage.
 
 ## Plan
 
-Phases 1 to 5 are done (29.09.2026; phases 1-2 in `roadmap.md`): strict `NativeFloat`, docs
+Phases 1 to 6 are done (29.09.2026; phases 1-2 in `roadmap.md`): strict `NativeFloat`, docs
 corrected, a single `gcd` in `util/primes.py`, `inverse()` in the `Field` protocol, and
 `ZmProduct` and `SymbolicInt` downgraded to `Ring`. The earlier suggestions S1, S2, S4 and S9 are
 done or resolved; the second half of S6 (block-matrix `descent()`) was not an issue. Everything
@@ -260,6 +264,12 @@ still open is below; step numbers continue those of `roadmap.md`.
 Result: the py4alg report went from 19 to 12 findings (the 6 `NotImplementedError`s and the
 timeout of `SymbolicInt` are gone); 259 tests pass on the Mac and the Pi, with identical reports.
 The remaining 12 are the known float towers `Fraction > FieldPolynomial > NativeFloat/NativeComplex`.
+
+Also done in phase 3: the test wrappers in `test_builtins.py` got `euclidean_function()` (`abs`
+for `IntWrapper`, `1` for the float and complex wrappers, `ValueError` on zero). Before, they
+passed only as `Ring`, so their division, gcd and inverse axioms were never checked; and
+`builtin_samples` listed the int samples three times, so the float and complex wrappers were not
+tested at all. Now `check_axioms` runs the full Euclidean and field checks on all three; they pass.
 
 ### Phase 4: missing tests (S8) — done 29.09.2026
 
@@ -286,8 +296,7 @@ Mac and Pi identical.
     bug in the flattening branches of `Polynomial` and `Complex` is fixed as well
     (`Polynomial(FieldPolynomial(...))`, `Complex(FieldComplex, FieldComplex)`).
 12. **`FieldMatrix[T: Field](Matrix[T])`** with `det()`, `inverse()` and `/` (see Mappers).
-    `gen_field_matrices` is in `SUCCESSORS` wherever the entries form a field (after
-    `gen_nat_floats`, `gen_nat_complex`, `gen_field_complex`, `gen_fractions`), so the tower
+    `gen_field_matrices` follows every generator whose entries form a field, so the tower
     tests cover it: 4 new types in `test_axioms.py`, 32 in `test_descent.py`.
     `tests/py4alg/test_field_matrix.py`: protocols (Ring, not Field), type propagation, block
     matrices keep their class; `det()` equals the Leibniz formula (sizes 1-4, exact fields), is
@@ -296,23 +305,27 @@ Mac and Pi identical.
 
 Result: py4alg 959 tests (all pass on the Mac and the Pi), report unchanged at 12 findings.
 
-### Phase 6: one table of type combinations (S7)
+### Phase 6: no table of type combinations (S7) — done 29.09.2026
 
-13. **Mappers declare their signature**: input protocol, output protocol, flattening (class
-    attributes); `SUCCESSORS` in `util/gen_samples.py` is derived from them instead of being
-    written by hand.
-14. **`protocols/p_table.py`** (an experimental second encoding of the same idea) becomes the
-    single source of truth or is removed. New mappers (`FieldMatrix`, symbolic types) then plug
-    into the axiom tests and the docs automatically.
+13. **Derived instead of declared.** The plan was to declare input and output protocols as class
+    attributes. That turned out to be unnecessary: the input protocol is the bound of the type
+    parameter (`class Fraction[T: EuclideanRing]`), readable at runtime, and the output protocol
+    is what `isinstance` says about a constructed element. `gen_tree` now probes one element of
+    each partial path and extends it by every constructor that `accepts` it (bound, or own
+    family); the hand-written `SUCCESSORS` table is gone. Compared with it, the derived rule adds
+    what the table had left out (`Complex` over `NativeInt`, i.e. Z[i]; `Polynomial`, `Complex`,
+    `Matrix` over `FieldComplex`; `Matrix` over `FieldMatrix`) and drops the wrapper self-loops
+    (`NativeInt(NativeInt)`), which only produced duplicates: over ints 44 types (was 35), over
+    floats and complex 86 each (was 74). All new towers pass the axioms; the report is unchanged.
+14. **`protocols/p_table.py` is removed** (with `test_table.py`): a second, hand-written encoding
+    of the same information, already wrong in places (`Fraction` over a `Ring`; no
+    `FieldMatrix`). `test_gen_tools.py` tests `accepts` on the cases above and that every
+    `gen_tree` path is constructible.
+
+Result: py4alg 948 tests (all pass on the Mac and the Pi), report unchanged at 12 findings.
 
 ### Phase 7: symbolic wrappers (S10)
 
 15. **`SymbolicFloat` / `SymbolicComplex`** over `sympy.Symbol(name, real=True)` /
-    `sympy.Symbol(name)`, and `gen_sym_*` generators in the table of phase 6. Property tests over
+    `sympy.Symbol(name)`, and `gen_sym_*` generators registered in `SOURCES`. Property tests over
     exact symbolic values give reproducible failures without the floating-point excuse.
-
-Also done in phase 3: the test wrappers in `test_builtins.py` got `euclidean_function()` (`abs`
-for `IntWrapper`, `1` for the float and complex wrappers, `ValueError` on zero). Before, they
-passed only as `Ring`, so their division, gcd and inverse axioms were never checked; and
-`builtin_samples` listed the int samples three times, so the float and complex wrappers were not
-tested at all. Now `check_axioms` runs the full Euclidean and field checks on all three; they pass.

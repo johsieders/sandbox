@@ -95,35 +95,48 @@ gen_field_polynomials = gen_make(FieldPolynomial, params['poly_min'], params['po
 gen_matrices = gen_make(Matrix, params['matrix_size'], params['matrix_size'])
 gen_field_matrices = gen_make(FieldMatrix, params['matrix_size'], params['matrix_size'])
 
-# meaning of successors:
-# gen_x : (gen_y, gen_z) means that gen_y, gen_z accept gen_x as argument
-# or compose(gen_y, gen_x), compose(gen_z, gen_x) are legal. 
-# Examples:
-# gen_nat_ints accepts gen_ints, gen_nat_ints
-# gen_fractions accepts gen_nat_ints, gen_floats, gen_complex, gen_field_polynomials, ...
-# gen_polynomials accepts gen_fractions, gen_polynomials, gen_matrices, ...
-SUCCESSORS = {gen_ints: (gen_nat_ints,),  # compose(gen_nat_ints, gen_ints)
-              gen_floats: (gen_nat_floats,),  # compose(gen_nat_floats, gen_floats)
-              gen_complex_: (gen_nat_complex,),
-              gen_nat_ints: (gen_nat_ints, gen_fractions, gen_matrices, gen_polynomials),
-              gen_nat_floats: (gen_nat_floats, gen_complex, gen_field_complex, gen_fractions, gen_matrices,
-                               gen_polynomials, gen_field_polynomials, gen_field_matrices),
-              gen_nat_complex: (gen_nat_complex, gen_complex, gen_field_complex, gen_fractions, gen_matrices,
-                                gen_polynomials, gen_field_polynomials, gen_field_matrices),
-              gen_complex: (gen_complex, gen_matrices, gen_polynomials,),
-              gen_field_complex: (gen_field_complex, gen_fractions, gen_field_polynomials, gen_field_matrices),
-              gen_fractions: (gen_fractions, gen_complex, gen_field_complex, gen_matrices, gen_polynomials,
-                              gen_field_polynomials, gen_field_matrices),
-              gen_matrices: (gen_matrices, gen_complex, gen_polynomials),
-              gen_field_matrices: (gen_field_matrices, gen_complex, gen_polynomials),  # a Ring, like Matrix
-              gen_polynomials: (gen_polynomials, gen_matrices, gen_complex),
-              gen_field_polynomials: (gen_field_polynomials, gen_matrices, gen_fractions)
-              }
+# Type constructors used by gen_tree, and the start of every tower (raw numbers -> wrapper).
+# Which constructor may follow which is not written down: it is derived from the constructor's
+# type-parameter bound (class Polynomial[T: Ring] -> Ring) and the runtime protocols (see accepts).
+CONSTRUCTORS = {gen_polynomials: Polynomial,
+                gen_field_polynomials: FieldPolynomial,
+                gen_complex: Complex,
+                gen_field_complex: FieldComplex,
+                gen_fractions: Fraction,
+                gen_matrices: Matrix,
+                gen_field_matrices: FieldMatrix}
+
+SOURCES = {gen_ints: gen_nat_ints,
+           gen_floats: gen_nat_floats,
+           gen_complex_: gen_nat_complex}
+
+
+def accepts(cls, x) -> bool:
+    """True if the type constructor cls can be applied to elements like x.
+
+    Either x satisfies the bound of cls's type parameter (Polynomial[T: Ring] accepts any Ring),
+    or x belongs to cls itself: Polynomial, Complex and Fraction flatten their own type, and
+    Matrix builds block matrices, even where the bound alone would not allow it
+    (FieldPolynomial of FieldPolynomials, FieldMatrix of FieldMatrix blocks).
+    """
+    (t,) = cls.__type_params__
+    return isinstance(x, t.__bound__) or isinstance(x, cls)
+
+
+def successors(gs: List[Callable]) -> List[Callable]:
+    """The generators that may extend the path gs (a list of generators, source first)."""
+    if gs[-1] in SOURCES:
+        return [SOURCES[gs[-1]]]
+    state = random.getstate()  # probe one element without disturbing the sample sequence
+    x = compose(take(1), *reversed(gs))(1, 10)[0]
+    random.setstate(state)
+    return [g for g, cls in CONSTRUCTORS.items() if accepts(cls, x)]
 
 
 def gen_tree(sources, depth=3, n=5) -> List[Any]:
     """
     This function generates all paths of the given depth, starting from one of the sources
+    (gen_ints, gen_floats, gen_complex_); each path is source, wrapper, then depth - 1 constructors.
     param n: length of samples
     """
     result = []
@@ -131,9 +144,8 @@ def gen_tree(sources, depth=3, n=5) -> List[Any]:
     while pool:
         gs = pool.pop()
         if len(gs) <= depth:
-            for g in SUCCESSORS[gs[-1]]:
-                hs = gs + [g]
-                pool.append(hs)
+            for g in successors(gs):
+                pool.append(gs + [g])
         else:
             gs.append(take(n))
             result.append(reversed(gs))
