@@ -62,13 +62,6 @@ class FieldMixin(AlgebraicMixin):
             raise ZeroDivisionError(f"{self.__class__.__name__}.inverse(): division by zero")
         return self.__class__(1) / self
 
-    def gcd(self, other):
-        """GCD in a field: 1 if either is non-zero, 0 if both are zero."""
-        if self != self.__class__.zero() or other != other.__class__.zero():
-            return self.__class__.one()
-        else:
-            return self.__class__.zero()
-
 
 # Inheritance-based wrappers that extend built-in types with algebraic methods
 class IntWrapper(int, AlgebraicMixin):
@@ -93,13 +86,8 @@ class IntWrapper(int, AlgebraicMixin):
         q, r = super().__divmod__(other)
         return IntWrapper(q), IntWrapper(r)
 
-    def gcd(self, other):
-        """Euclidean GCD for integers using Python's math.gcd."""
-        import math
-        return IntWrapper(math.gcd(int(self), int(other)))
-
     def normalize(self):
-        return self.one() if self else self.zero()
+        return IntWrapper(abs(int(self)))
 
     @classmethod
     def zero(cls): return cls(0)
@@ -197,9 +185,6 @@ class ComplexWrapper(complex, FieldMixin):
 
     def __eq__(self, other):
         return abs(self - other) < 1e-10 if isinstance(other, (complex, ComplexWrapper)) else False
-
-    def normalize(self):
-        return self.one() if self else self.zero()
 
     def normalize(self):
         return self.one() if self else self.zero()

@@ -14,6 +14,8 @@ class NativeFloat:
             self._value = value._value
         elif isinstance(value, float):
             self._value = value
+        else:
+            raise TypeError(f"Float can only wrap float or Float, got {type(value)}")
 
     def __add__(self, other: NativeFloat) -> NativeFloat:
         return NativeFloat(self._value + other._value)

@@ -83,15 +83,14 @@ def gcd[T: EuclideanRing](a: T, b: T) -> T:
     """
     Euclidean algorithm for greatest common divisor.
 
-    Dispatches to a.gcd(b) if available (e.g. FieldPolynomial provides
-    a numerically stable variant).
+    The single gcd of py4alg: works on any EuclideanRing, no type-specific variants.
+    The result is not normalized; it is unique only up to a unit, so callers
+    normalize if they need a canonical form (e.g. the Fraction constructor, the tests).
 
     :param a: an element of an Euclidean ring
     :param b: another element of an Euclidean ring
     :return: gcd of a and b
     """
-    if hasattr(a, 'gcd'):
-        return a.gcd(b)
     while b:
         a, b = b, a % b
     return a

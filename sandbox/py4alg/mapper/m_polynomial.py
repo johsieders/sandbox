@@ -119,19 +119,6 @@ class FieldPolynomial[T: Field](Polynomial[T]):
         _, r = self.__divmod__(other)
         return r
 
-    def gcd(self, other: FieldPolynomial[T]) -> FieldPolynomial[T]:
-        """Numerically stable GCD via monic Euclidean algorithm.
-
-        Normalizes (makes monic) at each step to prevent coefficient explosion
-        that occurs with floating-point arithmetic.
-        """
-        a, b = self, other
-        while b:
-            a, b = b, (a % b)
-            if b:
-                b = b.normalize()
-        return a.normalize()
-
     def __divmod__(self, other: FieldPolynomial[T]) -> tuple[FieldPolynomial[T], FieldPolynomial[T]]:
         if not other:
             raise ZeroDivisionError("Polynomial division by zero")
