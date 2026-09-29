@@ -23,7 +23,7 @@ development.
 - **Architecture**: Protocol-based design with wrappers and mappers
 - **Protocols** (`protocols/`): Abstract algebraic structures (Ring, Field, EuclideanRing, etc.)
 - **Wrappers** (`wrapper/`): Native type wrappers (NativeInt, NativeFloat, NativeComplex)
-- **Mappers** (`mapper/`): Complex algebraic types (Polynomial, FieldPolynomial, Matrix, Complex, Fraction, Fp, Zm, ZmProduct, ECpoint)
+- **Mappers** (`mapper/`): Complex algebraic types (Polynomial, FieldPolynomial, Matrix, FieldMatrix, Complex, Fraction, Fp, Zm, ZmProduct, ECpoint)
 - **Configuration**: the `params` dict in `util/utils.py` (tolerances `atol`/`rtol`, sample sizes, seed); samples from `util/gen_samples.py` (infinite generators, `gen_tree`) and `util/def_samples.py` (finite lists)
 - **Key pattern**: Types use `_descent` attribute to track construction hierarchy
 
@@ -129,5 +129,5 @@ Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest
 - Step functions use binary search for O(log n) evaluation
 - Efficient N-ary operations via single-pass breakpoint merging
 - Normalized canonical forms eliminate redundant breakpoints
-- The full suite has ~31,200 tests (~30,000 of them parametrized step function tests); with `pytest -n auto` it takes
+- The full suite has ~31,400 tests (~30,000 of them parametrized step function tests); with `pytest -n auto` it takes
   about 1 minute on the Mac (MacBook Air M4) and about 3 minutes on the Pi; `tests/py4alg` alone ≈ 10 s on the Mac

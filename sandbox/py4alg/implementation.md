@@ -51,7 +51,7 @@ sandbox/py4alg/
 |   |-- m_polynomial.py         Polynomial[T:Ring], FieldPolynomial[T:Field](Polynomial[T])
 |   |-- m_fraction.py           Fraction[T:EuclideanRing]
 |   |-- m_complex.py            Complex[T:Ring], FieldComplex[T:Field](Complex[T])
-|   |-- m_matrix.py             Matrix[T:Ring] (also acts as block-matrix / tensor product)
+|   |-- m_matrix.py             Matrix[T:Ring] (also builds block matrices), FieldMatrix[T:Field](Matrix[T])
 |   |-- m_modular.py            Zm (mod m), Fp(Zm) (mod p)
 |   |-- m_modular_product.py    ZmProduct via CRT
 |   |-- m_ec.py                 ECpoint (elliptic curve points; AbelianGroup only)
@@ -119,17 +119,23 @@ All wrappers expose `descent()` returning `[Cls]` and raise `TypeError` on forei
 | `Fraction[T]`                          | `T: EuclideanRing -> Fraction[T]`      | Field                                            | Yes (cross-multiplies on `Fraction(Fraction)`)                       |
 | `Complex[T]`                           | `T: Ring   -> Complex[T]`              | Ring                                             | Yes (collapses nested Complex via Gauss identity in `__init__`)      |
 | `FieldComplex[T]` (`<: Complex`)       | `T: Field  -> FieldComplex[T]`         | Field                                            | Yes (via parent)                                                     |
-| `Matrix[T]`                            | `T: Ring   -> Matrix[T]` (square only) | Ring                                             | No — `Matrix(Matrix, ...)` builds a block matrix (Kronecker-like)    |
+| `Matrix[T]`                            | `T: Ring   -> Matrix[T]` (square only) | Ring                                             | Block matrix: `Matrix(Matrix, ...)` is a `Matrix[T]` over the entries |
+| `FieldMatrix[T]` (`<: Matrix`)         | `T: Field  -> FieldMatrix[T]`          | Ring (+ `det`, `inverse`, `/`)                   | Block matrix (via parent)                                            |
 | `Fp`                                   | parameterless (modulus is data)        | Field + Comparable                               | n/a                                                                  |
 | `Zm`                                   | parameterless (modulus is data)        | EuclideanRing + Comparable                       | n/a                                                                  |
 | `ZmProduct`                            | parameterless (moduli are data)        | Ring (zero divisors; `//` by units only)          | n/a                                                                  |
 | `ECpoint`                              | parameterless (curve is data)          | AbelianGroup                                     | n/a                                                                  |
 
-Both `Polynomial.__init__` and `Complex.__init__` use `type(self)` when building
-the result, so the subclasses `FieldPolynomial` and `FieldComplex` propagate
-through arithmetic — a clean trick. `Matrix.__init__`, however, always returns
-a `Matrix` (no `type(self)`), so subclassing would lose information; right now
-no subclass exists, but the inconsistency is worth noting.
+`Polynomial`, `Complex` and (since 29.09.2026) `Matrix` use `type(self)` when building
+results, so the subclasses `FieldPolynomial`, `FieldComplex` and `FieldMatrix` propagate
+through arithmetic. When a constructor flattens (or builds a block matrix), `descent()` starts
+with the constructor's own class, not the argument's: `Polynomial(FieldPolynomial(...))` is a
+`Polynomial` with descent `[Polynomial, T]`.
+
+`FieldMatrix` is still a `Ring`: matrices do not commute and singular ones have no inverse.
+`det()` uses Gaussian elimination, `inverse()` Gauss-Jordan elimination (`ZeroDivisionError` if
+singular), `a / b == a * b.inverse()`. Pivots are the first nonzero entry of a column, so entries
+only need `__bool__`; for floats there is no partial pivoting by magnitude.
 
 ## Cross-cutting conventions
 
@@ -233,7 +239,7 @@ Coverage at a glance:
 
 ## Plan
 
-Phases 1 to 4 are done (29.09.2026; phases 1-2 in `roadmap.md`): strict `NativeFloat`, docs
+Phases 1 to 5 are done (29.09.2026; phases 1-2 in `roadmap.md`): strict `NativeFloat`, docs
 corrected, a single `gcd` in `util/primes.py`, `inverse()` in the `Field` protocol, and
 `ZmProduct` and `SymbolicInt` downgraded to `Ring`. The earlier suggestions S1, S2, S4 and S9 are
 done or resolved; the second half of S6 (block-matrix `descent()`) was not an issue. Everything
@@ -272,13 +278,23 @@ Result: 532 new tests, all pass (1.6 s); a deliberately planted error (block mat
 `Matrix` in its descent) made 48 of them fail. py4alg: 791 tests, report unchanged at 12 findings,
 Mac and Pi identical.
 
-### Phase 5: `Matrix` consistent, `FieldMatrix` (S6, S5)
+### Phase 5: `Matrix` consistent, `FieldMatrix` (S6, S5) — done 29.09.2026
 
-11. **`type(self)` instead of `Matrix(...)`** in `mapper/m_matrix.py` (6 places), as in
-    `Polynomial` and `Complex`, so that subclasses propagate through arithmetic.
-12. **`FieldMatrix[T: Field](Matrix[T])`** with `inverse()`, `det()` and Gauss-Jordan
-    `__truediv__` — the ring-class-plus-field-subclass pattern of `Polynomial`/`FieldPolynomial`
-    and `Complex`/`FieldComplex`, and linear algebra over any field. Needs step 6.
+11. **`type(self)` in `Matrix`** for all results (`+`, `-`, `*`, negation, `zero`, `one`), for the
+    descent and in `__repr__`. On the way: a block matrix took its descent from its first block,
+    so `Matrix(FieldMatrix, ...)` claimed `[FieldMatrix, T]`; now `[type(self)] + T`. The same
+    bug in the flattening branches of `Polynomial` and `Complex` is fixed as well
+    (`Polynomial(FieldPolynomial(...))`, `Complex(FieldComplex, FieldComplex)`).
+12. **`FieldMatrix[T: Field](Matrix[T])`** with `det()`, `inverse()` and `/` (see Mappers).
+    `gen_field_matrices` is in `SUCCESSORS` wherever the entries form a field (after
+    `gen_nat_floats`, `gen_nat_complex`, `gen_field_complex`, `gen_fractions`), so the tower
+    tests cover it: 4 new types in `test_axioms.py`, 32 in `test_descent.py`.
+    `tests/py4alg/test_field_matrix.py`: protocols (Ring, not Field), type propagation, block
+    matrices keep their class; `det()` equals the Leibniz formula (sizes 1-4, exact fields), is
+    multiplicative, `det(1) = 1`, singular matrices have det 0 and no inverse, pivoting;
+    `a·a⁻¹ = a⁻¹·a = 1` and `(a/b)·b = a` over `Fraction`, `Fp`, `NativeFloat` and `FieldComplex`.
+
+Result: py4alg 959 tests (all pass on the Mac and the Pi), report unchanged at 12 findings.
 
 ### Phase 6: one table of type combinations (S7)
 

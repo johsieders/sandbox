@@ -207,7 +207,7 @@ first run `tools/sync_pi.sh -n`.
   ```
 - **Pi, on the Pi** (standalone): `cd ~/sandbox && source .venv/bin/activate && pytest …`
 
-The full suite (about 31,200 tests) takes about 1 minute with `-n auto` on the Mac and about 3 minutes on the Pi
+The full suite (about 31,400 tests) takes about 1 minute with `-n auto` on the Mac and about 3 minutes on the Pi
 (September 2026, after `test_axioms.py` went to depth 4).
 During development, run targeted modules; `tests/py4alg` takes about 10 s on the Mac. The `stress`
 marker is registered for slow cases (deselect with `-m "not stress"`) but currently unused.

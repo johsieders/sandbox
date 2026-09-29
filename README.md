@@ -20,7 +20,7 @@ corrected the incorrect expected values, and that was the only manual editing I 
 invariant/axiom-driven) test suites, which were much more reliable and required no manual edits. This was a huge step
 forward; the tests passed (ignoring minor issues) on the first run.
 
-The full suite (about 31,200 tests) runs in about one minute on a MacBook Air M4 (`pytest -n auto`); also tested on
+The full suite (about 31,400 tests) runs in about one minute on a MacBook Air M4 (`pytest -n auto`); also tested on
 Windows 11, Codespace, and Raspberry Pi 5.
 
 *This project demonstrates how to use AI-assisted programming for rapid, mathematically sound library development.*

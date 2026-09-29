@@ -59,6 +59,7 @@ These parameterized classes are **functors** that lift algebraic structures to m
 | Constructor          | Signature               | Result Protocol | Description                             |
 |----------------------|-------------------------|-----------------|-----------------------------------------|
 | `Matrix[T]`          | `Ring → Ring`           | `Ring`          | Matrix algebra over rings               |
+| `FieldMatrix[T]`     | `Field → Ring`          | `Ring`          | Matrices over fields: det, inverse, `/` |
 | `Complex[T]`         | `Ring → Ring`           | `Ring`          | Complex numbers over rings (e.g. Z[i])  |
 | `FieldComplex[T]`    | `Field → Field`         | `Field`         | Complex numbers over fields             |
 | `Fraction[T]`        | `EuclideanRing → Field` | `Field`         | Field of fractions (quotient field)     |
