@@ -2,6 +2,8 @@
 
 **A mathematically rigorous, protocol-based algebraic type system for Python**
 
+https://github.com/johsieders/sandbox
+
 ## Overview
 
 `py4alg` implements a compositional approach to algebraic structures, allowing the construction of arbitrarily complex
@@ -21,11 +23,12 @@ This design creates a **tree of algebraic types** where any valid combination of
 types, automatically inheriting the appropriate algebraic properties.
 
 ```
-Base Types → Type Constructors → Composite Types
-    ↓              ↓                   ↓
-NativeInt  →  Polynomial[·]  →  Polynomial[NativeInt]
-    ↓              ↓                   ↓
-EuclideanRing → Ring → Ring    →    EuclideanRing
+Base type       Type constructor               Composite type
+NativeInt    →  Polynomial[·]               →  Polynomial[NativeInt]
+EuclideanRing   Ring → Ring                    Ring
+
+NativeFloat  →  FieldPolynomial[·]          →  FieldPolynomial[NativeFloat]
+Field           Field → EuclideanRing          EuclideanRing
 ```
 
 ## Base Types (Foundation Layer)
@@ -39,8 +42,13 @@ These parameterless classes provide the foundation of the algebraic hierarchy:
 | `NativeComplex` | `Field`                       | Complex number field                  |
 | `Fp`            | `Field`, `Comparable`         | Finite field Z/pZ (prime modulus)     |
 | `Zm`            | `EuclideanRing`, `Comparable` | Integers mod m (any modulus)          |
-| `ZmProduct`     | `Ring`                        | Direct product of Zm rings            |
+| `ZmProduct`     | `Ring`                        | Direct product of Zm rings (1)        |
 | `ECpoint`       | `AbelianGroup`                | Elliptic curve points over Fp         |
+| `SymbolicInt`   | `EuclideanRing`, `Comparable` | Symbolic integers over sympy (2)      |
+
+(1) Intended as `Ring`; it currently also passes `isinstance(x, EuclideanRing)` although it has zero
+divisors (see `implementation.md`, plan step 7).
+(2) Experimental; `euclidean_function` raises `NotImplementedError` (plan step 8).
 
 Each base type implements specific **protocols** that define their algebraic behavior through method signatures.
 
@@ -51,7 +59,8 @@ These parameterized classes are **functors** that lift algebraic structures to m
 | Constructor          | Signature               | Result Protocol | Description                             |
 |----------------------|-------------------------|-----------------|-----------------------------------------|
 | `Matrix[T]`          | `Ring → Ring`           | `Ring`          | Matrix algebra over rings               |
-| `Complex[T]`         | `Field → Field`         | `Field`         | Complex numbers over arbitrary fields   |
+| `Complex[T]`         | `Ring → Ring`           | `Ring`          | Complex numbers over rings (e.g. Z[i])  |
+| `FieldComplex[T]`    | `Field → Field`         | `Field`         | Complex numbers over fields             |
 | `Fraction[T]`        | `EuclideanRing → Field` | `Field`         | Field of fractions (quotient field)     |
 | `Polynomial[T]`      | `Ring → Ring`           | `Ring`          | Polynomial rings                        |
 | `FieldPolynomial[T]` | `Field → EuclideanRing` | `EuclideanRing` | Polynomials over fields (with division) |
@@ -65,9 +74,9 @@ Each type constructor preserves and transforms algebraic structure:
 - **Composable**: Multiple constructors can be applied sequentially
 - **Idempotent (flattening)**: `Polynomial`, `Complex`, and `Fraction` detect when their argument is already of the same
   type and flatten automatically. `Polynomial[Polynomial]` yields a `Polynomial` (by expanding the nested coefficients),
-- `Fraction[Fraction]` yields a `Fraction` (by cross-multiplying), `Complex[Complex]` yields a `Complex`, and
-  `Matrix[Matrix]` produces the tensor product, a matrix of size
-  $mn\times mn$ if $n \times n$ and $m \times m$ are the sizes of the input matrices.
+  `Fraction[Fraction]` yields a `Fraction` (by cross-multiplying), and `Complex[Complex]` yields a `Complex`.
+- **Block matrices**: `Matrix` applied to $n^2$ matrices of size $m \times m$ builds the block matrix of size
+  $nm \times nm$ over their scalars, so `Matrix(Matrix)` is again a `Matrix[T]` (its `descent()` is `[Matrix, T]`).
 
 ## Protocol System
 
@@ -91,8 +100,11 @@ AbelianGroup          __bool__, zero()
     ↓
 EuclideanRing         __floordiv__, __mod__, __divmod__, euclidean_function(), normalize()
     ↓
-  Field               __truediv__, inverse()
+  Field               __truediv__
 ```
+
+Every field also implements `inverse()`, and the axiom tests use it, but it is not yet part of the `Field` protocol
+(`implementation.md`, plan step 6).
 
 **Comparable** forms an orthogonal hierarchy for ordered structures.
 
@@ -114,10 +126,14 @@ The power of this system lies in its **compositional nature**. Here are some val
 
 ```python
 # Polynomials over integers
-Polynomial[NativeInt]  # → EuclideanRing
+Polynomial[NativeInt]  # → Ring
+
+# Polynomials over the rationals
+FieldPolynomial[Fraction[NativeInt]]  # → EuclideanRing
 
 # Complex numbers over rationals
-Complex[Fraction[NativeInt]]  # → Field
+FieldComplex[Fraction[NativeInt]]  # → Field
+Complex[Fraction[NativeInt]]  # → Ring (Complex is the ring version)
 
 # Matrices over finite fields
 Matrix[Fp]  # → Ring
@@ -132,8 +148,8 @@ Matrix[Polynomial[Complex[Fraction[NativeInt]]]]  # → Ring
 # Polynomials over matrix rings
 Polynomial[Matrix[NativeFloat]]  # → Ring
 
-# Fractions of polynomial rings (rational functions)
-Fraction[Polynomial[NativeInt]]  # → Field
+# Rational functions over the rationals (Fraction needs a Euclidean ring, so FieldPolynomial)
+Fraction[FieldPolynomial[Fraction[NativeInt]]]  # → Field
 ```
 
 ### Infinite Possibilities
@@ -185,7 +201,7 @@ isinstance(polynomial_ring, Field)  # → False (unless over a field)
 Each composite type tracks its construction history:
 
 ```python
-complex_poly = Complex[Polynomial[NativeInt]]()
+complex_poly = Complex(Polynomial(NativeInt(1), NativeInt(2)), Polynomial(NativeInt(3)))
 complex_poly.descent()  # → [Complex, Polynomial, NativeInt]
 ```
 
@@ -200,29 +216,31 @@ blowup in deep type towers.
 ### Basic Usage
 
 ```python
-from py4alg.wrapper import NativeInt
-from py4alg.mapper import Polynomial
+from sandbox.py4alg.mapper import Polynomial
+from sandbox.py4alg.protocols.p_ring import Ring
+from sandbox.py4alg.wrapper.w_int import NativeInt as N
 
-# Create a polynomial ring over integers
-P = Polynomial[NativeInt]
-p = P([1, 2, 3])  # represents 1 + 2x + 3x²
-q = P([4, 5])  # represents 4 + 5x
+# Polynomials over the integers: coefficients are passed one by one, lowest degree first
+p = Polynomial(N(1), N(2), N(3))  # 1 + 2x + 3x²
+q = Polynomial(N(4), N(5))  # 4 + 5x
 
-result = p * q  # polynomial multiplication
+result = p * q  # 4 + 13x + 22x² + 15x³
 assert isinstance(result, Ring)  # automatic protocol satisfaction
 ```
 
 ### Advanced Compositions
 
 ```python
-# Build complex rational functions
-from py4alg.mapper import Complex, Fraction, Polynomial
+from sandbox.py4alg.mapper import FieldComplex, FieldPolynomial, Fraction
+from sandbox.py4alg.protocols.p_field import Field
+from sandbox.py4alg.wrapper.w_float import NativeFloat as F
 
-# Rational functions over complex numbers
-RationalComplex = Fraction[Polynomial[Complex[NativeFloat]]]
-f = RationalComplex(numerator_poly, denominator_poly)
+# Rational functions over the complex numbers: Fraction[FieldPolynomial[FieldComplex[NativeFloat]]]
+num = FieldPolynomial(FieldComplex(F(1.0), F(2.0)))  # the constant 1 + 2i
+den = FieldPolynomial(FieldComplex(F(3.0), F(0.0)), FieldComplex(F(1.0), F(0.0)))  # 3 + x
+f = Fraction(num, den)
 
-# This type automatically implements Field protocol!
+# This type automatically implements the Field protocol!
 assert isinstance(f, Field)
 ```
 

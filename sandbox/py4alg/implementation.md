@@ -1,4 +1,4 @@
-# py4alg — Structure and Suggested Improvements
+# py4alg — Implementation
 
 ## Overview
 
@@ -13,7 +13,7 @@ protocol produces a new type whose protocol can be inferred from the input.
 Concretely the library lets you write:
 
 ```python
-Fraction[Polynomial[NativeInt]]  # rational functions over Z
+Fraction[FieldPolynomial[Fraction[NativeInt]]]  # rational functions over Q
 Matrix[Polynomial[Complex[Fraction[NativeInt]]]]
 ```
 
@@ -28,7 +28,8 @@ property suite (`../../tests/py4alg/check_protocols.py`) that is itself protocol
 sandbox/py4alg/
 |-- __init__.py                 (empty)
 |-- README.md                   long-form design narrative
-|-- roadmap.md                  open todos (gcd cleanup, Polynomial vs FieldPolynomial split, prefixes...)
+|-- implementation.md           this file: structure, conventions, open plan
+|-- roadmap.md                  earlier plan (R1-R7, March 2026) and its status as of 29.09.2026
 |-- testing.md                  open todos for the test suite
 |-- protocols/
 |   |-- __init__.py             (empty)
@@ -221,226 +222,66 @@ Coverage at a glance:
   per concept, each producing homogeneous sample sequences and calling
   `check_axioms`.
 - `test_axioms.py` is the “tower” test that enumerates compositions through
-  `gen_tree`, currently only for the `gen_ints` source (float and complex
+  `gen_tree` up to depth 4, currently only for the `gen_ints` source (float and complex
   sources are commented out — the known floating-point associativity failures
-  mentioned in `../../README.md`).
+  under "Known Limitations" in `README.md`). `test_zm_product.py` does not call
+  `check_axioms` yet (plan, step 7); `test_table.py` prints the `p_table.py` successors.
 - `test_primes.py`, `test_gen_tools.py` — utility coverage.
 
-## Suggested improvements
+## Plan
 
-### 1. Fix `descent()` coverage on `Zm`, `Fp`, `ZmProduct`, `ECpoint`
+Phases 1 and 2 are done (29.09.2026; details in `roadmap.md`): strict `NativeFloat`, docs
+corrected, and a single `gcd` in `util/primes.py`. The earlier suggestions S1, S2, S4 and S9 are
+done or resolved; the second half of S6 (block-matrix `descent()`) was not an issue. Everything
+still open is below; step numbers continue those of `roadmap.md`.
 
-**Status:** Done 28.09.2026 (without the `HasDescent` mixin).
+### Phase 3: protocols that tell the truth
 
-**Observation.** `Zm` (`mapper/m_modular.py:6`), `Fp`
-(`mapper/m_modular.py:94`), `ZmProduct` (`mapper/m_modular_product.py:8`),
-and `ECpoint` (`mapper/m_ec.py:102`) have no `descent()` method. Yet
-`check_axioms` (`check_protocols.py:392`) and every exception report calls
-`descent_str(samples)` (`util/utils.py:64`), which does `cls.descent()` on the
-first sample. Running the full property suite on a `Zm` sample today therefore
-crashes with `AttributeError` before any axiom is checked.
+6. **`inverse()` into the `Field` protocol** (S3). `check_truediv_and_inverse` calls
+   `a.inverse()` on every field sample, and every field (`NativeFloat`, `NativeComplex`, `Fp`,
+   `Fraction`, `FieldComplex`, the test wrappers) already has it, but `Field` declares only
+   `__truediv__`. Check afterwards that all fields still pass `isinstance(x, Field)`.
+7. **`ZmProduct` is no Euclidean ring.** It has `//`, `%`, `normalize()` and
+   `euclidean_function()`, so it passes `isinstance(x, EuclideanRing)`, but Z₃×Z₅ has zero
+   divisors, and `check_division`/`check_divmod` fail with `ZeroDivisionError`. Downgrade to
+   `Ring` (drop `//`, `%`, `divmod`, `euclidean_function`, `normalize`) and give
+   `test_zm_product.py` a `check_axioms` test (S8). *Decision needed.*
+8. **`SymbolicInt`**: `euclidean_function` raises `NotImplementedError` (6 findings in the report,
+   plus one timeout). Either a real, degree-based `euclidean_function` (cf. phase 7) or a
+   downgrade to `Ring`. *Decision needed.*
 
-**Proposed change.** Add `def descent(self): return [type(self)]` to those four
-classes (and any future parameterless base type). Even better: factor a tiny
-mixin `class HasDescent: def descent(self): return [type(self)]` and use it
-across all wrappers.
+### Phase 4: missing tests (S8)
 
-**Benefit.** Restores the property tests for finite rings / curves and removes
-a class of silent failures in the axiom reporter.
+9. **`test_descent.py`**: `descent()` is a flat list of classes of the right length for every type
+   of `gen_tree(depth=4)`; flattening invariants of `Polynomial`, `Complex`, `Fraction`
+   (`Fraction(Fraction(x)).descent() == Fraction(x).descent()`); block-matrix semantics.
+10. **Explicit tests** for `Complex(Complex)` flattening and for block matrices with varied block
+    sizes (`test_matrices.test_matrix_matrix` uses one size).
 
-### 2. Consolidate `cockpit.py` (or fix the name everywhere)
+### Phase 5: `Matrix` consistent, `FieldMatrix` (S6, S5)
 
-**Status:** Resolved 29.09.2026: `params` stays in `util/utils.py`; the docs no longer mention `cockpit.py`.
+11. **`type(self)` instead of `Matrix(...)`** in `mapper/m_matrix.py` (6 places), as in
+    `Polynomial` and `Complex`, so that subclasses propagate through arithmetic.
+12. **`FieldMatrix[T: Field](Matrix[T])`** with `inverse()`, `det()` and Gauss-Jordan
+    `__truediv__` — the ring-class-plus-field-subclass pattern of `Polynomial`/`FieldPolynomial`
+    and `Complex`/`FieldComplex`, and linear algebra over any field. Needs step 6.
 
-**Observation.** `../../CLAUDE.md` and `README.md` (line 106) both reference
-`cockpit.py`/`cockpit.params`, but the actual configuration lives in
-`util/utils.py` as a free dict `params` (lines 35-46) imported as
-`from sandbox.py4alg.util.utils import params`. There is no `cockpit` module.
+### Phase 6: one table of type combinations (S7)
 
-**Proposed change.** Either rename `utils.py` to `cockpit.py` and split out
-`compose/take/comparable_works/descent_str` into a `runtime.py`, or update the
-docs. Pure-data parameters and runtime helpers don’t belong in the same
-file, and the file naming convention (`s_int.py`, `w_int.py`, `m_complex.py`,
-`p_ring.py`) makes the "utils" name an outlier.
+13. **Mappers declare their signature**: input protocol, output protocol, flattening (class
+    attributes); `SUCCESSORS` in `util/gen_samples.py` is derived from them instead of being
+    written by hand.
+14. **`protocols/p_table.py`** (an experimental second encoding of the same idea) becomes the
+    single source of truth or is removed. New mappers (`FieldMatrix`, symbolic types) then plug
+    into the axiom tests and the docs automatically.
 
-**Benefit.** A single, named place for tunables (`atol`, `poly_min`,
-`matrix_size`, ...). Docs and code align.
+### Phase 7: symbolic wrappers (S10)
 
-### 3. Promote `inverse()` to the `Field` protocol
+15. **`SymbolicFloat` / `SymbolicComplex`** over `sympy.Symbol(name, real=True)` /
+    `sympy.Symbol(name)`, and `gen_sym_*` generators in the table of phase 6. Property tests over
+    exact symbolic values give reproducible failures without the floating-point excuse.
 
-**Status:** Open (roadmap phase 3).
+### Decisions needed
 
-**Observation.** `Field` (`protocols/p_field.py`) declares only
-`__truediv__`. But `check_truediv_and_inverse` (`check_protocols.py:267`)
-calls `a.inverse()` for every Field sample, and every Field implementation
-already exposes it (`NativeFloat`, `NativeComplex`, `Fp`, `Fraction`,
-`FieldComplex`). The contract is implicit.
-
-**Proposed change.** Add `def inverse(self) -> Any: ...` to the `Field`
-protocol. Optionally promote `norm()` similarly — many types implement it (`Zm`, `ZmProduct`, `Matrix`, `ECpoint`) but
-it is never a typed obligation.
-
-**Benefit.** Closes a documented gap; `isinstance(x, Field)` becomes a true
-guarantee for callers (e.g. linear algebra over a field needs `inverse()`).
-
-### 4. Remove the `hasattr(a, 'gcd')` dispatch in `gcd()` and the `gcd` method on `FieldPolynomial`
-
-**Status:** Done 29.09.2026, without normalizing remainders (see GCD above).
-
-**Observation.** `util/primes.py:82-97` falls back from `a.gcd(b)` to the
-generic Euclidean loop. The only beneficiary is
-`FieldPolynomial.gcd` (`mapper/m_polynomial.py:122`), which normalises at every
-step to avoid float blow-up. The roadmap (`roadmap.md` item 1) calls for
-removal. The current arrangement is also leaky: `IntWrapper.gcd` in
-`tests/py4alg/test_builtins.py:96` participates in dispatch, which silently
-swaps the algorithm out from under callers.
-
-**Proposed change.** Fold monic-at-each-step into the generic loop *when the
-operand has* `normalize()` *and* is in a Euclidean ring whose units include
-non-trivial inverses — or just always call `normalize()` on the running
-remainder. Then delete `FieldPolynomial.gcd` and the `hasattr` branch.
-Drop `IntWrapper.gcd` too.
-
-**Benefit.** One canonical GCD; removes a hidden polymorphism that defeats
-the "axioms are universal" claim of the test suite.
-
-### 5. Split `Polynomial` vs `FieldPolynomial` symmetrically with `Complex` vs `FieldComplex`
-
-**Status:** Open (roadmap phase 5, `FieldMatrix`).
-
-**Observation.** `Polynomial` and `Complex` follow the same pattern (use
-`type(self)` in arithmetic so the field-subclass propagates), but the *naming*
-is asymmetric: ring constructor is `Polynomial`, field-extension subclass is
-`FieldPolynomial`; ring constructor is `Complex`, field-extension subclass is
-`FieldComplex`. Good. But `Fraction` does not have a `RingFraction` variant
-— it always requires `EuclideanRing`. The roadmap (`roadmap.md` item 4)
-explicitly motivated the `Polynomial` split, and the same logic could be
-applied to `Matrix` (a `FieldMatrix` could expose inverse / determinant /
-solve when the entries form a field).
-
-**Proposed change.** Introduce `FieldMatrix[T: Field](Matrix[T])` with
-`inverse()`, `det()`, and Gauss–Jordan-based `__truediv__`. Make `Matrix`
-strictly `Ring`-typed and remove `type(self)`-less constructors so the
-specialisation propagates.
-
-**Benefit.** Symmetric API, opens the door to linear algebra over arbitrary
-fields, and exercises another corner of the functor lattice. Fits the
-existing pattern of "ring class + Field subclass".
-
-### 6. Make `Matrix` consistent with the other constructors (`type(self)` + `descent()` correctness)
-
-**Status:** `type(self)`: open (roadmap phase 5). The `descent()` part is not an issue: a block matrix is flattened, so `[Matrix, T]` is correct.
-
-**Observation.** `Matrix.__add__`/`__sub__`/`__mul__`/`__neg__`/`zero`/`one`
-in `mapper/m_matrix.py:49-103` all hard-code the bare class `Matrix(...)` —
-unlike `Polynomial` (`type(self)`) or `Complex` (`type(self)`). The
-`_descent` building (`mapper/m_matrix.py:28,42`) similarly hardcodes the class
-`Matrix`. This blocks any subclass (see item 5) and the block-matrix branch
-records `descent = args[0].descent()` without prepending the wrapping `Matrix`,
-so a block matrix of matrices loses one level of descent compared with a
-nested fraction or polynomial.
-
-**Proposed change.** Replace `Matrix(*...)` with `type(self)(*...)`, and in the
-block-matrix branch prepend `[type(self)]`. Provide explicit `Matrix(Matrix)`
-flattening semantics in the docstring (block matrix vs tensor product) so the
-non-idempotent contract is documented at the call site.
-
-**Benefit.** Subclassing works; `descent_str` and the type table accurately
-reflect nesting depth.
-
-### 7. Replace the ad-hoc `gen_tree`/`SUCCESSORS` adjacency with a generated cartesian product
-
-**Status:** Open (roadmap phase 6).
-
-**Observation.** `util/gen_samples.py:104-118` hand-encodes the legal
-constructor combinations. `protocols/p_table.py` is a separate
-stub at experimenting with the same idea via `(Cls, in_protocol) ->
-out_protocol`. The two encodings will drift. The roadmap (project memory:
-"compound type generator") explicitly wants a single source of truth.
-
-**Proposed change.** Tag each mapper with a class attribute or pair like
-`SOURCE_PROTOCOL = Ring`, `TARGET_PROTOCOL = Ring`, plus an `IDEMPOTENT`
-flag. Then derive `SUCCESSORS` automatically by enumerating
-`{cls : input_protocol matched by output_protocol}`. Make `p_table.py` the
-authoritative table and drive both the property-test enumerator and the
-documentation table in `../../README.md` from it.
-
-**Benefit.** Single source of truth; new mappers (e.g. `FieldMatrix`,
-`PowerSeries`, `Quaternion`, `Gaussian`) plug in automatically into both the
-property runner and the docs.
-
-### 8. Add the missing test corners
-
-**Status:** Open (roadmap phases 3 and 4).
-
-**Observation.** Several known weak spots are not covered:
-
-- `Fraction[Fraction[NativeInt]]` flattening is mentioned in the docs and the
-  README but only `test_fractions.py` covers `gen_fractions(gen_fractions(...))`
-  superficially (it is in `fraction_samples` but only with `nat_ints`).
-- `Complex[Complex[...]]` flattening is documented but no test exercises it.
-- `Polynomial[Polynomial[NativeInt]]` is tested via
-  `polynomials_polynomials_int` in `test_many.py` but only for the int case;
-  the `_descent` of the flattened result is not asserted.
-- `Matrix[Matrix[...]]` block matrix axioms get one quick test (`test_matrices.test_matrix_matrix`) but the block
-  dimensions aren't varied.
-- `ZmProduct` claims to be a `Ring`, but `test_zm_product.py` is not even
-  imported by the axiom runner — it doesn't use `check_axioms`. Need to
-  confirm it actually satisfies the ring axioms via the standard suite.
-- `SymbolicInt.euclidean_function` raises `NotImplementedError`, which the
-  axiom suite handles gracefully — but that means `check_division` silently
-  skips the euclidean-function size constraint for symbolic inputs.
-
-**Proposed change.** Add a `test_descent.py` that, for every reachable type in
-`gen_tree(depth=4)`, asserts:
-
-1. `descent()` is a flat `list[type]` of length equal to nesting depth + 1,
-2. all entries are classes,
-3. flattening invariants hold (`Fraction(Fraction(x)).descent() == Fraction(x).descent()`).
-   Add `check_axioms` parametrisation to `test_zm_product.py`. Add an explicit
-   test that `SymbolicInt` either implements a real `euclidean_function` (using
-   sympy degree on the polynomial form) or that it is downgraded to `Ring`
-   (no `__floordiv__` / `__mod__`).
-
-**Benefit.** The compositional promises become testable instead of
-documentation-only, and the symbolic wrapper is forced to either deliver or
-declare a smaller protocol.
-
-### 9. Fix the silent `NativeFloat` constructor and the duplicated `normalize` in `ComplexWrapper`
-
-**Status:** Done 29.09.2026.
-
-**Observation.** `NativeFloat.__init__` (`wrapper/w_float.py:12-16`) is the
-only wrapper without a final `else: raise TypeError(...)`. Passing `NativeFloat(1)`
-silently produces an object with `_value` *unset* — subsequent operations raise
-opaque `AttributeError`. Meanwhile `ComplexWrapper` in
-`tests/py4alg/test_builtins.py:195-199` declares `normalize` twice, the second
-overriding the first identically — almost certainly a copy-paste bug.
-
-**Proposed change.** Add the `else: raise TypeError(...)` branch to
-`NativeFloat.__init__` mirroring `NativeInt` and `NativeComplex`. Delete the
-duplicate `normalize` in `ComplexWrapper`.
-
-**Benefit.** Fail-fast at construction time; no dead duplicate code in tests.
-
-### 10. Add the symbolic wrappers planned in the roadmap
-
-**Status:** Open (roadmap phase 7).
-
-**Observation.** `s_int.py` (`SymbolicInt`) is a stub: `euclidean_function`
-raises `NotImplementedError`, and there is no `SymbolicFloat`/`SymbolicComplex`.
-The memory note explicitly lists "symbolic wrappers" as the next milestone.
-The test suite already has `test_symbolics.py` but it tests only three samples
-and skips division.
-
-**Proposed change.** Implement `SymbolicFloat`/`SymbolicComplex` over
-`sympy.Symbol(name, real=True)` / `sympy.Symbol(name)`. Replace
-`euclidean_function = NotImplementedError` with `degree`-based logic for
-polynomial-of-symbol expressions, falling back to `1` for atoms. Wire
-`gen_sym_ints/floats/complex` into `gen_samples.py` and `SUCCESSORS` so the
-compositional axiom suite runs over symbolic samples too — this is the
-cleanest way to detect *real* axiom violations (no floating-point excuse).
-
-**Benefit.** Property tests over symbolic samples give exact, reproducible
-failures; eliminates the "deep towers over floats fail" loophole; unlocks
-symbolic differentiation/integration once polynomial APIs are exposed.
+- `ZmProduct`: downgrade to `Ring` (step 7)?
+- `SymbolicInt`: real `euclidean_function`, or downgrade to `Ring` (step 8)?

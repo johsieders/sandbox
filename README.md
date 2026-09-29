@@ -7,7 +7,7 @@ PyCharm.
 
 - Main source: `sandbox/stepfunctions/stepfun.py` and `intervals.py`
 - Progressive versions: `stepfun_n.py` files document the evolution of the solution.
-- Main tests: `tests/test_stepfunctions/test_stepfun_f.py` and `test_intervals_b.py`
+- Main tests: `tests/stepfunctions/test_stepfun_f.py` and `test_intervals_b.py`
 
 The important thing is that I didn't edit a single line. The code was generated entirely automatically. It took me
 around 10 hours to create this small library. The generated code was generally very good. GPT made a few subtle mistakes
@@ -20,7 +20,8 @@ corrected the incorrect expected values, and that was the only manual editing I 
 invariant/axiom-driven) test suites, which were much more reliable and required no manual edits. This was a huge step
 forward; the tests passed (ignoring minor issues) on the first run.
 
-The full suite runs in about 15 seconds on a MacBook Air M4; also tested on Windows 11, Codespace, and Raspberry Pi 5.
+The full suite (about 30,700 tests) runs in about one minute on a MacBook Air M4 (`pytest -n auto`); also tested on
+Windows 11, Codespace, and Raspberry Pi 5.
 
 *This project demonstrates how to use AI-assisted programming for rapid, mathematically sound library development.*
 
