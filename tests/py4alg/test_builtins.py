@@ -62,6 +62,12 @@ class FieldMixin(AlgebraicMixin):
             raise ZeroDivisionError(f"{self.__class__.__name__}.inverse(): division by zero")
         return self.__class__(1) / self
 
+    def euclidean_function(self):
+        """In a field every nonzero element has Euclidean value 1; undefined on zero."""
+        if self == self.__class__.zero():
+            raise ValueError("euclidean_function is undefined on zero")
+        return 1
+
 
 # Inheritance-based wrappers that extend built-in types with algebraic methods
 class IntWrapper(int, AlgebraicMixin):
@@ -88,6 +94,11 @@ class IntWrapper(int, AlgebraicMixin):
 
     def normalize(self):
         return IntWrapper(abs(int(self)))
+
+    def euclidean_function(self):
+        if not self:
+            raise ValueError("euclidean_function is undefined on zero")
+        return abs(int(self))
 
     @classmethod
     def zero(cls): return cls(0)
@@ -218,7 +229,7 @@ def wrapped_complex_samples() -> List[ComplexWrapper]:
 
 # Test functions following the pattern of test_protocol_samples
 
-builtin_samples = (wrapped_int_samples(), wrapped_int_samples(), wrapped_int_samples())
+builtin_samples = (wrapped_int_samples(), wrapped_float_samples(), wrapped_complex_samples())
 
 
 @pytest.mark.parametrize("samples", builtin_samples)

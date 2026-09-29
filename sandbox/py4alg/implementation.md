@@ -94,9 +94,9 @@ Notes:
   `euclidean_function = 1`. All field implementations honour this convention.
 - `inverse()` is part of the `Field` protocol (since 29.09.2026); the field property tests
   (`check_truediv_and_inverse`) rely on it.
-- The test wrappers `IntWrapper`, `FloatWrapper`, `ComplexWrapper` (`tests/py4alg/test_builtins.py`)
-  have no `euclidean_function()`, so they only pass as `Ring` and `check_axioms` checks only the
-  ring axioms on them.
+- The test wrappers in `tests/py4alg/test_builtins.py` satisfy the full protocols (since
+  29.09.2026): `IntWrapper` is a `EuclideanRing`, `FloatWrapper` and `ComplexWrapper` are
+  `Field`s, and `test_any` runs `check_axioms` on all three.
 
 ## Wrappers (base types)
 
@@ -285,9 +285,8 @@ The remaining 12 are the known float towers `Fraction > FieldPolynomial > Native
     `sympy.Symbol(name)`, and `gen_sym_*` generators in the table of phase 6. Property tests over
     exact symbolic values give reproducible failures without the floating-point excuse.
 
-### Noticed on the way
-
-- The test wrappers in `test_builtins.py` lack `euclidean_function()`, so their Euclidean and
-  field axioms (division, gcd, inverse) are never checked. Adding it (`abs` for `IntWrapper`,
-  `1` for the float and complex wrappers, `ValueError` on zero) would let `check_axioms` run the
-  full checks on them.
+Also done in phase 3: the test wrappers in `test_builtins.py` got `euclidean_function()` (`abs`
+for `IntWrapper`, `1` for the float and complex wrappers, `ValueError` on zero). Before, they
+passed only as `Ring`, so their division, gcd and inverse axioms were never checked; and
+`builtin_samples` listed the int samples three times, so the float and complex wrappers were not
+tested at all. Now `check_axioms` runs the full Euclidean and field checks on all three; they pass.
