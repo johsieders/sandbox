@@ -75,7 +75,10 @@ Not an issue:
 
 Open, in this order:
 
-Phase 1: quick fixes
+Phase 1: quick fixes -- done 29.09.2026
+   NativeFloat rejects non-floats (TypeError), like NativeInt and NativeComplex; duplicate
+   normalize removed. params stays in util/utils.py (decision); CLAUDE.md, README and
+   py4alg_structure.md corrected (cockpit.py, check_protocols.py, Matrix(Matrix), status per item).
 1. S9 NativeFloat.__init__ gets "else: raise TypeError" (NativeFloat(1) is accepted silently and
    fails later with AttributeError); delete the duplicate normalize in ComplexWrapper
    (tests/py4alg/test_builtins.py).
@@ -83,7 +86,11 @@ Phase 1: quick fixes
    README, or rename. Also in CLAUDE.md: check_properties.py -> check_protocols.py, and the
    Matrix(Matrix) sentence. Bring py4alg_structure.md up to date (done items, S6).
 
-Phase 2: one gcd (R1 = S4)
+Phase 2: one gcd (R1 = S4) -- done 29.09.2026
+   Only primes.gcd remains (plain Euclidean loop, no dispatch, no normalization). Step 4 was
+   measured and dropped: plain loop 19 findings (was 30, fewer in the float towers), normalized
+   remainders 29 and breaks test_primes (plain ints have no normalize()). Bug found on the way:
+   IntWrapper.normalize returned 1 for every nonzero value; now abs(self). Mac and Pi identical.
 3. Delete FieldPolynomial.gcd, the hasattr(a, 'gcd') dispatch in primes.gcd, and the two gcd
    methods of the test wrappers in test_builtins.py.
 4. Keep float polynomials stable: the generic loop normalizes the running remainder if it has
@@ -117,7 +124,5 @@ Phase 7: symbolic wrappers (S10)
     exact values, no floating-point excuse.
 
 Decisions needed:
-- S2: rename to cockpit.py, or fix the docs?
-- NativeFloat(1): reject ints, or convert to float?
 - ZmProduct: downgrade to Ring?
 - SymbolicInt: real euclidean_function, or downgrade to Ring?

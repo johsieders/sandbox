@@ -103,7 +103,7 @@ EuclideanRing         __floordiv__, __mod__, __divmod__, euclidean_function(), n
 - **`euclidean_function()`**: Returns `int`. Raises `ValueError` on zero. Fields: `1`. Integers: `abs(value)`.
   Polynomials: `degree()`.
 - **`zero()`**: Instance method (not classmethod) for parameterized types, preserving instance parameters.
-- **`__bool__()`**: Tests for non-zeroness. NativeFloat uses tolerance from `cockpit.params`.
+- **`__bool__()`**: Tests for non-zeroness. NativeFloat uses tolerance from `params` in `util/utils.py`.
 - **GCD**: Free function in `util/primes.py` using the generic Euclidean algorithm. Not a method on types.
 
 ## Compositional Examples
@@ -146,20 +146,21 @@ The compositional system generates **infinitely many valid types**:
 
 ## Rigorous Testing Framework
 
-### Property Verification (`check_properties.py`)
+### Property Verification (`tests/py4alg/check_protocols.py`)
 
 The testing system validates algebraic axioms through composable check functions:
 
 - **`check_abelian_group(samples)`**: Identity, inverse, commutativity, associativity of addition
-- **`check_rings(samples)`**: All abelian group checks + multiplicative identity, associativity, commutativity,
-  distributivity, annihilator
-- **`check_euclidean_rings(samples)`**: All ring checks + division, divmod, GCD properties (divisibility, commutativity,
-  associativity, identity)
+- **`check_rings(samples)`**: All abelian group checks + multiplicative identity, associativity, distributivity,
+  annihilator
+- **`check_euclidean_rings(samples)`**: All ring checks + division, divmod, commutativity of multiplication, GCD
+  properties (divisibility, commutativity, associativity, identity)
 - **`check_fields(samples)`**: All Euclidean ring checks + true division and inverse
 
-### Sample Generation (`util/gen_samples.py`)
+### Sample Generation (`util/gen_samples.py`, `util/def_samples.py`)
 
-Factory functions create typed sample lists for testing:
+`gen_samples.py` has infinite generators and `gen_tree`; `def_samples.py` has factory functions that create typed
+sample lists for testing:
 
 - `def_nat_ints(...)`, `def_nat_floats(...)`, `def_nat_complex(...)` — base types
 - `def_fractions(...)`, `def_polynomials(...)`, `def_field_polynomials(...)` — composite types

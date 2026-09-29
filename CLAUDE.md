@@ -24,7 +24,7 @@ development.
 - **Protocols** (`protocols/`): Abstract algebraic structures (Ring, Field, EuclideanRing, etc.)
 - **Wrappers** (`wrapper/`): Native type wrappers (NativeInt, NativeFloat, NativeComplex)
 - **Mappers** (`mapper/`): Complex algebraic types (Polynomial, FieldPolynomial, Matrix, Complex, Fraction, Fp, Zm, ZmProduct, ECpoint)
-- **Configuration**: `cockpit.py` contains test parameters; `util/gen_samples.py` for sample generation
+- **Configuration**: the `params` dict in `util/utils.py` (tolerances `atol`/`rtol`, sample sizes, seed); samples from `util/gen_samples.py` (infinite generators, `gen_tree`) and `util/def_samples.py` (finite lists)
 - **Key pattern**: Types use `_descent` attribute to track construction hierarchy
 
 ### Other Modules
@@ -91,7 +91,7 @@ Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest
 - `_descent` attribute tracks type construction hierarchy
 - Functor system maps algebraic properties through type constructors
 - `Polynomial[T: Ring]` is the base ring; `FieldPolynomial[T: Field]` adds `//`, `%`, `divmod`, and `normalize`
-- **Idempotent (flattening) constructors**: `Polynomial`, `Complex`, and `Fraction` flatten when applied to their own type (e.g., `Fraction(Fraction)` → `Fraction`). `Matrix` does not flatten — `Matrix(Matrix)` is a matrix of matrices.
+- **Idempotent (flattening) constructors**: `Polynomial`, `Complex`, and `Fraction` flatten when applied to their own type (e.g., `Fraction(Fraction)` → `Fraction`). `Matrix` builds a block matrix instead: `Matrix(m1, m2, m3, m4)` with n×n blocks is a 2n×2n matrix over the blocks' scalars (so its `descent()` stays `[Matrix, T]`).
 
 ### Key Conventions for Algebraic Types
 
@@ -99,16 +99,16 @@ Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest
 - **`euclidean_function()`**: Required by `EuclideanRing`. Returns an `int`. Must raise `ValueError` on zero. For fields return `1`; for integers return `abs(value)`; for polynomials return `degree()`.
 - **`zero()`**: Must be an instance method (not classmethod) for parameterized types so it preserves the instance's parameters (e.g., curve parameters for ECpoint, modulus for Zm).
 - **`__bool__()`**: Required by `AbelianGroup`. Tests for non-zeroness. Used for trailing-zero trimming in polynomials and for GCD termination.
-- **`__eq__()`**: Fraction uses cross-multiplication (`a.num * b.den == a.den * b.num`), not `close_to`. NativeFloat uses tolerance-based comparison (configured via `cockpit.params`).
+- **`__eq__()`**: Fraction uses cross-multiplication (`a.num * b.den == a.den * b.num`), not `close_to`. NativeFloat uses tolerance-based comparison (configured via `params` in `util/utils.py`).
 - **GCD**: Defined as a free function in `util/primes.py`, not as a method. Uses the generic Euclidean algorithm on any `EuclideanRing`. Commutativity depends on correct `normalize()`.
 - **Fraction simplification**: The `Fraction` constructor divides numerator and denominator by their GCD directly (without normalizing the GCD first), so that field-valued fractions actually simplify.
 
 ### Testing Strategy
 
 - **Property-based testing**: Tests mathematical axioms and invariants rather than specific expected values
-- **Axiomatic approach**: `check_properties.py` verifies ring/field/Euclidean ring axioms (commutativity, associativity, distributivity, GCD properties)
-- **Tolerance-based equality**: NativeFloat uses `atol`/`rtol` from `cockpit.params`; all other types use exact equality
-- **Sample generation**: `util/gen_samples.py` provides factory functions (`def_nat_ints`, `def_nat_floats`, `def_polynomials`, `def_field_polynomials`, `def_fractions`, etc.)
+- **Axiomatic approach**: `tests/py4alg/check_protocols.py` verifies ring/field/Euclidean ring axioms (commutativity, associativity, distributivity, GCD properties)
+- **Tolerance-based equality**: NativeFloat/NativeComplex use `atol`/`rtol` from `params` in `util/utils.py`; all other types use exact equality
+- **Sample generation**: `util/gen_samples.py` provides infinite generators (`gen_ints`, `gen_polynomials`, …) and `gen_tree`; `util/def_samples.py` provides finite lists (`def_nat_ints`, `def_nat_floats`, `def_polynomials`, `def_field_polynomials`, `def_fractions`, etc.)
 - **Known limitation**: Deep type towers over floats (e.g., `Fraction[FieldPolynomial[NativeFloat]]`) can fail associativity due to floating-point accumulation in polynomial GCD and cross-multiplication
 
 ### Error Handling

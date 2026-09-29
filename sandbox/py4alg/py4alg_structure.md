@@ -104,9 +104,8 @@ Notes:
 | `NativeComplex` | `complex`             | AbelianGroup, Ring, EuclideanRing, Field             | Tolerance `__eq__`; no `__lt__` (correctly not Comparable).      |
 | `SymbolicInt`   | `sympy.Symbol`/`Expr` | AbelianGroup, Ring, EuclideanRing (Comparable)       | Experimental; `euclidean_function` raises `NotImplementedError`. |
 
-All wrappers expose `descent()` returning `[Cls]`. `NativeFloat.__init__` is
-silent on bad input (no raise on unknown type); the other wrappers raise
-`TypeError`.
+All wrappers expose `descent()` returning `[Cls]` and raise `TypeError` on foreign input
+(`NativeFloat(1)` is rejected like `NativeInt(1.0)`; since 29.09.2026).
 
 ## Mappers (type constructors)
 
@@ -133,11 +132,9 @@ no subclass exists, but the inconsistency is worth noting.
 
 - **`descent()`** is the runtime construction trace, e.g.
   `Fraction(Polynomial(NativeInt(1)), ...).descent() == [Fraction, Polynomial, NativeInt]`.
-  It is **only** implemented on the four wrappers and on `Polynomial`,
-  `FieldPolynomial`, `Fraction`, `Complex`, `FieldComplex`, `Matrix`. **`Zm`, `Fp`, `ZmProduct`, and `ECpoint` do not
-  implement `descent()`** — so
-  `descent_str(samples)` (`util/utils.py:64`) will crash on these types and the
-  axiom report cannot label their failures. This is an outright gap.
+  Every type implements it (since 28.09.2026 also `Zm`, `Fp`, `ZmProduct`, `ECpoint`, which
+  return `[Cls]`). A block matrix `Matrix(m1, m2, m3, m4)` is flattened into a matrix over the
+  blocks' scalars, so its descent is `[Matrix, T]`, which is correct.
 - **`zero()`/`one()`** are instance methods on every parameterised type so they
   preserve type parameters (modulus for `Zm`/`Fp`, curve for `ECpoint`, etc.),
   but they are `@classmethod` on `NativeInt`, `NativeFloat`, `NativeComplex`,
@@ -160,22 +157,19 @@ no subclass exists, but the inconsistency is worth noting.
   with `params['atol']`, `params['rtol']`. `Fraction.__eq__` uses
   `a.num*b.den == a.den*b.num` so it inherits whatever equality the underlying
   ring uses. All other types use structural equality.
-- **GCD** is a free function in `util/primes.py`:
+- **GCD** is a single free function in `util/primes.py` (since 29.09.2026 the only one; the
+  `hasattr(a, 'gcd')` dispatch, `FieldPolynomial.gcd` and the test wrappers' `gcd` are gone):
   ```python
   def gcd[T: EuclideanRing](a, b):
-      if hasattr(a, 'gcd'):
-          return a.gcd(b)
       while b:
           a, b = b, a % b
       return a
   ```
-  The `hasattr(a, 'gcd')` dispatch exists solely so that
-  `FieldPolynomial.gcd` (a stabilised, monic-at-each-step variant) is picked up
-  — but the roadmap (`roadmap.md` item 1) explicitly says this should go away.
-  The fallback does **not** normalize at the end, which makes
-  `gcd(a, b)` and `gcd(b, a)` differ by a unit; that is why
-  `check_gcd_commutativity` (`check_protocols.py:215`) normalises both
-  results before comparing.
+  It does **not** normalize, so `gcd(a, b)` and `gcd(b, a)` may differ by a unit; that is why
+  the gcd checks in `check_protocols.py` normalize both results before comparing. Normalizing the
+  running remainder (the old `FieldPolynomial.gcd`) was measured and dropped: with the plain loop
+  the py4alg report has 19 findings instead of 30 (fewer in the float towers), with normalized
+  remainders 29 — and plain ints, which `primes.gcd` also serves, have no `normalize()`.
 - **Idempotent constructors** (`Polynomial`, `Complex`, `Fraction`) detect
   `isinstance(args[0], Cls)` and flatten. `Matrix` instead treats a sequence of
   matrix blocks as a block matrix — this is documented but easy to forget.
@@ -194,13 +188,18 @@ no subclass exists, but the inconsistency is worth noting.
 
 The entry point is `check_axioms(samples)` which:
 
-1. Picks the strongest matching protocol via `isinstance(samples[0], Field|EuclideanRing|Ring)`.
+1. Picks the strongest matching protocol via
+   `isinstance(samples[0], Field|EuclideanRing|Ring|AbelianGroup)` (abelian groups since
+   28.09.2026, e.g. `ECpoint`).
 2. Adds `Comparable` checks iff `comparable_works(samples[0])` returns `True`.
-3. Wraps each axiom in `try/except (AssertionError, ZeroDivisionError, ...)` and
-   appends failures to the module-level `exception_report`. The companion
-   `black_box` deque stores the last 5 sample descents to survive timeouts.
-4. Both lists are aggregated across xdist workers in `conftest.py` and dumped
-   in `pytest_terminal_summary`.
+3. Reports instead of failing: a violated axiom or a numerical problem (`GRACEFUL`:
+   AssertionError, ArithmeticError, ValueError, NotImplementedError, RecursionError) is recorded
+   per case and the loop continues; any other exception is recorded under the check's name by the
+   `@graceful` decorator and the next check runs; a pytest-timeout is recorded as `timeout`.
+   Records go to the module-level `exception_report`; the `black_box` deque stores the last
+   5 sample descents to survive hangs.
+4. Both lists are aggregated across xdist workers in `conftest.py`, printed in
+   `pytest_terminal_summary` and written to `reports/py4alg_exceptions_<host>.txt`.
 
 Samples are produced in two complementary styles:
 
@@ -231,6 +230,8 @@ Coverage at a glance:
 
 ### 1. Fix `descent()` coverage on `Zm`, `Fp`, `ZmProduct`, `ECpoint`
 
+**Status:** Done 28.09.2026 (without the `HasDescent` mixin).
+
 **Observation.** `Zm` (`mapper/m_modular.py:6`), `Fp`
 (`mapper/m_modular.py:94`), `ZmProduct` (`mapper/m_modular_product.py:8`),
 and `ECpoint` (`mapper/m_ec.py:102`) have no `descent()` method. Yet
@@ -249,6 +250,8 @@ a class of silent failures in the axiom reporter.
 
 ### 2. Consolidate `cockpit.py` (or fix the name everywhere)
 
+**Status:** Resolved 29.09.2026: `params` stays in `util/utils.py`; the docs no longer mention `cockpit.py`.
+
 **Observation.** `../../CLAUDE.md` and `README.md` (line 106) both reference
 `cockpit.py`/`cockpit.params`, but the actual configuration lives in
 `util/utils.py` as a free dict `params` (lines 35-46) imported as
@@ -265,6 +268,8 @@ file, and the file naming convention (`s_int.py`, `w_int.py`, `m_complex.py`,
 
 ### 3. Promote `inverse()` to the `Field` protocol
 
+**Status:** Open (roadmap phase 3).
+
 **Observation.** `Field` (`protocols/p_field.py`) declares only
 `__truediv__`. But `check_truediv_and_inverse` (`check_protocols.py:267`)
 calls `a.inverse()` for every Field sample, and every Field implementation
@@ -279,6 +284,8 @@ it is never a typed obligation.
 guarantee for callers (e.g. linear algebra over a field needs `inverse()`).
 
 ### 4. Remove the `hasattr(a, 'gcd')` dispatch in `gcd()` and the `gcd` method on `FieldPolynomial`
+
+**Status:** Done 29.09.2026, without normalizing remainders (see GCD above).
 
 **Observation.** `util/primes.py:82-97` falls back from `a.gcd(b)` to the
 generic Euclidean loop. The only beneficiary is
@@ -298,6 +305,8 @@ Drop `IntWrapper.gcd` too.
 the "axioms are universal" claim of the test suite.
 
 ### 5. Split `Polynomial` vs `FieldPolynomial` symmetrically with `Complex` vs `FieldComplex`
+
+**Status:** Open (roadmap phase 5, `FieldMatrix`).
 
 **Observation.** `Polynomial` and `Complex` follow the same pattern (use
 `type(self)` in arithmetic so the field-subclass propagates), but the *naming*
@@ -320,6 +329,8 @@ existing pattern of "ring class + Field subclass".
 
 ### 6. Make `Matrix` consistent with the other constructors (`type(self)` + `descent()` correctness)
 
+**Status:** `type(self)`: open (roadmap phase 5). The `descent()` part is not an issue: a block matrix is flattened, so `[Matrix, T]` is correct.
+
 **Observation.** `Matrix.__add__`/`__sub__`/`__mul__`/`__neg__`/`zero`/`one`
 in `mapper/m_matrix.py:49-103` all hard-code the bare class `Matrix(...)` —
 unlike `Polynomial` (`type(self)`) or `Complex` (`type(self)`). The
@@ -339,6 +350,8 @@ reflect nesting depth.
 
 ### 7. Replace the ad-hoc `gen_tree`/`SUCCESSORS` adjacency with a generated cartesian product
 
+**Status:** Open (roadmap phase 6).
+
 **Observation.** `util/gen_samples.py:104-118` hand-encodes the legal
 constructor combinations. `protocols/p_table.py` is a separate
 stub at experimenting with the same idea via `(Cls, in_protocol) ->
@@ -357,6 +370,8 @@ documentation table in `../../README.md` from it.
 property runner and the docs.
 
 ### 8. Add the missing test corners
+
+**Status:** Open (roadmap phases 3 and 4).
 
 **Observation.** Several known weak spots are not covered:
 
@@ -393,6 +408,8 @@ declare a smaller protocol.
 
 ### 9. Fix the silent `NativeFloat` constructor and the duplicated `normalize` in `ComplexWrapper`
 
+**Status:** Done 29.09.2026.
+
 **Observation.** `NativeFloat.__init__` (`wrapper/w_float.py:12-16`) is the
 only wrapper without a final `else: raise TypeError(...)`. Passing `NativeFloat(1)`
 silently produces an object with `_value` *unset* — subsequent operations raise
@@ -407,6 +424,8 @@ duplicate `normalize` in `ComplexWrapper`.
 **Benefit.** Fail-fast at construction time; no dead duplicate code in tests.
 
 ### 10. Add the symbolic wrappers planned in the roadmap
+
+**Status:** Open (roadmap phase 7).
 
 **Observation.** `s_int.py` (`SymbolicInt`) is a stub: `euclidean_function`
 raises `NotImplementedError`, and there is no `SymbolicFloat`/`SymbolicComplex`.
