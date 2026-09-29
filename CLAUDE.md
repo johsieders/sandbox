@@ -56,7 +56,7 @@ pytest tests/py4alg/test_axioms_bench.py --benchmark-enable --benchmark-only --b
 
 ### Dependencies
 
-Python 3.14.7 on Mac and Pi, managed by uv and pinned in `.python-version`. Dependencies are declared in
+Python 3.14.7 on Mac, Pi and Windows, managed by uv and pinned in `.python-version`. Dependencies are declared in
 `pyproject.toml` (test tools in the `dev` group) and pinned in `uv.lock`; commit both together.
 
 - Install / update the venv: `uv sync` (creates `.venv`, installs exact locked versions, editable `sandbox`)
@@ -67,6 +67,13 @@ Python 3.14.7 on Mac and Pi, managed by uv and pinned in `.python-version`. Depe
 Mac/Pi 5 setup (Pi `~/sandbox` is a git-free mirror, never edit/pull there; run `tools/sync_pi.sh`
 after edits made outside PyCharm; `python tools/check_pi.py` checks the whole setup, e.g. after a reconnect;
 the Pi is the SSH alias `pi5`): see `docs/multi_platform.md`.
+
+Windows PC (Intel, NVIDIA GPU; `docs/multi_platform.md` §10): its own git clone from GitHub, same uv
+environment via `uv sync` (torch `2.14.0+cu130`), no mirroring, no Pi access — the Mac/Pi scripts
+(`sync_pi.sh`, `check_pi.py`, `compare_hosts.py`, `remote-setup.sh`) are not used there. Two clones
+now: pull before working; after a `git pull` on the Mac, run `tools/sync_pi.sh`. `.gitattributes` keeps
+`*.sh` LF. On Windows pytest-timeout has no SIGALRM and ends the process on a timeout, so
+`check_axioms` cannot report it as a graceful `timeout`.
 
 Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest-benchmark
 
