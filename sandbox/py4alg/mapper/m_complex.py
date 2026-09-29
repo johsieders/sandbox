@@ -18,7 +18,8 @@ class Complex[T: Ring]:
             b = args[1]
 
         if isinstance(a, Complex) and isinstance(b, Complex):
-            self._descent = args[0].descent()
+            # flattened: same components, but our class (e.g. Complex built from FieldComplexes)
+            self._descent = [type(self)] + args[0].descent()[1:]
             self._re = a._re - b._im
             self._im = a._im + b._re
         else:

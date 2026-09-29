@@ -4,7 +4,7 @@ import random
 from itertools import cycle
 from typing import Any, Sequence, Iterator, Iterable, Callable, List
 
-from sandbox.py4alg.mapper import Complex, FieldComplex, Fp, Fraction, Matrix, Polynomial, FieldPolynomial
+from sandbox.py4alg.mapper import Complex, FieldComplex, FieldMatrix, Fp, Fraction, Matrix, Polynomial, FieldPolynomial
 from sandbox.py4alg.mapper.m_modular import Zm
 from sandbox.py4alg.util.utils import compose, params, take
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
@@ -93,6 +93,7 @@ gen_field_complex = gen_make(FieldComplex, min=1, max=2)
 gen_polynomials = gen_make(Polynomial, params['poly_min'], params['poly_max'])
 gen_field_polynomials = gen_make(FieldPolynomial, params['poly_min'], params['poly_max'])
 gen_matrices = gen_make(Matrix, params['matrix_size'], params['matrix_size'])
+gen_field_matrices = gen_make(FieldMatrix, params['matrix_size'], params['matrix_size'])
 
 # meaning of successors:
 # gen_x : (gen_y, gen_z) means that gen_y, gen_z accept gen_x as argument
@@ -106,14 +107,15 @@ SUCCESSORS = {gen_ints: (gen_nat_ints,),  # compose(gen_nat_ints, gen_ints)
               gen_complex_: (gen_nat_complex,),
               gen_nat_ints: (gen_nat_ints, gen_fractions, gen_matrices, gen_polynomials),
               gen_nat_floats: (gen_nat_floats, gen_complex, gen_field_complex, gen_fractions, gen_matrices,
-                               gen_polynomials, gen_field_polynomials),
+                               gen_polynomials, gen_field_polynomials, gen_field_matrices),
               gen_nat_complex: (gen_nat_complex, gen_complex, gen_field_complex, gen_fractions, gen_matrices,
-                                gen_polynomials, gen_field_polynomials),
+                                gen_polynomials, gen_field_polynomials, gen_field_matrices),
               gen_complex: (gen_complex, gen_matrices, gen_polynomials,),
-              gen_field_complex: (gen_field_complex, gen_fractions, gen_field_polynomials),
+              gen_field_complex: (gen_field_complex, gen_fractions, gen_field_polynomials, gen_field_matrices),
               gen_fractions: (gen_fractions, gen_complex, gen_field_complex, gen_matrices, gen_polynomials,
-                              gen_field_polynomials),
+                              gen_field_polynomials, gen_field_matrices),
               gen_matrices: (gen_matrices, gen_complex, gen_polynomials),
+              gen_field_matrices: (gen_field_matrices, gen_complex, gen_polynomials),  # a Ring, like Matrix
               gen_polynomials: (gen_polynomials, gen_matrices, gen_complex),
               gen_field_polynomials: (gen_field_polynomials, gen_matrices, gen_fractions)
               }

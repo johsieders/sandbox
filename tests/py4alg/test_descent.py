@@ -7,7 +7,7 @@ from operator import add
 
 import pytest
 
-from sandbox.py4alg.mapper import Complex, FieldComplex, FieldPolynomial, Fraction, Matrix, Polynomial
+from sandbox.py4alg.mapper import Complex, FieldComplex, FieldMatrix, FieldPolynomial, Fraction, Matrix, Polynomial
 from sandbox.py4alg.util.gen_samples import gen_tree, gen_ints, gen_floats, gen_complex_
 from sandbox.py4alg.util.utils import set_test_seed, descent_str
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
@@ -27,7 +27,7 @@ BASE_TYPES = (NativeInt, NativeFloat, NativeComplex)
 
 # constructors that never appear directly on top of their own family:
 # Polynomial, Complex and Fraction flatten, Matrix builds a block matrix over the scalars
-FAMILIES = ({Polynomial, FieldPolynomial}, {Complex, FieldComplex}, {Fraction}, {Matrix})
+FAMILIES = ({Polynomial, FieldPolynomial}, {Complex, FieldComplex}, {Fraction}, {Matrix, FieldMatrix})
 
 
 def component(x):
@@ -126,6 +126,16 @@ def test_fraction_of_fractions_flattens():
     assert c == a / b
     assert c.descent() == [Fraction, NativeInt]
     assert Fraction(a) == a
+
+
+def test_flattening_keeps_the_outer_class():
+    # a ring constructor applied to its field subclass: the result is the ring class, and so is descent()[0]
+    f = [NativeFloat(v) for v in (1.0, 2.0)]
+    q = Polynomial(FieldPolynomial(f[0], f[1]))
+    assert type(q) is Polynomial and q.descent() == [Polynomial, NativeFloat]
+    a = FieldComplex(f[0], f[1])
+    c = Complex(a, a)
+    assert type(c) is Complex and c.descent() == [Complex, NativeFloat]
 
 
 def test_complex_of_polynomials_does_not_flatten():

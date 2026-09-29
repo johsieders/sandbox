@@ -28,7 +28,8 @@ class Polynomial[T: Ring]:
         if len(args) == 0:
             raise TypeError(f"expected at least one argument, got {len(args)}")
         elif isinstance(args[0], Polynomial):
-            self._descent = args[0].descent()
+            # flattened: same coefficients, but our class (e.g. Polynomial built from FieldPolynomials)
+            self._descent = [type(self)] + args[0].descent()[1:]
             ps = list(args)  # list of polynomials
             zero = ps[0]._coeffs[0].zero()
             coeffs = []
