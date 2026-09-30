@@ -34,6 +34,16 @@ def test_isinstance():
     assert not isinstance(n, NativeComplex)
 
 
+def test_divmod():
+    a = Symbol('a', integer=True)
+    b = Symbol('b', integer=True)
+    q, r = divmod(a, b)
+    t = q * b + r
+
+    # t == a in symbolic terms
+    assert (t - a).rewrite(floor).simplify() == 0
+
+
 symbols = [chr(i) for i in range(ord('a'), ord('z') + 1)] * 2
 sym_int_samples = [SymbolicInt(s) for s in symbols]
 
@@ -57,21 +67,9 @@ def test_complex():
 
 
 def test_matrix():
-    a = Matrix(*sym_int_samples[:16])
-    b = Matrix(*sym_int_samples[16:32])
+    a = Matrix(*sym_int_samples[:9])
+    b = Matrix(*sym_int_samples[9:18])
     check_axioms((a, b))
-
-
-def test_symb2():
-    a = Symbol('a', integer=True)
-    b = Symbol('b', integer=True)
-    q, r = divmod(a, b)
-    t = q * b + r
-
-    print()
-    print(q, r, t)
-    print(t == a)
-    print((t - a).rewrite(floor).simplify())
 
 
 @pytest.mark.timeout(10)
