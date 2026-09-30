@@ -1,12 +1,15 @@
 # tests/py4alg/gen_samples.py
 
 import random
+
+from sympy import Symbol
 from itertools import cycle
 from typing import Any, Sequence, Iterator, Iterable, Callable, List
 
 from sandbox.py4alg.mapper import Complex, FieldComplex, FieldMatrix, Fp, Fraction, Matrix, Polynomial, FieldPolynomial
 from sandbox.py4alg.mapper.m_modular import Zm
 from sandbox.py4alg.util.utils import compose, params, take
+from sandbox.py4alg.wrapper.s_int import SymbolicInt
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat
 from sandbox.py4alg.wrapper.w_int import NativeInt
@@ -42,6 +45,20 @@ def gen_complex_(a, b: float, no_zeros=params['no_zeros']) -> Iterator[complex]:
             continue
         else:
             yield complex(re, im)
+
+
+SYMBOLS = tuple(Symbol(name, integer=True) for name in "abc")
+
+
+def gen_symbolic_(a, b: int, no_zeros=params['no_zeros']) -> Iterator[Any]:
+    """Symbolic integers k0 + k1*s: integer coefficients in [a, b], s one of SYMBOLS (degree 1, so
+    products in deep towers stay manageable)."""
+    while True:
+        k0, k1 = random.randint(a, b), random.randint(a, b)
+        x = k0 + k1 * random.choice(SYMBOLS)
+        if no_zeros and x == 0:
+            continue
+        yield x
 
 
 def gen_tuples(min, max: int, samples: Iterable[Any]) -> Iterator[tuple]:
@@ -86,6 +103,7 @@ gen_zm = gen_make(lambda n: Zm(params['nonprime'], n))
 gen_nat_ints = gen_make(NativeInt)
 gen_nat_floats = gen_make(NativeFloat)
 gen_nat_complex = gen_make(NativeComplex)
+gen_sym_ints = gen_make(SymbolicInt)
 
 gen_fractions = gen_make(Fraction, min=1, max=2)
 gen_complex = gen_make(Complex, min=1, max=2)
@@ -108,7 +126,8 @@ CONSTRUCTORS = {gen_polynomials: Polynomial,
 
 SOURCES = {gen_ints: gen_nat_ints,
            gen_floats: gen_nat_floats,
-           gen_complex_: gen_nat_complex}
+           gen_complex_: gen_nat_complex,
+           gen_symbolic_: gen_sym_ints}
 
 
 # Rational functions with float coefficients are not generated: the Euclidean gcd over floats is

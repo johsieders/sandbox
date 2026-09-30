@@ -1,4 +1,4 @@
-# py4alg/tests/test_natives.py
+# tests/py4alg/test_symbolics.py
 
 import pytest
 from sympy import Symbol, floor
@@ -7,10 +7,11 @@ from sandbox.py4alg.mapper.m_complex import Complex
 from sandbox.py4alg.mapper.m_matrix import Matrix
 from sandbox.py4alg.mapper.m_polynomial import Polynomial
 from sandbox.py4alg.protocols.p_abelian_group import AbelianGroup
-from sandbox.py4alg.protocols.p_comparable import Comparable
 from sandbox.py4alg.protocols.p_euclidean_ring import EuclideanRing
 from sandbox.py4alg.protocols.p_field import Field
 from sandbox.py4alg.protocols.p_ring import Ring
+from sandbox.py4alg.util.gen_samples import gen_tree, gen_symbolic_
+from sandbox.py4alg.util.utils import comparable_works, descent_str, set_test_seed
 from sandbox.py4alg.wrapper.s_int import SymbolicInt
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat
@@ -24,14 +25,25 @@ def test_isinstance():
     n = SymbolicInt('a')
     # Positive assertions
     assert isinstance(n, SymbolicInt)
-    assert isinstance(n, Comparable)
     assert isinstance(n, AbelianGroup)
     assert isinstance(n, Ring)
     # Negative assertions
-    assert not isinstance(n, EuclideanRing)  # no euclidean_function on symbolic expressions
+    assert not comparable_works(n)  # a < b has no truth value (isinstance(n, Comparable) is useless:
+    #                                 every object inherits __lt__ from object)
+    assert not isinstance(n, EuclideanRing)  # Z[a, b, ...] has no division with remainder
     assert not isinstance(n, Field)  # Integers don't have multiplicative inverses
     assert not isinstance(n, NativeFloat)
     assert not isinstance(n, NativeComplex)
+
+
+def test_zero_test_is_exact():
+    a = SymbolicInt('a')
+    one = SymbolicInt.one()
+    z = (a + one) * (a + one) - a * a - a - a - one  # zero, although sympy keeps it unexpanded
+    assert not z
+    assert z == SymbolicInt.zero()
+    assert a
+    assert Polynomial(one, z) == Polynomial(one)  # the zero leading coefficient is trimmed
 
 
 def test_divmod():
@@ -75,4 +87,19 @@ def test_matrix():
 @pytest.mark.timeout(10)
 @pytest.mark.parametrize("samples", (sym_int_samples[:10],))
 def test_symbolics(samples):
+    check_axioms(samples)
+
+
+# ----- towers over SymbolicInt: Polynomial, Complex, Matrix (the constructors whose bound is Ring) -----
+# own settings: exact symbolic arithmetic is slow, depth 3 / N = 3 takes about 8 s on the Mac
+
+SYM_DEPTH = 3
+SYM_N = 3
+set_test_seed()
+sym_towers = gen_tree((gen_symbolic_,), depth=SYM_DEPTH, n=SYM_N)
+
+
+@pytest.mark.timeout(30)
+@pytest.mark.parametrize("samples", sym_towers, ids=[descent_str(s) for s in sym_towers])
+def test_symbolic_towers(samples):
     check_axioms(samples)

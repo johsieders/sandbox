@@ -8,8 +8,9 @@ from operator import add
 import pytest
 
 from sandbox.py4alg.mapper import Complex, FieldComplex, FieldMatrix, FieldPolynomial, Fraction, Matrix, Polynomial
-from sandbox.py4alg.util.gen_samples import gen_tree, gen_ints, gen_floats, gen_complex_
+from sandbox.py4alg.util.gen_samples import gen_tree, gen_ints, gen_floats, gen_complex_, gen_symbolic_
 from sandbox.py4alg.util.utils import set_test_seed, descent_str
+from sandbox.py4alg.wrapper.s_int import SymbolicInt
 from sandbox.py4alg.wrapper.w_complex import NativeComplex
 from sandbox.py4alg.wrapper.w_float import NativeFloat
 from sandbox.py4alg.wrapper.w_int import NativeInt
@@ -18,12 +19,12 @@ DEPTH = 4
 N = 3
 set_test_seed()
 
-# all towers up to DEPTH over ints, floats and complex (descent does not care about rounding)
-tower_samples = [s for source in (gen_ints, gen_floats, gen_complex_)
+# all towers up to DEPTH over ints, floats, complex and symbolic integers
+tower_samples = [s for source in (gen_ints, gen_floats, gen_complex_, gen_symbolic_)
                  for s in gen_tree((source,), depth=DEPTH, n=N)]
 tower_ids = [descent_str(s) for s in tower_samples]
 
-BASE_TYPES = (NativeInt, NativeFloat, NativeComplex)
+BASE_TYPES = (NativeInt, NativeFloat, NativeComplex, SymbolicInt)
 
 # constructors that never appear directly on top of their own family:
 # Polynomial, Complex and Fraction flatten, Matrix builds a block matrix over the scalars
