@@ -43,7 +43,7 @@ sandbox/py4alg/
 |   |-- w_int.py                NativeInt over int                 -> EuclideanRing + Comparable
 |   |-- w_float.py              NativeFloat over float (tol eq)    -> Field + Comparable
 |   |-- w_complex.py            NativeComplex over complex (tol eq) -> Field (no __lt__)
-|   |-- s_int.py                SymbolicInt over sympy.Symbol      -> Ring + Comparable (no euclidean_function)
+|   |-- s_int.py                SymbolicInt: Z[a, b, ...] as sympy Poly over ZZ -> Ring (not Comparable)
 |-- mapper/
 |   |-- __init__.py             re-exports Fp, Zm, ZmProduct, Polynomial, FieldPolynomial,
 |   |                             Fraction, Complex, FieldComplex, Matrix, ECpoint
@@ -84,7 +84,8 @@ sandbox/py4alg/
 All protocols are `@runtime_checkable`, so `isinstance(x, Ring)` is the only
 discriminator used by the property suite. `Comparable` is intentionally not in
 the inheritance chain — it is added a la carte and detected by trying
-`sample <= sample` at runtime (`util/utils.py:56`).
+`sample <= sample` at runtime (`util/utils.py:56`). `isinstance(x, Comparable)` is useless for
+that: every Python object inherits `__lt__` from `object`, so even `object()` passes the check.
 
 Notes:
 
@@ -104,7 +105,7 @@ Notes:
 | `NativeInt`     | `int`                 | AbelianGroup, Ring, EuclideanRing, Comparable        | `zero`/`one` are `@classmethod`. Exact equality.                 |
 | `NativeFloat`   | `float`               | AbelianGroup, Ring, EuclideanRing, Field, Comparable | Tolerance `__eq__` from `params['atol'/'rtol']`.                 |
 | `NativeComplex` | `complex`             | AbelianGroup, Ring, EuclideanRing, Field             | Tolerance `__eq__`; no `__lt__` (correctly not Comparable).      |
-| `SymbolicInt`   | `sympy.Symbol`/`Expr` | AbelianGroup, Ring (Comparable)                      | Experimental; no `euclidean_function` (Ring since 29.09.2026). |
+| `SymbolicInt`   | sympy `Poly` over ZZ  | AbelianGroup, Ring                                   | Z[a, b, ...]; exact `__eq__`/`__bool__` via `(x - y).is_zero`; no `__lt__`, no `//`. |
 
 All wrappers expose `descent()` returning `[Cls]` and raise `TypeError` on foreign input
 (`NativeFloat(1)` is rejected like `NativeInt(1.0)`; since 29.09.2026).
@@ -311,7 +312,7 @@ still open is below; step numbers continue those of `roadmap.md`.
    `normalize` are gone; `//` stays as division by units (`ZeroDivisionError` for zero divisors).
    `test_zm_product.py` asserts `not isinstance(z, EuclideanRing)`, checks ring axioms in its
    adapter tests and has a `check_axioms` test; the gcd and `%` tests are removed.
-8. **`SymbolicInt` is a `Ring`** (and `Comparable`): `euclidean_function` (which only raised
+8. **`SymbolicInt` is a `Ring`**: `euclidean_function` (which only raised
    `NotImplementedError`) and `normalize` are gone; `//`, `%` and `divmod` stay (sympy's `floor`
    and `Mod`).
 
@@ -378,8 +379,30 @@ Result: py4alg 959 tests (all pass on the Mac and the Pi), report unchanged at 1
 
 Result: py4alg 948 tests (all pass on the Mac and the Pi), report unchanged at 12 findings.
 
-### Phase 7: symbolic wrappers (S10)
+### Phase 7: symbolic integers (S10, revised 30.09.2026)
 
-15. **`SymbolicFloat` / `SymbolicComplex`** over `sympy.Symbol(name, real=True)` /
-    `sympy.Symbol(name)`, and `gen_sym_*` generators registered in `SOURCES`. Property tests over
-    exact symbolic values give reproducible failures without the floating-point excuse.
+The original step 15 (`SymbolicFloat` / `SymbolicComplex`) is replaced by:
+
+15a. **`SymbolicInt` as a clean `Ring`** — done 30.09.2026. Symbolic integers form Z[a, b, ...]:
+     unique factorization, so gcds exist, but no division with remainder (not Euclidean) and no
+     order (`a < b` has no truth value). So: no `__lt__` (hence not Comparable, `comparable_works`
+     is false), no `//`, `%`, `divmod`, no `Fraction` over it. The value is a sympy `Poly` over
+     `ZZ`: integer coefficients are enforced (`a/2` is rejected), `__eq__` and `__bool__` are exact
+     (`(x - y).is_zero`; `Poly`'s own `==` also compares generators). Before, `__bool__` was
+     `bool(expr)`, true for unexpanded zeros like `(a+1)² - a² - 2a - 1`, which broke polynomial
+     trimming. Speed: `Matrix > SymbolicInt` (9×9, N = 3) took 76 s with expressions expanded when
+     compared, 122 s when expanded after every operation, 1.8 s with `Poly`.
+15b. **Symbolic towers** — done 30.09.2026. `gen_symbolic_` yields `k0 + k1·s` (integer
+     coefficients, `s` from `SYMBOLS` = a, b, c), `gen_sym_ints` wraps them; registered in
+     `SOURCES`, so `gen_tree` builds towers over `SymbolicInt` with the constructors whose bound
+     is `Ring`: `Polynomial`, `Complex`, `Matrix` (no `Fraction`, no `Field…` types).
+     `test_symbolics.py::test_symbolic_towers` checks the axioms at depth 3, N = 3 (9 towers,
+     about 8 s on the Mac, `Matrix > SymbolicInt` 4.6 s; Pi 13 s; timeout 30 s); `test_descent.py`
+     checks their structure up to depth 4. No findings: the symbolic towers satisfy the ring axioms
+     exactly. Depth 4 would take over 5 minutes.
+15c. **Fractions of `SymbolicInt`** — open, decision pending. The universal gcd does not apply
+     (Z[a, b, ...] is not Euclidean). Options: a `GCDDomain` protocol with `Fraction[T: GCDDomain]`
+     using the type's own gcd (brings back type-specific gcds, cf. R1), or a separate exact field
+     wrapper `SymbolicRational` over Q(a, b, ...) with `sympy.cancel` for reduction — then
+     `FieldPolynomial`, `FieldComplex`, `FieldMatrix` over it would run the towers that are
+     excluded over floats, exactly.

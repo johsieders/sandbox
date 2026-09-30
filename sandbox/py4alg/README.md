@@ -44,11 +44,11 @@ These parameterless classes provide the foundation of the algebraic hierarchy:
 | `Zm`            | `EuclideanRing`, `Comparable` | Integers mod m (any modulus)          |
 | `ZmProduct`     | `Ring`                        | Direct product of Zm rings (1)        |
 | `ECpoint`       | `AbelianGroup`                | Elliptic curve points over Fp         |
-| `SymbolicInt`   | `Ring`, `Comparable`          | Symbolic integers over sympy (2)      |
+| `SymbolicInt`   | `Ring`                        | Symbolic integers Z[a, b, ...] (2)    |
 
 (1) Zero divisors, e.g. (1, 0) · (0, 1) = (0, 0), so not a Euclidean ring; `//` divides by units only.
-(2) Experimental; `//`, `%` and `divmod` exist (sympy's `floor` and `Mod`), but there is no Euclidean function on
-symbolic expressions.
+(2) Polynomials with integer coefficients in symbols, stored as sympy `Poly` over ZZ, with exact equality. Not
+Euclidean (no division with remainder) and not ordered (`a < b` has no truth value), so no `Fraction` over it.
 
 Each base type implements specific **protocols** that define their algebraic behavior through method signatures.
 

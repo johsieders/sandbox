@@ -22,7 +22,7 @@ development.
 
 - **Architecture**: Protocol-based design with wrappers and mappers
 - **Protocols** (`protocols/`): Abstract algebraic structures (Ring, Field, EuclideanRing, etc.)
-- **Wrappers** (`wrapper/`): Native type wrappers (NativeInt, NativeFloat, NativeComplex)
+- **Wrappers** (`wrapper/`): Native type wrappers (NativeInt, NativeFloat, NativeComplex) and SymbolicInt (Z[a, b, ...] as sympy `Poly` over ZZ; a Ring only)
 - **Mappers** (`mapper/`): Complex algebraic types (Polynomial, FieldPolynomial, Matrix, FieldMatrix, Complex, Fraction, Fp, Zm, ZmProduct, ECpoint)
 - **Configuration**: the `params` dict in `util/utils.py` (tolerances `atol`/`rtol`, sample sizes, seed); samples from `util/gen_samples.py` (infinite generators, `gen_tree`) and `util/def_samples.py` (finite lists)
 - **Key pattern**: Types use `_descent` attribute to track construction hierarchy
