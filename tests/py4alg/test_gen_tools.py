@@ -74,13 +74,19 @@ def test_accepts_follows_bounds_and_own_family():
 
     assert accepts(Complex, n[0])  # Gaussian integers: Complex[T: Ring]
     assert not accepts(FieldComplex, n[0])  # NativeInt is no Field
-    assert accepts(Fraction, field_poly)  # rational functions: Fraction[T: EuclideanRing]
+    assert not accepts(Fraction, field_poly)  # EuclideanRing, but float coefficients (INEXACT)
     assert not accepts(Fraction, ring_poly)  # Polynomial over Z is only a Ring
     assert not accepts(Fraction, matrix)
     assert accepts(FieldPolynomial, field_poly)  # own family: flattening, although no Field
     assert accepts(FieldMatrix, field_matrix)  # own family: block matrix, although no Field
     assert not accepts(FieldMatrix, matrix)  # a Ring over ints is no Field
     assert accepts(Matrix, field_matrix)  # Matrix[T: Ring], FieldMatrix is a Ring
+    # no rational functions with float coefficients (INEXACT), but exact ones and fractions of floats
+    from sandbox.py4alg.mapper import Fp
+    assert not accepts(Fraction, FieldPolynomial(FieldComplex(f[0], f[1])))
+    assert accepts(Fraction, FieldPolynomial(Fraction(n[0]), Fraction(n[1])))
+    assert accepts(Fraction, FieldPolynomial(Fp(17, 3), Fp(17, 5)))
+    assert accepts(Fraction, f[0])
 
 
 def test_gen_tree_paths_are_constructible():

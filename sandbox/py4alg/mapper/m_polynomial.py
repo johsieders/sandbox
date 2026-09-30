@@ -137,7 +137,10 @@ class FieldPolynomial[T: Field](Polynomial[T]):
             q[k] = qk
             for j in range(n + 1):
                 r[j + k] = r[j + k] - qk * b[j]
-        # Normalize remainder (remove trailing zeros)
+        # The remainder has degree < n: positions n..m were eliminated and are zero by construction.
+        # Dropping them (instead of testing them against the tolerance) keeps float rounding residue
+        # out of the remainder's degree.
+        r = r[:n] or [a[0].zero()]
         while len(r) > 1 and not r[-1]:
             r.pop()
         return FieldPolynomial(*q), FieldPolynomial(*r)

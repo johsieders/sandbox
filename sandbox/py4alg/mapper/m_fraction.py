@@ -41,13 +41,13 @@ class Fraction[T: EuclideanRing]:
             if g:
                 num = num // g
                 den = den // g
-        # this works for Comparables, but not for Complex, Polynomials:
-        try:
-            if den < den.zero():
-                num = -num
-                den = -den
-        except TypeError:
-            pass
+            # canonical denominator: divide both by the unit u with den == u * den.normalize().
+            # Integers: the sign (den > 0); polynomials over a field: den becomes monic, which also
+            # keeps the coefficient scale near 1 (floats otherwise drift to 1e14 and 1e-10, and the
+            # absolute zero tolerance then misjudges gcd remainders); fields: den becomes one.
+            u = den // den.normalize()
+            num = num // u
+            den = den // u
 
         self._num = num
         self._den = den

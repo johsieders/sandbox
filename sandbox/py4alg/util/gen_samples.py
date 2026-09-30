@@ -111,6 +111,12 @@ SOURCES = {gen_ints: gen_nat_ints,
            gen_complex_: gen_nat_complex}
 
 
+# Rational functions with float coefficients are not generated: the Euclidean gcd over floats is
+# ill-conditioned (whether a remainder counts as zero decides the gcd's degree), so Fraction's
+# reduction goes wrong and the axioms fail by rounding, not by a bug (implementation.md, "Floats").
+INEXACT = (NativeFloat, NativeComplex)
+
+
 def accepts(cls, x) -> bool:
     """True if the type constructor cls can be applied to elements like x.
 
@@ -118,8 +124,11 @@ def accepts(cls, x) -> bool:
     or x belongs to cls itself: Polynomial, Complex and Fraction flatten their own type, and
     Matrix builds block matrices, even where the bound alone would not allow it
     (FieldPolynomial of FieldPolynomials, FieldMatrix of FieldMatrix blocks).
+    Exception: no Fraction over polynomials with float coefficients (INEXACT).
     """
     (t,) = cls.__type_params__
+    if cls is Fraction and isinstance(x, Polynomial) and x.descent()[-1] in INEXACT:
+        return False  # rational functions with float coefficients: see INEXACT
     return isinstance(x, t.__bound__) or isinstance(x, cls)
 
 
