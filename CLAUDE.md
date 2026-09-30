@@ -51,7 +51,8 @@ pytest tests/py4alg/test_polynomials.py
 pytest tests/py4alg/test_axioms_bench.py --benchmark-enable --benchmark-only --benchmark-sort=mean
 
 # Exploratory print output of passed tests: -rP (or -s without -n auto).
-# tests/py4alg writes its exception report to reports/py4alg_exceptions_<host>.txt
+# tests/py4alg writes a new exception report per run: reports/<YYYYMMDD-HHMMSS>_py4alg_exceptions_<host>.txt
+# (also under PyCharm's runner; with the Pi interpreter the file lands on the Pi)
 ```
 
 ### Dependencies

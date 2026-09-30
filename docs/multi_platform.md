@@ -216,8 +216,11 @@ Output and reports:
 
 - Print output of passed tests: `-rP` in the summary, or `-s` live (not with `-n auto`).
 - `tests/py4alg` writes its exception report (graceful failures of the axiom checks) to
-  `reports/py4alg_exceptions_<host>.txt` on each machine, overwritten per run. `reports/` is
-  gitignored and excluded from `sync_pi.sh`, so the Pi's report survives a sync.
+  a new file per run, `reports/<YYYYMMDD-HHMMSS>_py4alg_exceptions_<host>.txt`, on the machine
+  that ran the tests; the timestamp prefix sorts the files chronologically, old reports are kept.
+  This also works under PyCharm's test runner (the file is written in `pytest_sessionfinish`); with
+  the Pi interpreter selected, the report lands on the Pi. `reports/` is gitignored and excluded
+  from `sync_pi.sh`, so the Pi's reports survive a sync.
 - What the report covers: `check_axioms` (`tests/py4alg/check_protocols.py`) picks the checks by
   protocol — field, Euclidean ring, ring, or abelian group (the last since September 2026; before,
   group-only types such as `ECpoint` ran no checks at all) — plus the order axioms if the elements
@@ -241,8 +244,9 @@ the tests by Pi time together with the Pi/Mac ratio. Orientation: collecting the
 5 s on the Mac and 11.5 s on the Pi; `test_polynomials.py` runs in 2.2 s vs. 3.4 s.
 
 Results: after running `tests/py4alg` on both machines, compare the exception reports, e.g.
-`diff reports/py4alg_exceptions_<mac>.txt <(ssh pi5 cat sandbox/reports/py4alg_exceptions_raspberrypi5.txt)`
-(the first three lines — time, host, command — differ by design). In September 2026 both machines
+`diff "$(ls reports/*_py4alg_exceptions_*.txt | tail -1)" <(ssh pi5 'cat "$(ls sandbox/reports/*.txt | tail -1)"')`
+compares the latest report of each (the first three lines — time, host, command — differ by
+design). In September 2026 both machines
 reported the same 30 findings.
 
 ### 4.5 Add, remove or upgrade a library
@@ -598,8 +602,8 @@ used on Windows.
   (`os._exit(1)`). `check_axioms` therefore cannot report a Windows timeout as a graceful
   `timeout`: without xdist the test session ends, with `-n auto` the worker dies, the test is
   reported as failed and xdist starts a new worker.
-- *Reports.* The exception report is written to `reports\py4alg_exceptions_<host>.txt` as on the
-  other machines; `reports/` is gitignored.
+- *Reports.* A new exception report per run in `reports\<timestamp>_py4alg_exceptions_<host>.txt`,
+  as on the other machines; `reports/` is gitignored.
 - *Scripts.* The Mac/Pi scripts are bash; they are neither needed nor run on Windows.
 
 

@@ -35,17 +35,25 @@ def pytest_configure(config):
 def pytest_sessionfinish(session, exitstatus):
     """Called after all tests in a process have run.
 
-    In xdist: runs in each worker after its share of tests is done.
-    Without xdist: runs once (but the data is not needed here — we read
-    the module-level lists directly in pytest_terminal_summary).
+    In xdist: runs in each worker after its share of tests is done, and last on the controller,
+    after all workers are down (so pytest_testnodedown has collected their data).
+    Without xdist: runs once.
 
     Workers serialise their module-level exception_report and black_box
     into config.workeroutput, which xdist transfers to the controller.
+    The controller (or the single process) writes the report file here, not in
+    pytest_terminal_summary: PyCharm's test runner replaces the terminal reporter
+    and never calls pytest_terminal_summary.
     """
-    if hasattr(session.config, 'workeroutput'):
-        session.config.workeroutput['exception_report'] = json.dumps(
+    config = session.config
+    if hasattr(config, 'workeroutput'):
+        config.workeroutput['exception_report'] = json.dumps(
             [list(t) for t in exception_report])
-        session.config.workeroutput['black_box'] = json.dumps(list(black_box))
+        config.workeroutput['black_box'] = json.dumps(list(black_box))
+        return
+    er, bb = collected(config)
+    if bb:  # check_axioms ran: keep the exception report, one file per machine
+        config._report_path = write_exception_report(config, er)
 
 
 def pytest_testnodedown(node, error):
@@ -60,16 +68,20 @@ def pytest_testnodedown(node, error):
     node.config._black_box.extend(json.loads(wo.get('black_box', '[]')))
 
 
-def pytest_terminal_summary(terminalreporter, config):
-    """Called once at the very end, when pytest prints its summary.
+def collected(config):
+    """The exception report and black box of the whole run.
 
-    In xdist: runs on the controller; reads the aggregated data collected
-    via pytest_testnodedown.
-    Without xdist: falls back to the module-level lists (which were
-    populated in-process).
+    In xdist: the data aggregated on the controller via pytest_testnodedown.
+    Without xdist: the module-level lists, populated in-process.
     """
     er = getattr(config, '_exception_report', None) or list(exception_report)
     bb = getattr(config, '_black_box', None) or list(black_box)
+    return er, bb
+
+
+def pytest_terminal_summary(terminalreporter, config):
+    """Called once at the very end, when pytest prints its summary (not under PyCharm's runner)."""
+    er, bb = collected(config)
 
     if er:
         terminalreporter.section("Exception report")
@@ -83,21 +95,23 @@ def pytest_terminal_summary(terminalreporter, config):
         for entry in bb:
             terminalreporter.write_line(f"  {entry}")
 
-    if bb:  # check_axioms ran: keep the exception report, one file per machine
-        path = write_exception_report(config, er)
+    path = getattr(config, '_report_path', None)
+    if path:
         terminalreporter.write_line(f"Exception report written to {path.relative_to(config.rootpath)}")
 
 
 def write_exception_report(config, er):
-    """Write the exception report to reports/py4alg_exceptions_<host>.txt (overwritten each run).
+    """Write the exception report to a new file reports/<timestamp>_py4alg_exceptions_<host>.txt.
 
-    The host in the name keeps the Mac's and the Pi's reports apart; reports/ is gitignored and
-    excluded from the Pi mirror sync.
+    Every run gets its own file; the timestamp prefix (YYYYMMDD-HHMMSS) sorts them
+    chronologically, the host keeps the Mac's and the Pi's reports apart. reports/ is gitignored
+    and excluded from the Pi mirror sync.
     """
+    now = datetime.now()
     host = platform.node().split('.')[0]
-    path = config.rootpath / "reports" / f"py4alg_exceptions_{host}.txt"
+    path = config.rootpath / "reports" / f"{now:%Y%m%d-%H%M%S}_py4alg_exceptions_{host}.txt"
     path.parent.mkdir(exist_ok=True)
-    lines = [f"{datetime.now():%Y-%m-%d %H:%M:%S}  {host}  Python {platform.python_version()}",
+    lines = [f"{now:%Y-%m-%d %H:%M:%S}  {host}  Python {platform.python_version()}",
              f"pytest {' '.join(sys.argv[1:])}",
              f"{len(er)} graceful failure(s)"]
     lines += [f"  {check} [{descent}]: {etype}: {msg}" for check, descent, etype, msg in er]

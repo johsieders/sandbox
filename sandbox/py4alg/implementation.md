@@ -207,7 +207,9 @@ The entry point is `check_axioms(samples)` which:
    Records go to the module-level `exception_report`; the `black_box` deque stores the last
    5 sample descents to survive hangs.
 4. Both lists are aggregated across xdist workers in `conftest.py`, printed in
-   `pytest_terminal_summary` and written to `reports/py4alg_exceptions_<host>.txt`.
+   `pytest_terminal_summary` and written to a new file
+   `reports/<YYYYMMDD-HHMMSS>_py4alg_exceptions_<host>.txt` per run, in
+   `pytest_sessionfinish` — not in the terminal summary, which PyCharm's test runner never calls.
 
 Samples are produced in two complementary styles:
 
