@@ -229,9 +229,11 @@ Output and reports:
   exception is reported under the check's name and the next check runs; a timeout is reported as
   `timeout`. The test itself passes: the report, not the test status, tells whether the axioms hold.
 - Benchmarks are disabled by default (`addopts = "--benchmark-disable"`): benchmarked tests run once
-  as plain tests. Measure with `--benchmark-enable --benchmark-only` (without `-n auto`);
-  `--benchmark-autosave` stores each run in `.benchmarks/<platform>/`, `--benchmark-compare`
-  compares against the last one.
+  as plain tests. Measure with `--benchmark-enable --benchmark-only` (without `-n auto`); every
+  measured run is saved automatically (`--benchmark-autosave` in `addopts`) to
+  `.benchmarks/<platform>/`, disabled runs save nothing. `pytest-benchmark list` shows the saved
+  runs, `pytest-benchmark compare 0001 0002` compares two, `--benchmark-compare` compares a new run
+  against the last one.
 
 ### 4.4 Compare results and execution times
 

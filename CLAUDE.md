@@ -47,7 +47,8 @@ pytest tests/stepfunctions/test_stepfun_f.py
 pytest tests/py4alg/test_polynomials.py
 
 # Benchmarks: disabled by default (addopts), i.e. benchmarked tests run once as plain tests.
-# Measure (without -n auto); --benchmark-autosave keeps runs in .benchmarks/ for --benchmark-compare
+# Measure (without -n auto); measured runs are autosaved (addopts) to .benchmarks/<platform>/;
+# view with `pytest-benchmark list` / `pytest-benchmark compare 0001 0002`, or add --benchmark-compare
 pytest tests/py4alg/test_axioms_bench.py --benchmark-enable --benchmark-only --benchmark-sort=mean
 
 # Exploratory print output of passed tests: -rP (or -s without -n auto).

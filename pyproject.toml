@@ -33,8 +33,9 @@ include = ["sandbox*", "tests*"]   # tests import each other as `tests.py4alg...
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-# Benchmarked tests run once, as plain tests. Measure with --benchmark-enable --benchmark-only.
-addopts = "--benchmark-disable"
+# Benchmarked tests run once, as plain tests. Measure with --benchmark-enable --benchmark-only;
+# measured runs are saved to .benchmarks/<platform>/ (disabled runs save nothing).
+addopts = "--benchmark-disable --benchmark-autosave"
 markers = [
     "stress: slow or fragile cases; deselect with -m 'not stress'",
 ]
