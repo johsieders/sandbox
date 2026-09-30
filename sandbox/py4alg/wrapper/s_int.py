@@ -40,9 +40,6 @@ class SymbolicInt:
         return (isinstance(other, SymbolicInt) and
                 (self._value - other._value).rewrite(floor).simplify() == 0)
 
-    def __lt__(self, other: SymbolicInt) -> bool:
-        return self._value < other._value
-
     def __floordiv__(self, other: SymbolicInt) -> SymbolicInt:
         return SymbolicInt(self._value // other._value)
 
@@ -55,6 +52,9 @@ class SymbolicInt:
 
     def norm(self) -> Abs:
         return Abs(self._value)
+    
+    def __lt__(self, other: SymbolicInt) -> SymbolicInt:
+        return SymbolicInt(self._value < other._value)
 
     def __bool__(self):
         return bool(self._value)
