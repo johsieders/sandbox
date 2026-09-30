@@ -181,8 +181,10 @@ sample lists for testing:
 
 ### Known Limitations
 
-- Deep type towers over floats (e.g., `Fraction[FieldPolynomial[NativeFloat]]`) can fail associativity due to
-  floating-point accumulation in polynomial GCD and cross-multiplication
+- Rational functions with float coefficients (e.g., `Fraction[FieldPolynomial[NativeFloat]]`) fail associativity
+  and distributivity by rounding: the Euclidean gcd over floats is ill-conditioned, so fractions are reduced
+  inconsistently. The tower tests do not build them; the same structure over exact coefficients is tested. See
+  `implementation.md`, "Floats".
 
 ## Implementation Details
 

@@ -243,9 +243,61 @@ Coverage at a glance:
 - `test_descent.py` — `descent()` of every tower type, flattening, block matrices.
 - `test_primes.py`, `test_gen_tools.py` — utility coverage.
 
+## Floats: rational functions with float coefficients
+
+Investigated 30.09.2026 with `test_axioms.py` at depth 4, N = 5, over ints, floats and complex.
+
+**Finding.** 1,121 findings in the report, none over ints. All 1,117 violated axioms were in the 12
+towers containing `Fraction > FieldPolynomial > NativeFloat/NativeComplex` (rational functions
+with float coefficients): associativity of multiplication 544, distributivity 539, division and
+divmod 24, a few others; matrices on top amplify them (up to 262 per tower). Plus 4 timeouts.
+
+**Mechanisms**, found by tracing failing checks step by step:
+
+1. *Division algorithm.* `FieldPolynomial.__divmod__` computed the eliminated coefficients as
+   `r[n+k] - qk·b[n]`, mathematically 0, numerically a residue such as `1.8e-12`; it survived the
+   trimming against the absolute `atol = 1e-12`, so the remainder had too high a degree, and the
+   next gcd step divided by the residue (a "gcd" of `1.4e14`). **Fixed**: the remainder is cut to
+   degree < n (`r[:n]`).
+2. *The gcd over floats is ill-conditioned.* Whether a remainder counts as zero decides the gcd's
+   degree, and a fixed `atol` misjudges both ways: remainders that should vanish do not (fractions
+   stay less reduced), real ones are dropped (spurious common factors; `//` then silently discards
+   a remainder and changes the fraction's value; degenerate denominators like `-1.1e-34`).
+3. *Coefficient-wise equality.* Two correct but differently reduced representations have cross
+   products that agree to about 1e-8 relative to their largest coefficient, but the small
+   coefficients carry the same absolute error, up to 1.5e-5 relative to themselves — far above
+   `rtol = 1e-9`: `NativeFloat.__eq__` measures each coefficient only against itself.
+
+**Changes.**
+
+- `Fraction` normalizes its denominator by its unit after the gcd reduction
+  (`u = den // den.normalize()`): positive for integers, monic for polynomials over a field (keeps
+  the coefficient scale near 1; floats drifted to 1e14 and 1e-10), `1` over a field. A canonical
+  form in itself; it also made degenerate float denominators visible (`ZeroDivisionError`
+  instead of silently wrong fractions).
+- The divmod fix above.
+- `gen_tree` no longer builds `Fraction` over polynomials with float coefficients
+  (`INEXACT` in `accepts`). Mechanisms 2 and 3 would need an approximate gcd and scale-aware
+  equality — substantial work and still heuristic; rational functions with float coefficients
+  are a known weak spot of computer algebra. The same structure over exact coefficients
+  (`Fraction > FieldPolynomial > Fraction > NativeInt`, over `Fp`) stays in the tower tests.
+
+| `test_axioms.py`, depth 4, N = 5 | findings | of which timeouts |
+|---|---|---|
+| before | 1,121 | 4 |
+| + canonical denominator | 978 | 5 |
+| + divmod fix | 928 | 6 |
+| + no `Fraction` over float polynomials | **5** | 5 |
+
+The remaining 5 are timeouts of large block matrices over floats and complex (three nested block
+steps give 27×27 matrices; associativity at N = 5 needs 125 triples), a performance matter.
+`test_polynomials.py` and `test_many.py` still build such fractions by hand and report a few
+violated axioms: they document the limitation.
+
+
 ## Plan
 
-Phases 1 to 6 are done (29.09.2026; phases 1-2 in `roadmap.md`): strict `NativeFloat`, docs
+Phases 1 to 6 are done (29.09.2026; float findings 30.09.2026, see above; phases 1-2 in `roadmap.md`): strict `NativeFloat`, docs
 corrected, a single `gcd` in `util/primes.py`, `inverse()` in the `Field` protocol, and
 `ZmProduct` and `SymbolicInt` downgraded to `Ring`. The earlier suggestions S1, S2, S4 and S9 are
 done or resolved; the second half of S6 (block-matrix `descent()`) was not an issue. Everything

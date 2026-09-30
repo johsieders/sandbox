@@ -103,7 +103,7 @@ Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest
 - **`__bool__()`**: Required by `AbelianGroup`. Tests for non-zeroness. Used for trailing-zero trimming in polynomials and for GCD termination.
 - **`__eq__()`**: Fraction uses cross-multiplication (`a.num * b.den == a.den * b.num`), not `close_to`. NativeFloat uses tolerance-based comparison (configured via `params` in `util/utils.py`).
 - **GCD**: Defined as a free function in `util/primes.py`, not as a method. Uses the generic Euclidean algorithm on any `EuclideanRing`. Commutativity depends on correct `normalize()`.
-- **Fraction simplification**: The `Fraction` constructor divides numerator and denominator by their GCD directly (without normalizing the GCD first), so that field-valued fractions actually simplify.
+- **Fraction simplification**: The `Fraction` constructor divides numerator and denominator by their GCD directly (without normalizing the GCD first), so that field-valued fractions actually simplify; then it divides both by the unit of the denominator (`den // den.normalize()`): integer denominators positive, polynomial denominators monic.
 
 ### Testing Strategy
 
@@ -111,7 +111,9 @@ Key dependencies: numpy, pandas, pytest, matplotlib, scikit-learn, torch, pytest
 - **Axiomatic approach**: `tests/py4alg/check_protocols.py` verifies ring/field/Euclidean ring axioms (commutativity, associativity, distributivity, GCD properties)
 - **Tolerance-based equality**: NativeFloat/NativeComplex use `atol`/`rtol` from `params` in `util/utils.py`; all other types use exact equality
 - **Sample generation**: `util/gen_samples.py` provides infinite generators (`gen_ints`, `gen_polynomials`, …) and `gen_tree`; `util/def_samples.py` provides finite lists (`def_nat_ints`, `def_nat_floats`, `def_polynomials`, `def_field_polynomials`, `def_fractions`, etc.)
-- **Known limitation**: Deep type towers over floats (e.g., `Fraction[FieldPolynomial[NativeFloat]]`) can fail associativity due to floating-point accumulation in polynomial GCD and cross-multiplication
+- **Known limitation**: rational functions with float coefficients (`Fraction[FieldPolynomial[NativeFloat]]`) fail axioms by
+  rounding (ill-conditioned float gcd); `gen_tree` does not build them (`INEXACT` in `accepts`). Details:
+  `sandbox/py4alg/implementation.md`, "Floats"
 
 ### Error Handling
 
