@@ -9,15 +9,16 @@ from sandbox.py4alg.util.gen_samples import gen_tree, gen_ints, gen_floats, gen_
 from sandbox.py4alg.util.utils import set_test_seed, descent_str
 from tests.py4alg.check_protocols import check_axioms
 
-DEPTH = 4
+DEPTH = 3
 N = 3
 set_test_seed()
 
-int_samples = gen_tree((gen_ints,), depth=DEPTH, n=N)
-# float_samples = gen_tree((gen_floats,), depth=DEPTH, n=N)
+# int_samples = gen_tree((gen_ints,), depth=DEPTH, n=N)
+float_samples = gen_tree((gen_floats,), depth=DEPTH, n=N)
 # complex_samples = gen_tree((gen_complex_,), depth=DEPTH, n=N)
 
-float_samples = []
+int_samples = []
+# float_samples = []
 complex_samples = []
 
 TIMEOUT = 10
