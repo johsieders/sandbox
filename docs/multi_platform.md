@@ -420,6 +420,23 @@ it again and the Pi never gets it.
 *Fix:* Settings → Python → Interpreter → Show All: delete the virtualenv-type entry (this removes
 only PyCharm's entry, not the venv) and keep the uv one.
 
+**6.11 No `print()` output when running tests from PyCharm.**
+*Symptom:* in the terminal, `pytest -s` (or `-rP`) shows the prints of passing tests; from PyCharm
+("Run test …") the console shows only `PASSED [100%]`.
+*Cause:* pytest captures stdout. PyCharm's runner (`_jb_pytest_runner.py`) passes the captured
+output to the IDE per test (`testStdOut`), so it is shown only when that test is selected in the
+tree of the Run window, not in the console of the whole run. `-s` in the configuration template
+does not help at once: the template applies only to configurations created afterwards, and
+"Run test …" reuses the temporary configurations created earlier (with empty arguments).
+*Fix:* select the test in the tree; or put `-s` into the run configuration actually used (e.g. the
+one for `tests/py4alg`), or delete the old temporary configurations (Run → Edit Configurations…)
+so that new ones are created from the template. `-s` does not work together with `-n auto`.
+Check the arguments while there: a configuration with `--benchmark-enabled` (instead of
+`--benchmark-enable`) makes pytest stop with "unrecognized arguments".
+*Related:* PyCharm's runner replaces pytest's terminal reporter and never calls
+`pytest_terminal_summary`; the py4alg exception report is therefore written in
+`pytest_sessionfinish` (§4.3).
+
 
 ## 7. Design Decisions
 
